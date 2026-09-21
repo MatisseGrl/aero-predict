@@ -36,7 +36,7 @@ Exemple : `feat: ajoute la normalisation par capteur pour FD001`
 3. **Au moins une revue d'un autre contributeur code avant merge** (les 3 personnes qui poussent du code se relisent mutuellement — même une relecture rapide vaut mieux qu'aucune : c'est ce qui donne un historique défendable en entretien).
 4. Merge en **squash** (une PR = un commit propre sur `main`) sauf si l'historique détaillé de la branche a un intérêt particulier.
 5. Supprimer la branche après merge.
-6. Mettre à jour `docs/STATUS.md` et `docs/journal/<prenom>.md` dans la même PR (voir "Traçabilité" ci-dessous).
+6. Mettre à jour `docs/STATUS.md` et `docs/journal/<prenom>.md` dans la même PR — créer ce dernier si c'est ta première contribution (voir "Traçabilité" ci-dessous).
 
 ## Pas de changement hors-sujet, ni de régression déguisée en "autre idée"
 
@@ -50,7 +50,7 @@ Pour le détail technique (quel commit, par qui, quand), `git log` et l'historiq
 
 Ce que git ne capture pas — le contexte humain — vit dans deux fichiers, à tenir à jour :
 - [`docs/STATUS.md`](docs/STATUS.md) : état collectif du projet (phase actuelle, dernière modification significative, pourquoi, impact).
-- `docs/journal/<prenom>.md` : ton propre historique (ce que tu as fait, compris, où tu en es) — un fichier par personne, voir [`CONTRIBUTORS.md`](CONTRIBUTORS.md).
+- `docs/journal/<prenom>.md` : ton propre historique (ce que tu as fait, compris, où tu en es) — créé à ta première contribution, pas avant (voir [`CONTRIBUTORS.md`](CONTRIBUTORS.md) pour la liste de l'équipe).
 
 Une session Claude Code lit ces deux sources en début de session pour te resituer sans tout réexpliquer, et les met à jour en fin de session si le travail était significatif.
 
