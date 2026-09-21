@@ -36,7 +36,7 @@ Exemple : `feat: ajoute la normalisation par capteur pour FD001`
 3. **Au moins une revue d'un autre contributeur code avant merge** (les 3 personnes qui poussent du code se relisent mutuellement — même une relecture rapide vaut mieux qu'aucune : c'est ce qui donne un historique défendable en entretien).
 4. Merge en **squash** (une PR = un commit propre sur `main`) sauf si l'historique détaillé de la branche a un intérêt particulier.
 5. Supprimer la branche après merge.
-6. Mettre à jour `docs/STATUS.md` et `docs/journal/<prenom>.md` dans la même PR — créer ce dernier si c'est ta première contribution (voir "Traçabilité" ci-dessous).
+6. Mettre à jour `docs/STATUS.md` dans la même PR (voir "Traçabilité" ci-dessous). Si la PR change une décision déjà actée dans une ADR, ajouter une nouvelle ADR qui la remplace plutôt que d'éditer l'ancienne (voir "Décisions d'architecture" ci-dessous).
 
 ## Pas de changement hors-sujet, ni de régression déguisée en "autre idée"
 
@@ -48,11 +48,21 @@ Si ta PR **remplace** une solution déjà validée (par exemple une autre approc
 
 Pour le détail technique (quel commit, par qui, quand), `git log` et l'historique des PR sur GitHub font foi — pas besoin de le retracer ailleurs.
 
-Ce que git ne capture pas — le contexte humain — vit dans deux fichiers, à tenir à jour :
-- [`docs/STATUS.md`](docs/STATUS.md) : état collectif du projet (phase actuelle, dernière modification significative, pourquoi, impact).
-- `docs/journal/<prenom>.md` : ton propre historique (ce que tu as fait, compris, où tu en es) — créé à ta première contribution, pas avant (voir [`CONTRIBUTORS.md`](CONTRIBUTORS.md) pour la liste de l'équipe).
+Ce que git ne capture pas — le contexte collectif : pourquoi ce changement, quel impact — vit dans [`docs/STATUS.md`](docs/STATUS.md). Une session Claude Code le lit en début de session pour te resituer sans tout réexpliquer, et le met à jour en fin de session si le travail était significatif.
 
-Une session Claude Code lit ces deux sources en début de session pour te resituer sans tout réexpliquer, et les met à jour en fin de session si le travail était significatif.
+On a testé en plus un journal individuel par personne (ce que chacun avait fait/compris) et on l'a retiré : ça contredisait notre propre règle de ne jamais déduire le niveau de quelqu'un d'un historique écrit, et un historique de compréhension rédigé par un assistant encourageant dérive vers la complaisance avec le temps. Détail dans [`docs/decisions/0003-abandon-journaux-individuels.md`](docs/decisions/0003-abandon-journaux-individuels.md).
+
+## Décisions d'architecture (ADR)
+
+Pour les décisions coûteuses à défaire, ou dont quelqu'un se demandera "pourquoi on a fait ça ?" dans trois mois — pas pour du travail courant. Format volontairement léger, à l'échelle d'une équipe de 6, pas le processus lourd d'une grande entreprise.
+
+**Quand en écrire une** : un choix qui engage plusieurs phases (ex. architecture de modèle retenue, choix de base de données en Phase 6), un choix technique difficile à défaire, ou tout changement qui remplace une décision déjà actée (voir Règle 8 dans [`AGENTS.md`](AGENTS.md)).
+
+**Où** : [`docs/decisions/NNNN-titre-court.md`](docs/decisions/), numérotées dans l'ordre à partir de 0001, en partant du gabarit [`docs/decisions/template.md`](docs/decisions/template.md).
+
+**Règle d'or : une ADR ne se réécrit jamais après coup.** Si une décision change, on écrit une nouvelle ADR qui explique le changement, et on passe le statut de l'ancienne à "Remplacée par ADR-00XX" — jamais une édition silencieuse. C'est ce qui rend l'historique du projet crédible sur la durée : personne ne peut réécrire discrètement le passé pour qu'il ait l'air plus malin qu'il ne l'était, ce qui compte particulièrement ici puisque ce dépôt sera public en portfolio.
+
+**Ton** : factuel, vérifiable, jamais complaisant — voir [`AGENTS.md`](AGENTS.md), section "Ton d'écriture". Toute ADR liste au moins une conséquence négative ou un coût accepté.
 
 ## Definition of Done avant d'ouvrir une PR
 
