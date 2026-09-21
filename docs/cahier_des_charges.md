@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | **Statut** | Document de référence — mis à jour à chaque fin de phase |
-| **Porteur** | Matisse (contributeur technique unique dans une équipe de 5) |
+| **Équipe** | 6 personnes — voir [`CONTRIBUTORS.md`](../CONTRIBUTORS.md) pour qui est qui |
 | **Dépôt technique** | GitHub (ce fichier + `docs/0X_phase.md`) |
 | **Coordination équipe** | Notion (résumés vulgarisés uniquement) |
 | **Sources** | Brief pédagogique original ([docs/00_brief_original.md](00_brief_original.md), Digityser / P. Lemaistre) + revue de 9 dépôts GitHub publics traitant du même sujet + Saxena et al. (2008) + cours *Advanced Databases*, Leçon 1 |
@@ -18,7 +18,7 @@ Le brief pédagogique original donne un objectif et un découpage en 5 phases, m
 
 1. **Le brief original** (contexte métier, phases 1 à 5, pré-requis).
 2. **Une moyenne des pratiques observées sur 9 dépôts GitHub publics** traitant du même problème (RUL sur C-MAPSS), pour vérifier que le périmètre du brief correspond à ce qui se fait réellement dans l'état de l'art "communautaire" — et repérer les points où plusieurs projets convergent (donc probablement incontournables) vs les points optionnels.
-3. **La Phase 6 bonus** (plateforme MLOps) définie par Matisse, et la méthodologie de modélisation de données du cours *Advanced Databases* (Leçon 1, Section 3-4), pour que le schéma de base de données de la Phase 6 soit conçu, et pas seulement codé.
+3. **La Phase 6 bonus** (plateforme MLOps), et la méthodologie de modélisation de données du cours *Advanced Databases* (Leçon 1, Section 3-4), pour que le schéma de base de données de la Phase 6 soit conçu, et pas seulement codé.
 
 Ce document ne remplace pas les `docs/0X_phase.md` : c'est la carte du territoire, chaque phase aura son propre document technique détaillé une fois validée.
 
@@ -28,7 +28,7 @@ Ce document ne remplace pas les `docs/0X_phase.md` : c'est la carte du territoir
 
 **Objectif technique** : construire un pipeline complet de prédiction de RUL (Remaining Useful Life) sur le dataset NASA C-MAPSS, du nettoyage des signaux capteurs jusqu'à une plateforme servant des prédictions en quasi temps réel, avec explicabilité et suivi de dérive.
 
-**Objectif pédagogique** (le vrai objectif, sur lequel le projet sera jugé) : produire une pièce de portfolio défendable en entretien technique SWE (big tech), qui démontre :
+**Objectif pédagogique** (le vrai objectif, sur lequel le projet sera jugé) : produire une pièce de portfolio technique défendable en entretien (SWE, Data, ML — les objectifs de carrière varient selon les membres de l'équipe), qui démontre :
 - une compréhension réelle des séries temporelles et du ML appliqué à un problème métier à coût asymétrique (pas juste "j'ai fait tourner un LSTM") ;
 - une rigueur d'ingénierie logicielle (code versionné, testé, documenté, architecture de service) — pas seulement un notebook de data science ;
 - une capacité à concevoir un schéma de données avant de l'implémenter (méthodologie ER → relationnel vue en cours) ;
