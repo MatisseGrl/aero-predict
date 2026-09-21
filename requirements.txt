@@ -1,0 +1,25 @@
+# Phase 0-2 : EDA, préparation des données, target engineering
+pandas
+numpy
+scipy
+matplotlib
+seaborn
+jupyter
+
+# Phase 3 : modélisation ML classique + deep learning
+scikit-learn
+xgboost
+lightgbm
+torch
+
+# Phase 4-5 : explicabilité
+shap
+
+# Phase 5 : dashboard
+streamlit
+
+# Phase 6 : plateforme MLOps (bonus)
+fastapi
+uvicorn
+sqlalchemy
+mlflow
