@@ -216,3 +216,15 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- Aero Predict — project specific ---
+
+# MLflow experiment tracking (Phase 3+)
+mlruns/
+mlartifacts/
+
+# Trained model artifacts (exported models, checkpoints) — regenerated from code, not versioned
+*.pt
+*.pth
+*.pkl
+*.joblib
