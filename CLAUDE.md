@@ -52,12 +52,19 @@ Avant de coder le schéma SQL (`engines` / `sensor_readings` / `predictions`), m
 - **Phase 0 (état de l'art) : pas encore commencée.**
 - Un notebook exploratoire pré-existant (`notebooks/exploration/baseline_fd001_v0.ipynb`) a établi un **benchmark empirique** sur FD001 avant la mise en place de ce process : Random Forest, RMSE test = 18.97, Score NASA test = 1053.9 (détail dans le README). Il n'a suivi ni la normalisation, ni le lissage, ni la documentation par phase — il sert de référence chiffrée à battre, pas de code à réutiliser tel quel.
 
+## Workflow git en équipe
+
+Équipe de 6, dont **3 personnes poussent du code**. `main` est protégée (PR obligatoire, pas de push direct). Convention de branches, de commits et process de revue : voir [`CONTRIBUTING.md`](CONTRIBUTING.md). En résumé : une branche par tâche (`phase-0X/description`), au moins une revue avant merge, squash merge sur `main`.
+
 ## Structure du repo
 
 ```
 aero-predict/
 ├── CLAUDE.md                  # ce fichier
+├── CONTRIBUTING.md            # workflow git d'équipe (branches, commits, PR)
 ├── README.md                  # vue d'ensemble, mis à jour à chaque phase
+├── .github/
+│   └── PULL_REQUEST_TEMPLATE.md
 ├── docs/
 │   ├── cahier_des_charges.md  # référence complète du projet
 │   ├── 00_brief_original.md   # brief pédagogique source (Digityser)
