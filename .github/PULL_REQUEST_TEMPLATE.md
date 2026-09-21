@@ -24,4 +24,5 @@ Si cette PR n'en remplace pas une autre, écrire "N/A".
 - [ ] Le code est commenté et docstringé
 - [ ] La validation ci-dessus est concluante
 - [ ] Si cette PR clôt une phase : `docs/0X_phase.md` est à jour et le résumé Notion est rédigé
-- [ ] `docs/STATUS.md` et `docs/journal/<ton-prenom>.md` sont à jour
+- [ ] `docs/STATUS.md` est à jour
+- [ ] Si cette PR remplace une décision déjà actée : une nouvelle ADR a été ajoutée dans `docs/decisions/` (l'ancienne n'a pas été éditée)

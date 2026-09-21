@@ -1,6 +1,8 @@
 # État du projet — Aero Predict
 
-Mis à jour après chaque changement significatif. Sert de point d'entrée pour savoir où en est le projet collectivement et ce qui vient de se passer — lu automatiquement en début de session par les assistants IA (voir [`AGENTS.md`](../AGENTS.md), section "Suivi de l'avancement"). Pour le détail de qui a poussé quel commit, `git log` / l'historique GitHub font déjà foi ; ce fichier donne le contexte que le git log ne donne pas (pourquoi, quel impact).
+Mis à jour après chaque changement significatif. Sert de point d'entrée pour savoir où en est le projet collectivement et ce qui vient de se passer — lu automatiquement en début de session par les assistants IA (voir [`AGENTS.md`](../AGENTS.md), section "Suivi de l'avancement et des décisions"). Pour le détail de qui a poussé quel commit, `git log` / l'historique GitHub font déjà foi ; ce fichier donne le contexte que le git log ne donne pas (pourquoi, quel impact). Les décisions structurantes (pas le travail courant) vivent dans [`docs/decisions/`](decisions/), jamais réécrites une fois actées.
+
+Écriture factuelle uniquement — pas d'opinion non étayée, pas de réécriture silencieuse d'une entrée déjà publiée (voir [`AGENTS.md`](../AGENTS.md), section "Ton d'écriture").
 
 ## Phase actuelle
 
@@ -9,14 +11,20 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 ## Dernière modification
 
 - **Qui** : Matisse (avec Claude Code)
-- **Date** : 2026-09-21
-- **Quoi** : mise en place du système de suivi d'avancement — ce fichier et les journaux personnels dans `docs/journal/`.
-- **Pourquoi** : pour que n'importe quel membre de l'équipe reprenne une session Claude Code sur ce projet sans perdre le fil (ni le sien, ni celui du projet), et pour éviter les pushs hors-sujet en gardant une trace explicite de pourquoi chaque changement a été fait.
-- **Impact** : aucun sur le pipeline ML/données ; c'est un outil de process.
+- **Date** : 2026-09-22
+- **Quoi** : suppression de `docs/journal/` (5 fichiers vides + celui de Matisse) et introduction de `docs/decisions/` (ADR). Détail et raisons complètes : [ADR-0003](decisions/0003-abandon-journaux-individuels.md).
+- **Pourquoi** : les journaux individuels contredisaient une règle déjà actée (ne jamais déduire le niveau de quelqu'un d'un historique écrit) et risquaient de dériver vers la complaisance, rédigés par un assistant dont la consigne est d'être encourageant — problématique pour un dépôt public en portfolio.
+- **Impact** : aucun sur le pipeline ML/données ; réduction du nombre de fichiers de process à maintenir.
 
 ## Historique
 
 <!-- Nouvelle entrée en haut, même format que ci-dessus (Qui / Date / Quoi / Pourquoi / Impact). -->
+
+### 2026-09-21 — Mise en place du suivi d'avancement (journaux individuels, depuis retirés — voir ADR-0003)
+- **Qui** : Matisse (avec Claude Code)
+- **Quoi** : ce fichier et un journal personnel par membre de l'équipe dans `docs/journal/`.
+- **Pourquoi** : pour que n'importe quel membre de l'équipe reprenne une session Claude Code sans perdre le fil, et pour garder une trace de pourquoi chaque changement a été fait.
+- **Impact** : aucun sur le pipeline ML/données. Le volet "journaux individuels" a été retiré le lendemain — voir l'entrée du 2026-09-22 ci-dessus.
 
 ### 2026-09-21 — Fondations du projet
 - **Qui** : Matisse (avec Claude Code)

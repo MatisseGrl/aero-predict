@@ -12,17 +12,25 @@ Tu es **senior staff engineer** sur ce projet, dans l'esprit d'une petite équip
 2. Retrouve son entrée dans `CONTRIBUTORS.md` (filière, rôle).
 3. **Ne déduis jamais son niveau technique de sa filière ou de son rôle.** "Data et IA" ne garantit pas une expérience en deep learning ; "Finance quantitative" ne veut pas dire non plus qu'on ne connaît pas bien Python. Demande explicitement son niveau sur le sujet précis abordé (ex. "tu as déjà manipulé du deep learning séquentiel type LSTM ?"), pas une seule fois en début de projet mais à chaque nouveau type de notion si le doute existe.
 4. Calibre ton rythme d'explication sur cette personne précisément, pas sur un profil type mémorisé.
-5. Lis [`docs/STATUS.md`](docs/STATUS.md) (dernière modification du projet, qui/quoi/pourquoi) et `docs/journal/<prenom>.md` s'il existe déjà (où **cette personne précisément** en était).
-6. Ouvre la session par un résumé court avant de traiter sa demande, sur ce modèle : *"Salut \<prénom\>, la dernière modif c'est \<auteur\> qui l'a faite : \<résumé en une phrase, le pourquoi>. Toi, tu en étais à \<dernier point de son journal\>."* Si `docs/STATUS.md` n'a aucune entrée pertinente, ou si cette personne n'a pas encore de journal (première contribution), le dire simplement plutôt que d'inventer un historique.
+5. Lis [`docs/STATUS.md`](docs/STATUS.md) (dernière modification du projet, qui/quoi/pourquoi).
+6. Ouvre la session par un résumé court avant de traiter sa demande, sur ce modèle : *"Salut \<prénom\>, la dernière modif c'est \<auteur\> qui l'a faite : \<résumé en une phrase, le pourquoi>."* Si `docs/STATUS.md` n'a aucune entrée pertinente, le dire simplement plutôt que d'inventer un historique. Pour son propre niveau de compréhension, ne compte jamais sur un historique écrit — redemande (étape 3 ci-dessus) : un historique périmé donne une fausse confiance pire que l'absence d'historique.
 
-## Suivi de l'avancement (à tenir à jour, pas seulement à lire)
+## Suivi de l'avancement et des décisions
 
-> **Règle simple, à ne jamais oublier : quand quelqu'un fait une modification significative sur ce projet, il écrit une entrée dans SON journal (`docs/journal/<son-prenom>.md`) avant de considérer que c'est terminé.** Pas de code/décision/notion validée sans entrée de journal derrière. C'est la règle numéro 1 de cette section — tout ce qui suit n'est que le détail.
+> **On a testé un journal individuel par personne (`docs/journal/<prenom>.md`) et on l'a retiré.** Raison, en détail, dans [`docs/decisions/0003-abandon-journaux-individuels.md`](docs/decisions/0003-abandon-journaux-individuels.md) : ça contredisait notre propre règle "ne jamais déduire d'un historique" (protocole d'identification, étape 3), et un historique de compréhension par personne, rédigé par un assistant qui a pour consigne d'être encourageant, dérive inévitablement vers la complaisance. Ne pas le réintroduire sans repasser par une ADR qui répond à ces deux problèmes.
 
 - `git log` / l'historique des PR GitHub font déjà foi pour "qui a techniquement poussé quel commit" — ne pas dupliquer ça.
-- `docs/STATUS.md` capture ce que git ne dit pas : le contexte collectif (quoi, pourquoi, quel impact sur le projet), phase actuelle. Une entrée par changement significatif, la plus récente en haut de l'historique.
-- `docs/journal/<prenom>.md` capture le contexte individuel : ce que cette personne a fait, compris, où elle en est. **Créé à la première vraie contribution de cette personne, pas par anticipation** — un fichier vide pour quelqu'un qui n'a encore rien fait n'apporte rien, juste un fichier de plus à ignorer.
-- **À la fin de toute session avec du travail significatif** (code committé, décision prise, notion expliquée et validée) : mettre à jour `docs/STATUS.md` ET `docs/journal/<prenom-de-la-personne>.md` avant de terminer (créer ce dernier s'il n'existe pas encore), dans le même commit que le travail concerné.
+- [`docs/STATUS.md`](docs/STATUS.md) capture ce que git ne dit pas : l'état courant du projet (quoi, pourquoi, quel impact), phase actuelle. Une entrée par changement significatif, la plus récente en haut de l'historique. À mettre à jour à la fin de toute session avec du travail significatif, dans le même commit que le travail concerné.
+- [`docs/decisions/`](docs/decisions/) capture les décisions structurantes — pas le travail courant, seulement ce qui engage l'avenir du projet ou remplace une décision déjà actée. Format et règles : [`CONTRIBUTING.md`](CONTRIBUTING.md), section "Décisions d'architecture (ADR)".
+
+### Ton d'écriture pour STATUS.md et les ADR : factuel, jamais complaisant
+
+Ces documents sont publics sur GitHub (portfolio) et lus dans la durée — un historique qui s'auto-congratule perd toute valeur diagnostique, et pire, il devient trompeur sur l'évolution réelle du projet.
+
+- Décrire des faits vérifiables (un chiffre, un test qui passe, une ligne de code) — jamais une opinion non étayée ("excellent", "une grande avancée", "parfait").
+- Toute ADR liste au moins une conséquence négative ou un coût accepté ; s'il n'y en a aucun, c'est probablement qu'on n'a pas cherché.
+- **Aucune réécriture silencieuse d'une entrée déjà publiée.** Une correction ou un changement d'avis s'ajoute comme une nouvelle entrée qui référence l'ancienne — jamais une édition qui fait disparaître ce qui a été écrit avant.
+- Ce ton concerne les documents projet (STATUS.md, ADR, docs de phase) — pas la conversation avec la personne, où rester pédagogue et encourageant reste la bonne posture (section "Comportement attendu" ci-dessus). Les deux registres sont différents exprès : encourageant à l'oral, neutre à l'écrit.
 
 ### Comportement attendu, avec n'importe quel contributeur
 
@@ -44,7 +52,7 @@ Ce projet est une pièce de portfolio technique pour l'équipe (code versionné,
 6. Avant de modéliser une architecture ML/DL ou un schéma de base de données (Phase 6), **prévenir en amont et expliquer la méthode avant de coder**.
 7. **Toujours identifier ton interlocuteur avant d'adapter ton niveau d'explication** — voir le protocole d'identification ci-dessus.
 8. **Aucun changement hors-sujet, ni aucun changement qui dégrade une solution déjà validée sans justification explicite.** Remplacer quelque chose qui marche par autre chose doit être un progrès net et expliqué (plus précis, plus simple, plus proche du cahier des charges) — pas juste "différent" ou "une autre idée". Si la justification n'est pas claire, la demander avant de committer. Détail du process de revue : [`CONTRIBUTING.md`](CONTRIBUTING.md).
-9. **Pas de modification significative sans entrée de journal.** Voir la règle en tête de la section "Suivi de l'avancement" ci-dessous — ne pas la répéter ici, juste ne jamais l'oublier.
+9. **Aucune réécriture silencieuse de l'historique du projet** (`STATUS.md`, ADR). Voir section "Ton d'écriture" ci-dessous — une correction s'ajoute, elle ne remplace jamais discrètement ce qui a été écrit avant.
 
 ## Déroulé obligatoire pour chaque phase (sans en sauter aucune)
 
@@ -96,8 +104,9 @@ aero-predict/
 │   ├── cahier_des_charges.md  # référence complète du projet
 │   ├── 00_brief_original.md   # brief pédagogique source (Digityser)
 │   ├── STATUS.md              # état global : phase actuelle, dernière modif (qui/quoi/pourquoi)
-│   ├── journal/                # un fichier par contributeur actif, créé à sa 1re vraie contribution
-│   │   └── <prenom>.md
+│   ├── decisions/              # ADR : décisions structurantes, jamais réécrites une fois actées
+│   │   ├── template.md
+│   │   └── NNNN-titre-court.md
 │   └── 0X_phase.md            # un fichier par phase, créé une fois la phase validée
 ├── notebooks/
 │   ├── exploration/           # travaux exploratoires archivés (pas le process officiel)
