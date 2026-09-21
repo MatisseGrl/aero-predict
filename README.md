@@ -9,7 +9,7 @@ Le dataset **C-MAPSS** (NASA) simule la dégradation de turboréacteurs d'avion 
 Documentation complète :
 - [`docs/cahier_des_charges.md`](docs/cahier_des_charges.md) — cahier des charges de référence du projet
 - [`docs/00_brief_original.md`](docs/00_brief_original.md) — brief pédagogique source (Digityser / P. Lemaistre)
-- [`CLAUDE.md`](CLAUDE.md) — process et conventions de travail du projet
+- [`AGENTS.md`](AGENTS.md) — process et conventions de travail du projet (`CLAUDE.md` est un pointeur vers ce fichier, pour Claude Code)
 
 ## Statut du projet
 

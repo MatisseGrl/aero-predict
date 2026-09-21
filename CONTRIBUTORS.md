@@ -1,6 +1,6 @@
 # Équipe — Aero Predict
 
-Référence utilisée par [`CLAUDE.md`](CLAUDE.md) pour savoir qui contribue au projet. Sert à identifier un interlocuteur, pas à présumer son niveau technique — voir la section "Protocole d'identification" de `CLAUDE.md` : le rôle/la filière ne dit rien sur l'expérience réelle avec un sujet donné, ça se demande.
+Référence utilisée par [`AGENTS.md`](AGENTS.md) pour savoir qui contribue au projet. Sert à identifier un interlocuteur, pas à présumer son niveau technique — voir la section "Protocole d'identification" de `AGENTS.md` : le rôle/la filière ne dit rien sur l'expérience réelle avec un sujet donné, ça se demande.
 
 | Initiales | Nom | Filière | Rôle projet | Email |
 |---|---|---|---|---|

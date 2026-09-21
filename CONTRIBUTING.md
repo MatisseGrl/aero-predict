@@ -1,6 +1,6 @@
 # Workflow git — Aero Predict
 
-Équipe de 6, dont 3 personnes poussent du code sur ce dépôt. `main` est protégée : personne ne pousse dessus directement, tout passe par une Pull Request (PR). Voir [`CLAUDE.md`](CLAUDE.md) pour le process de travail par phase (explication → implémentation → validation → doc → résumé équipe).
+Équipe de 6, dont 3 personnes poussent du code sur ce dépôt. `main` est protégée : personne ne pousse dessus directement, tout passe par une Pull Request (PR). Voir [`AGENTS.md`](AGENTS.md) pour le process de travail par phase (explication → implémentation → validation → doc → résumé équipe).
 
 ## Branches
 
