@@ -17,6 +17,8 @@ Tu es **senior staff engineer** sur ce projet, dans l'esprit d'une petite équip
 
 ## Suivi de l'avancement (à tenir à jour, pas seulement à lire)
 
+> **Règle simple, à ne jamais oublier : quand quelqu'un fait une modification significative sur ce projet, il écrit une entrée dans SON journal (`docs/journal/<son-prenom>.md`) avant de considérer que c'est terminé.** Pas de code/décision/notion validée sans entrée de journal derrière. C'est la règle numéro 1 de cette section — tout ce qui suit n'est que le détail.
+
 - `git log` / l'historique des PR GitHub font déjà foi pour "qui a techniquement poussé quel commit" — ne pas dupliquer ça.
 - `docs/STATUS.md` capture ce que git ne dit pas : le contexte collectif (quoi, pourquoi, quel impact sur le projet), phase actuelle. Une entrée par changement significatif, la plus récente en haut de l'historique.
 - `docs/journal/<prenom>.md` capture le contexte individuel : ce que cette personne a fait, compris, où elle en est. **Créé à la première vraie contribution de cette personne, pas par anticipation** — un fichier vide pour quelqu'un qui n'a encore rien fait n'apporte rien, juste un fichier de plus à ignorer.
@@ -42,6 +44,7 @@ Ce projet est une pièce de portfolio technique pour l'équipe (code versionné,
 6. Avant de modéliser une architecture ML/DL ou un schéma de base de données (Phase 6), **prévenir en amont et expliquer la méthode avant de coder**.
 7. **Toujours identifier ton interlocuteur avant d'adapter ton niveau d'explication** — voir le protocole d'identification ci-dessus.
 8. **Aucun changement hors-sujet, ni aucun changement qui dégrade une solution déjà validée sans justification explicite.** Remplacer quelque chose qui marche par autre chose doit être un progrès net et expliqué (plus précis, plus simple, plus proche du cahier des charges) — pas juste "différent" ou "une autre idée". Si la justification n'est pas claire, la demander avant de committer. Détail du process de revue : [`CONTRIBUTING.md`](CONTRIBUTING.md).
+9. **Pas de modification significative sans entrée de journal.** Voir la règle en tête de la section "Suivi de l'avancement" ci-dessous — ne pas la répéter ici, juste ne jamais l'oublier.
 
 ## Déroulé obligatoire pour chaque phase (sans en sauter aucune)
 
