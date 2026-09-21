@@ -32,10 +32,27 @@ Exemple : `feat: ajoute la normalisation par capteur pour FD001`
 ## Pull Requests
 
 1. Ouvrir la PR dès que la branche est prête, en ciblant `main`.
-2. Remplir le template de PR (rempli automatiquement à l'ouverture).
+2. Remplir le template de PR (rempli automatiquement à l'ouverture), **y compris le champ de justification** (voir ci-dessous).
 3. **Au moins une revue d'un autre contributeur code avant merge** (les 3 personnes qui poussent du code se relisent mutuellement — même une relecture rapide vaut mieux qu'aucune : c'est ce qui donne un historique défendable en entretien).
 4. Merge en **squash** (une PR = un commit propre sur `main`) sauf si l'historique détaillé de la branche a un intérêt particulier.
 5. Supprimer la branche après merge.
+6. Mettre à jour `docs/STATUS.md` et `docs/journal/<prenom>.md` dans la même PR (voir "Traçabilité" ci-dessous).
+
+## Pas de changement hors-sujet, ni de régression déguisée en "autre idée"
+
+Une PR doit se rattacher explicitement à une phase ou un objectif du [cahier des charges](docs/cahier_des_charges.md) — pas de changement qui n'a rien à voir avec ce sur quoi l'équipe travaille actuellement.
+
+Si ta PR **remplace** une solution déjà validée (par exemple une autre approche de feature engineering, un autre modèle, un autre choix d'architecture), ce n'est pas suffisant qu'elle soit "différente" ou "une autre idée qui te semble bien" : il faut que ce soit un **progrès net et démontré** — un chiffre qui s'améliore (RMSE, score NASA), une simplification réelle, ou un rapprochement du cahier des charges. Sinon la revue doit la refuser et demander la justification manquante. C'est le champ "Justification" du template de PR — ne pas le laisser vide ou vague ("j'ai trouvé ça mieux").
+
+## Traçabilité : qui a fait quoi
+
+Pour le détail technique (quel commit, par qui, quand), `git log` et l'historique des PR sur GitHub font foi — pas besoin de le retracer ailleurs.
+
+Ce que git ne capture pas — le contexte humain — vit dans deux fichiers, à tenir à jour :
+- [`docs/STATUS.md`](docs/STATUS.md) : état collectif du projet (phase actuelle, dernière modification significative, pourquoi, impact).
+- `docs/journal/<prenom>.md` : ton propre historique (ce que tu as fait, compris, où tu en es) — un fichier par personne, voir [`CONTRIBUTORS.md`](CONTRIBUTORS.md).
+
+Une session Claude Code lit ces deux sources en début de session pour te resituer sans tout réexpliquer, et les met à jour en fin de session si le travail était significatif.
 
 ## Definition of Done avant d'ouvrir une PR
 
