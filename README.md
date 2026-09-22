@@ -45,7 +45,10 @@ Python · scikit-learn, XGBoost, LightGBM · PyTorch · SHAP · FastAPI · SQLit
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
+pre-commit install
 ```
+
+La dernière commande active le hook local qui nettoie automatiquement les outputs des notebooks avant chaque commit (détail : [`CONTRIBUTING.md`](CONTRIBUTING.md)).
 
 ## Organisation
 

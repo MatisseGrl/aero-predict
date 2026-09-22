@@ -95,6 +95,7 @@ Avant de coder le schéma SQL (`engines` / `sensor_readings` / `predictions`), m
 aero-predict/
 ├── AGENTS.md                  # ce fichier — source de vérité (standard agents.md)
 ├── CLAUDE.md                  # pointeur : `@AGENTS.md` (import Claude Code)
+├── .pre-commit-config.yaml    # hook git local : nettoie les outputs des notebooks avant commit
 ├── CONTRIBUTING.md            # workflow git d'équipe (branches, commits, PR)
 ├── CONTRIBUTORS.md            # qui est qui dans l'équipe
 ├── README.md                  # vue d'ensemble, mis à jour à chaque phase
