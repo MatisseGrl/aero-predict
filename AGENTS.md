@@ -87,7 +87,7 @@ Avant de coder le schéma SQL (`engines` / `sensor_readings` / `predictions`), m
 
 ## Workflow git en équipe
 
-Équipe de 6, dont **3 personnes poussent du code**. `main` est protégée (PR obligatoire, pas de push direct). Convention de branches, de commits et process de revue : voir [`CONTRIBUTING.md`](CONTRIBUTING.md). En résumé : une branche par tâche (`phase-0X/description`), au moins une revue avant merge, squash merge sur `main`.
+Équipe de 6, dont **3 personnes poussent du code**. `main` **n'est pas protégée techniquement** — GitHub Free n'applique pas les règles de protection sur un dépôt privé (voir [ADR-0004](docs/decisions/0004-pas-de-protection-technique-main.md)). Le workflow (branche par tâche, PR, revue) est une **convention que chacun s'engage à suivre**, pas une barrière technique : un push direct sur `main` reste possible, il ne doit juste jamais arriver. Détail : voir [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Structure du repo
 

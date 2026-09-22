@@ -1,6 +1,6 @@
 # Workflow git — Aero Predict
 
-Équipe de 6, dont 3 personnes poussent du code sur ce dépôt. `main` est protégée : personne ne pousse dessus directement, tout passe par une Pull Request (PR). Voir [`AGENTS.md`](AGENTS.md) pour le process de travail par phase (explication → implémentation → validation → doc → résumé équipe).
+Équipe de 6, dont 3 personnes poussent du code sur ce dépôt. `main` **n'est pas protégée techniquement** — GitHub Free n'applique pas les règles de protection de branche sur un dépôt privé (voir [ADR-0004](docs/decisions/0004-pas-de-protection-technique-main.md)). Le principe reste le même — personne ne pousse dessus directement, tout passe par une Pull Request (PR) — mais c'est une **discipline d'équipe**, pas une barrière technique : rien n'empêche un push direct de passer si quelqu'un ne suit pas la règle. Voir [`AGENTS.md`](AGENTS.md) pour le process de travail par phase (explication → implémentation → validation → doc → résumé équipe).
 
 ## Configuration locale (une fois, après avoir cloné le repo)
 
@@ -13,7 +13,7 @@ La deuxième commande active un hook git local (`nbstripout`) qui nettoie automa
 
 ## Branches
 
-- `main` — toujours stable, toujours fonctionnelle. Protégée : push direct interdit, merge uniquement via PR.
+- `main` — toujours stable, toujours fonctionnelle. Push direct interdit **par convention** (pas par blocage technique, voir ADR-0004) : merge uniquement via PR.
 - Une branche par tâche, créée depuis `main` à jour :
 
 ```
@@ -69,7 +69,7 @@ Pour les décisions coûteuses à défaire, ou dont quelqu'un se demandera "pour
 
 **Où** : [`docs/decisions/NNNN-titre-court.md`](docs/decisions/), numérotées dans l'ordre à partir de 0001, en partant du gabarit [`docs/decisions/template.md`](docs/decisions/template.md).
 
-**Règle d'or : une ADR ne se réécrit jamais après coup.** Si une décision change, on écrit une nouvelle ADR qui explique le changement, et on passe le statut de l'ancienne à "Remplacée par ADR-00XX" — jamais une édition silencieuse. C'est ce qui rend l'historique du projet crédible sur la durée : personne ne peut réécrire discrètement le passé pour qu'il ait l'air plus malin qu'il ne l'était, ce qui compte particulièrement ici puisque ce dépôt sera public en portfolio.
+**Règle d'or : une ADR ne se réécrit jamais après coup.** Si une décision change, on écrit une nouvelle ADR qui explique le changement, et on passe le statut de l'ancienne à "Remplacée par ADR-00XX" — jamais une édition silencieuse. C'est ce qui rend l'historique du projet crédible sur la durée : personne ne peut réécrire discrètement le passé pour qu'il ait l'air plus malin qu'il ne l'était, ce qui compte particulièrement ici puisque ce dépôt est destiné à être montré en entretien/soutenance (privé pour l'instant, partagé par invitation — voir [ADR-0004](docs/decisions/0004-pas-de-protection-technique-main.md) sur pourquoi il n'est pas encore public).
 
 **Ton** : factuel, vérifiable, jamais complaisant — voir [`AGENTS.md`](AGENTS.md), section "Ton d'écriture". Toute ADR liste au moins une conséquence négative ou un coût accepté.
 
@@ -82,9 +82,8 @@ Reprend la Definition of Done par phase de [`docs/cahier_des_charges.md`](docs/c
 - La validation (visualisation ou métrique) est concluante.
 - Si la PR clôt une phase : `docs/0X_phase.md` est à jour et le résumé Notion est rédigé.
 
-## Configuration de la protection de `main` (à faire une fois, côté admin du repo)
+## `main` n'est pas protégée techniquement — pourquoi, et ce que ça change
 
-Sur GitHub : **Settings → Branches → Add branch protection rule** sur `main` :
-- "Require a pull request before merging" activé.
-- "Require approvals" = 1.
-- "Do not allow bypassing the above settings" activé (sinon les admins peuvent quand même pousser directement).
+Un ruleset GitHub a été créé (Require a pull request + 1 approbation + blocage des force-push), mais **GitHub désactive l'application des rulesets sur les dépôts privés hors GitHub Pro/Team**. Le ruleset existe, il est juste inactif tant que le repo reste privé sur un compte gratuit. Raisons du choix de rester privé plutôt que payer ou passer public maintenant : [ADR-0004](docs/decisions/0004-pas-de-protection-technique-main.md).
+
+**Ce que ça veut dire concrètement** : rien n'empêche techniquement quelqu'un de faire `git push origin main` directement. La règle "toujours passer par une PR" ne tient que parce que chaque personne qui code s'engage à la respecter — **ne poussez jamais directement sur `main`, même par accident, même pour un "petit" changement.** Si le repo passe un jour public ou sur GitHub Pro, réactiver le ruleset déjà créé dans Settings → Rules → Rulesets, il n'y a rien à reconfigurer.

@@ -12,13 +12,19 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-09-22
-- **Quoi** : ajout d'un hook git local (`pre-commit` + `nbstripout`, voir `.pre-commit-config.yaml`) qui nettoie automatiquement les outputs des cellules de notebook avant chaque commit. Testé en local (notebook avec output → outputs vidés au commit, confirmé).
-- **Pourquoi** : sans ça, un notebook Jupyter exécuté par 3 personnes différentes produit des diffs énormes et des conflits git sans rapport avec le vrai changement de code — dette technique identifiée avant même la Phase 0.
-- **Impact** : chaque personne doit lancer `pre-commit install` une fois après avoir cloné/pull (documenté dans `CONTRIBUTING.md`/`README.md`) ; aucun changement sur le pipeline ML/données.
+- **Quoi** : correction de `AGENTS.md`/`CONTRIBUTING.md`, qui affirmaient à tort que `main` était protégée techniquement. En tentant de configurer un ruleset GitHub, découverte que GitHub Free n'applique pas ces règles sur un dépôt privé — le ruleset créé est inactif. Décision : rester privé, sans protection technique, discipline d'équipe à la place. Détail : [ADR-0004](decisions/0004-pas-de-protection-technique-main.md).
+- **Pourquoi** : ne pas laisser une doc affirmer une protection qui n'existe pas — exactement le genre de fausse confiance qu'on avait identifié comme dangereux avec les journaux individuels (ADR-0003), ici appliqué à une garantie technique plutôt qu'à un historique.
+- **Impact** : aucune barrière technique contre un push direct sur `main` — repose entièrement sur le fait que les 3 personnes qui codent suivent la convention documentée dans `CONTRIBUTING.md`.
 
 ## Historique
 
 <!-- Nouvelle entrée en haut, même format que ci-dessus (Qui / Date / Quoi / Pourquoi / Impact). -->
+
+### 2026-09-22 — Hook pre-commit (nbstripout)
+- **Qui** : Matisse (avec Claude Code)
+- **Quoi** : ajout d'un hook git local (`pre-commit` + `nbstripout`, voir `.pre-commit-config.yaml`) qui nettoie automatiquement les outputs des cellules de notebook avant chaque commit. Testé en local (notebook avec output → outputs vidés au commit, confirmé).
+- **Pourquoi** : sans ça, un notebook Jupyter exécuté par 3 personnes différentes produit des diffs énormes et des conflits git sans rapport avec le vrai changement de code — dette technique identifiée avant même la Phase 0.
+- **Impact** : chaque personne doit lancer `pre-commit install` une fois après avoir cloné/pull (documenté dans `CONTRIBUTING.md`/`README.md`) ; aucun changement sur le pipeline ML/données.
 
 ### 2026-09-22 — Abandon des journaux individuels
 - **Qui** : Matisse (avec Claude Code)
