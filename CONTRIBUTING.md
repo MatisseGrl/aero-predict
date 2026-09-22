@@ -2,6 +2,15 @@
 
 Équipe de 6, dont 3 personnes poussent du code sur ce dépôt. `main` est protégée : personne ne pousse dessus directement, tout passe par une Pull Request (PR). Voir [`AGENTS.md`](AGENTS.md) pour le process de travail par phase (explication → implémentation → validation → doc → résumé équipe).
 
+## Configuration locale (une fois, après avoir cloné le repo)
+
+```bash
+pip install -r requirements.txt
+pre-commit install
+```
+
+La deuxième commande active un hook git local (`nbstripout`) qui nettoie automatiquement les outputs des cellules de notebook avant chaque commit — sans ça, un notebook exécuté produit des diffs énormes et des conflits inutiles à chaque fois que quelqu'un le rouvre. `pre-commit install` s'exécute une fois par personne et par clone : ce n'est pas synchronisé par git (seul `.pre-commit-config.yaml`, qui définit le hook, est versionné).
+
 ## Branches
 
 - `main` — toujours stable, toujours fonctionnelle. Protégée : push direct interdit, merge uniquement via PR.

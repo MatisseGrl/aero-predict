@@ -1,0 +1,7 @@
+# Configuration pour le framework pre-commit (https://pre-commit.com).
+# Installation une fois par personne, après avoir cloné le repo : voir CONTRIBUTING.md.
+repos:
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.8.1
+    hooks:
+      - id: nbstripout
