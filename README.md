@@ -15,7 +15,7 @@ Documentation complète :
 
 | Phase | Contenu | Statut |
 |---|---|---|
-| 0 | État de l'art | À faire |
+| 0 | État de l'art | ✅ Terminée — [docs/00_etat_de_l_art.md](docs/00_etat_de_l_art.md) |
 | 1 | EDA et préparation des données | À faire |
 | 2 | Target engineering (Piecewise RUL) | À faire |
 | 3 | Modélisation (ML classique + Deep Learning) | À faire |
