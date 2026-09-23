@@ -10,8 +10,14 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 ## Dernière modification
 
-- **Qui** : Matisse (avec Claude Code)
+- **Qui** : Matisse (avec Codex ; push et documentation par Claude Code après un crash de Codex avant le push)
 - **Date** : 2026-09-23
+- **Quoi** : dans [`notebooks/01_eda_preparation.ipynb`](../notebooks/01_eda_preparation.ipynb), l'étape de normalisation (min-max et standardisation) repasse d'une boucle manuelle (calcul direct de min/max ou moyenne/écart-type) à `MinMaxScaler`/`StandardScaler` de scikit-learn. Résultats numériques identiques (mêmes formules) — vérifié par ré-exécution complète du notebook à froid (0 erreur, min=0/max=1 confirmés sur les 15 capteurs). Documentation technique mise à jour en conséquence : [`docs/01_eda_preparation.md`](01_eda_preparation.md).
+- **Pourquoi** : l'objet `scaler` retourné par `fit` conserve les paramètres appris sur `train` — nécessaire pour appliquer plus tard la même transformation à `test_FD001.txt` via `.transform()` sans réapprendre de paramètres sur le test (fuite de données sinon). `scikit-learn` était déjà une dépendance déclarée du projet (`requirements.txt`, prévue pour la Phase 3).
+- **Impact** : aucun sur la décision déjà actée (min-max retenu) ni sur les valeurs produites ; changement d'implémentation uniquement.
+
+### 2026-09-23 — Phase 1 validée : rapport et figures
+- **Qui** : Matisse (avec Claude Code)
 - **Quoi** : Phase 1 validée — [`docs/01_eda_preparation.md`](01_eda_preparation.md) rédigé, avec les deux figures de vérification (`docs/figures/01_normalisation_comparaison_minmax_standard.png`, `docs/figures/01_lissage_moteur1_sensor11.png`) sauvegardées séparément puisque `nbstripout` nettoie les outputs du notebook à chaque commit. Tableau des phases du README et `AGENTS.md` mis à jour (Phase 1 : ✅ Terminée).
 - **Pourquoi** : dernière étape du déroulé obligatoire de phase (`AGENTS.md`) — documentation technique écrite seulement après validation explicite de la phase, jamais avant.
 - **Impact** : aucun sur le code ; Phase 2 peut démarrer.
