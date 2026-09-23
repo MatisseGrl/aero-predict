@@ -1,6 +1,6 @@
 # ADR-0002 : Archiver le notebook baseline FD001 plutôt que le reprendre
 
-**Statut** : Acceptée
+**Statut** : Remplacée par ADR-0006
 **Date** : 2026-09-21
 **Décideurs** : Matisse
 

@@ -82,8 +82,8 @@ Avant de coder le schéma SQL (`engines` / `sensor_readings` / `predictions`), m
 
 ## État actuel du projet
 
-- **Phase 0 (état de l'art) : pas encore commencée.**
-- Un notebook exploratoire pré-existant (`notebooks/exploration/baseline_fd001_v0.ipynb`) a établi un **benchmark empirique** sur FD001 avant la mise en place de ce process : Random Forest, RMSE test = 18.97, Score NASA test = 1053.9 (détail dans le README). Il n'a suivi ni la normalisation, ni le lissage, ni la documentation par phase — il sert de référence chiffrée à battre, pas de code à réutiliser tel quel.
+- **Phase 1 (EDA et préparation) : en cours**, voir `docs/STATUS.md` pour le détail.
+- Un notebook exploratoire pré-existant avait établi un **benchmark empirique** sur FD001 avant la mise en place de ce process : Random Forest, RMSE test = 18.97, Score NASA test = 1053.9 (détail dans le README). Il n'a suivi ni la normalisation, ni le lissage, ni la documentation par phase. Le fichier a depuis été supprimé (voir [ADR-0006](docs/decisions/0006-suppression-baseline-exploratoire.md)) ; seul le chiffre de référence est conservé, dans le README et `docs/00_etat_de_l_art.md`.
 
 ## Workflow git en équipe
 
