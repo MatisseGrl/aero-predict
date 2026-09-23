@@ -83,12 +83,14 @@ Avant de coder le schéma SQL (`engines` / `sensor_readings` / `predictions`), m
 
 ## État actuel du projet
 
-- **Phase 0 (état de l'art) : pas encore commencée.**
-- Un notebook exploratoire pré-existant (`notebooks/exploration/baseline_fd001_v0.ipynb`) a établi un **benchmark empirique** sur FD001 avant la mise en place de ce process : Random Forest, RMSE test = 18.97, Score NASA test = 1053.9 (détail dans le README). Il n'a suivi ni la normalisation, ni le lissage, ni la documentation par phase — il sert de référence chiffrée à battre, pas de code à réutiliser tel quel.
+- **Phase 1 (EDA et préparation) : en cours**, voir `docs/STATUS.md` pour le détail.
+- Un notebook exploratoire pré-existant avait établi un **benchmark empirique** sur FD001 avant la mise en place de ce process : Random Forest, RMSE test = 18.97, Score NASA test = 1053.9 (détail dans le README). Il n'a suivi ni la normalisation, ni le lissage, ni la documentation par phase. Le fichier a depuis été supprimé (voir [ADR-0006](docs/decisions/0006-suppression-baseline-exploratoire.md)) ; seul le chiffre de référence est conservé, dans le README et `docs/00_etat_de_l_art.md`.
 
 ## Workflow git en équipe
 
-Équipe de 6, dont **3 personnes poussent du code**. `main` **n'est pas protégée techniquement** — GitHub Free n'applique pas les règles de protection sur un dépôt privé (voir [ADR-0004](docs/decisions/0004-pas-de-protection-technique-main.md)). Le workflow (branche par tâche, PR, revue) est une **convention que chacun s'engage à suivre**, pas une barrière technique : un push direct sur `main` reste possible, il ne doit juste jamais arriver. Détail : voir [`CONTRIBUTING.md`](CONTRIBUTING.md).
+Équipe de 6, dont **3 personnes poussent du code**. `main` **n'est pas protégée techniquement** — GitHub Free n'applique pas les règles de protection sur un dépôt privé (voir [ADR-0004](docs/decisions/0004-pas-de-protection-technique-main.md)). Le workflow (branche par tâche, PR, revue) est une **convention que chacun s'engage à suivre**, pas une barrière technique.
+
+**Assoupli temporairement pendant la période solo** ([ADR-0005](docs/decisions/0005-assouplissement-workflow-git-periode-solo.md)) : Matisse est actuellement seul contributeur actif au code — la revue obligatoire et le passage par PR ne sont pas exigés pour l'instant, un merge/push direct sur `main` est autorisé. Ne pas bloquer sur "il faut une PR" tant que cette ADR est en vigueur ; redevient obligatoire dès qu'un autre contributeur recode sur le projet. Détail : voir [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Structure du repo
 
