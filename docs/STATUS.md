@@ -6,19 +6,31 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 ## Phase actuelle
 
-**Phase 1 — EDA et préparation (FD001) : en cours.** Étape 1/3 faite (capteurs à variance nulle). Prochaine étape : normalisation par capteur.
+**Phase 1 — EDA et préparation (FD001) : en cours** (branche `phase-01/eda-preparation`, pas encore mergée). Étape 1/3 faite (capteurs à variance nulle). Prochaine étape : suppression effective des capteurs, puis normalisation par capteur.
 
 ## Dernière modification
 
 - **Qui** : Matisse (avec Claude Code)
-- **Date** : 2026-09-22
-- **Quoi** : démarrage Phase 1 — [`notebooks/01_eda_preparation.ipynb`](../notebooks/01_eda_preparation.ipynb) (branche `phase-01/eda-preparation`, pas encore mergée) : chargement de `train_FD001.txt` et détection des capteurs à variance nulle. Un premier critère naïf (`variance == 0`) s'est révélé insuffisant — vérifié en croisant avec `nunique()` : `sensor_5` et `sensor_16` sont réellement constants mais leur variance calculée tombe à ≈1e-29/1e-35 (erreur d'arrondi flottant, pas 0 exact) — remplacé par le critère `nunique() == 1`, fiable. Résultat : 6 capteurs constants (`sensor_1, 5, 10, 16, 18, 19`), 15 capteurs informatifs conservés sur 21.
-- **Pourquoi** : première étape de la Phase 1 (cahier des charges, section Phase 1) — retirer les capteurs non informatifs avant normalisation et lissage.
-- **Impact** : aucun sur le pipeline de modélisation (pas encore commencé) ; travail encore sur une branche de phase, pas sur `main`.
+- **Date** : 2026-09-23
+- **Quoi** : suppression du notebook `notebooks/exploration/baseline_fd001_v0.ipynb`, qui remplace la décision d'archivage prise dans ADR-0002. Références corrigées dans `README.md`, `AGENTS.md` et `docs/00_etat_de_l_art.md`. Détail : [ADR-0006](decisions/0006-suppression-baseline-exploratoire.md).
+- **Pourquoi** : le chiffre de référence qu'il contenait (RMSE 18.97, score NASA 1053.9) est déjà dupliqué dans le README et `00_etat_de_l_art.md` depuis la Phase 0 — le fichier n'était donc plus la seule source de ce résultat, et sa présence pouvait laisser croire à tort qu'il fait partie du pipeline actif.
+- **Impact** : aucun sur le pipeline ML/données (le fichier n'a jamais été repris comme code, seulement comme référence chiffrée). Coût accepté : le code source de ce résultat n'est plus auditable/ré-exécutable directement dans le repo (reste récupérable via l'historique git).
 
 ## Historique
 
 <!-- Nouvelle entrée en haut, même format que ci-dessus (Qui / Date / Quoi / Pourquoi / Impact). -->
+
+### 2026-09-23 — Assouplissement temporaire du workflow git
+- **Qui** : Matisse (avec Claude Code)
+- **Quoi** : revue obligatoire et PR suspendues tant que Matisse est seul contributeur actif au code, merge/push direct sur `main` autorisé. Détail : [ADR-0005](decisions/0005-assouplissement-workflow-git-periode-solo.md).
+- **Pourquoi** : le workflow d'équipe (branche + PR + revue) suppose un second relecteur disponible ; en l'absence des deux autres contributeurs code, exiger une revue n'apportait aucune relecture réelle, juste de la friction.
+- **Impact** : aucun sur le pipeline ML/données. Le workflow complet redevient obligatoire dès qu'un autre contributeur recode sur le projet (condition posée dans l'ADR elle-même).
+
+### 2026-09-22 — Démarrage Phase 1 : détection des capteurs constants
+- **Qui** : Matisse (avec Claude Code)
+- **Quoi** : [`notebooks/01_eda_preparation.ipynb`](../notebooks/01_eda_preparation.ipynb) (branche `phase-01/eda-preparation`, pas encore mergée) : chargement de `train_FD001.txt` et détection des capteurs à variance nulle. Un premier critère naïf (`variance == 0`) s'est révélé insuffisant — vérifié en croisant avec `nunique()` : `sensor_5` et `sensor_16` sont réellement constants mais leur variance calculée tombe à ≈1e-29/1e-35 (erreur d'arrondi flottant, pas 0 exact) — remplacé par le critère `nunique() == 1`, fiable. Résultat : 6 capteurs constants (`sensor_1, 5, 10, 16, 18, 19`), 15 capteurs informatifs conservés sur 21.
+- **Pourquoi** : première étape de la Phase 1 (cahier des charges, section Phase 1) — retirer les capteurs non informatifs avant normalisation et lissage.
+- **Impact** : aucun sur le pipeline de modélisation (pas encore commencé) ; travail encore sur une branche de phase, pas sur `main`.
 
 ### 2026-09-22 — Phase 0 validée
 - **Qui** : Matisse (avec Claude Code)

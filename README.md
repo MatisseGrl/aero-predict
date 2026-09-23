@@ -25,7 +25,7 @@ Documentation complète :
 
 ## Benchmark de référence
 
-Avant la mise en place du process ci-dessus, un notebook exploratoire (`notebooks/exploration/baseline_fd001_v0.ipynb`) a établi un premier point de repère sur FD001 (Random Forest, validation croisée par moteur, features statistiques glissantes sur 5 cycles) :
+Avant la mise en place du process ci-dessus, un notebook exploratoire a établi un premier point de repère sur FD001 (Random Forest, validation croisée par moteur, features statistiques glissantes sur 5 cycles) :
 
 | Évaluation | RMSE | Score NASA |
 |---|---|---|
@@ -33,7 +33,7 @@ Avant la mise en place du process ci-dessus, un notebook exploratoire (`notebook
 | Test officiel — brut | 18.97 | 1 053.90 |
 | Test officiel — prudent (biais -11 cycles) | 20.27 | 721.91 |
 
-Ce notebook n'a pas suivi la normalisation, le lissage ni la documentation par phase prévus dans le cahier des charges — il sert de **référence chiffrée à battre**, le pipeline officiel repart de la Phase 0.
+Ce notebook n'a pas suivi la normalisation, le lissage ni la documentation par phase prévus dans le cahier des charges — il sert de **référence chiffrée à battre**, le pipeline officiel repart de la Phase 0. Le fichier lui-même a été supprimé depuis (voir [ADR-0006](docs/decisions/0006-suppression-baseline-exploratoire.md)) ; seuls ces chiffres sont conservés.
 
 ## Stack technique
 
