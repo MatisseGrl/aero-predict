@@ -35,6 +35,8 @@ Les deux sont des transformations linéaires : elles ne changent jamais la forme
 
 **Coût accepté, à revalider** : ce choix n'est pas prouvé optimal, seulement argumenté. Si le LSTM performe mal en Phase 3-4, `sensor_9`, `sensor_14` et `sensor_8` sont les premiers suspects — le choix sera retesté à ce moment avec un vrai chiffre (RMSE / score NASA), pas une intuition.
 
+**Implémentation** : `MinMaxScaler`/`StandardScaler` de scikit-learn plutôt qu'une boucle manuelle recalculant min/max ou moyenne/écart-type. Le résultat numérique est identique (mêmes formules), mais l'objet `scaler` retourné par `fit` conserve les paramètres appris sur `train` — indispensable pour appliquer plus tard *exactement la même transformation* à `test_FD001.txt` via `.transform()` (sans jamais réapprendre de paramètres sur le jeu de test, ce qui serait une fuite de données).
+
 ### 3. Lissage du signal
 
 Les capteurs contiennent du bruit de mesure cycle-à-cycle en plus du vrai signal de dégradation. Méthode retenue : **moyenne mobile, fenêtre de 5 cycles** (cohérente avec le benchmark exploratoire déjà documenté dans le README).
