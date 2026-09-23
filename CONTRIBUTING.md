@@ -13,7 +13,9 @@ La deuxième commande active un hook git local (`nbstripout`) qui nettoie automa
 
 ## Branches
 
-- `main` — toujours stable, toujours fonctionnelle. Push direct interdit **par convention** (pas par blocage technique, voir ADR-0004) : merge uniquement via PR.
+> **Assoupli temporairement pendant la période solo** ([ADR-0005](docs/decisions/0005-assouplissement-workflow-git-periode-solo.md)) : tant que Matisse est seul contributeur actif au code, la revue obligatoire et le passage par PR ne sont plus exigés — un merge/push direct sur `main` est autorisé. Le workflow ci-dessous redevient obligatoire dès qu'un autre contributeur recode sur le projet, sans qu'une nouvelle ADR soit nécessaire pour ça.
+
+- `main` — toujours stable, toujours fonctionnelle. Push direct interdit **par convention** (pas par blocage technique, voir ADR-0004) : merge uniquement via PR — hors période solo, voir encadré ci-dessus.
 - Une branche par tâche, créée depuis `main` à jour :
 
 ```

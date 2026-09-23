@@ -6,19 +6,25 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 ## Phase actuelle
 
-**Phase 0 — État de l'art : terminée.** Prochaine étape : Phase 1 (EDA et préparation, FD001).
+**Phase 1 — EDA et préparation (FD001) : en cours** (branche `phase-01/eda-preparation`, pas encore mergée). Étape 1/3 faite (capteurs à variance nulle). Prochaine étape : suppression effective des capteurs, puis normalisation par capteur.
 
 ## Dernière modification
 
 - **Qui** : Matisse (avec Claude Code)
-- **Date** : 2026-09-22
-- **Quoi** : Phase 0 validée — [`docs/00_etat_de_l_art.md`](00_etat_de_l_art.md) rédigé à partir d'une lecture complète de Saxena et al. (2008) et de la veille communautaire déjà présente dans le cahier des charges. Une équation du papier (indice de santé `h(t)`) s'est révélée corrompue par l'extraction automatique du PDF — vérifié en la recalculant numériquement (elle diverge hors de [0,1]) — donc non reproduite dans le doc, remplacée par une description qualitative.
-- **Pourquoi** : Phase 0 = pré-requis avant tout code (cahier des charges, Section 5). La fonction de score NASA, elle, a été vérifiée numériquement et confirmée cohérente (retard pénalisé ~2x plus qu'avance à écart égal) — c'est celle-là qui compte pour la Phase 4.
-- **Impact** : aucun sur le code ; Phase 1 peut démarrer.
+- **Date** : 2026-09-23
+- **Quoi** : assouplissement temporaire du workflow git — revue obligatoire et PR suspendues tant que Matisse est seul contributeur actif au code, merge/push direct sur `main` autorisé. Détail : [ADR-0005](decisions/0005-assouplissement-workflow-git-periode-solo.md).
+- **Pourquoi** : le workflow d'équipe (branche + PR + revue) suppose un second relecteur disponible ; en l'absence des deux autres contributeurs code, exiger une revue n'apportait aucune relecture réelle, juste de la friction.
+- **Impact** : aucun sur le pipeline ML/données. Le workflow complet redevient obligatoire dès qu'un autre contributeur recode sur le projet (condition posée dans l'ADR elle-même).
 
 ## Historique
 
 <!-- Nouvelle entrée en haut, même format que ci-dessus (Qui / Date / Quoi / Pourquoi / Impact). -->
+
+### 2026-09-22 — Phase 0 validée
+- **Qui** : Matisse (avec Claude Code)
+- **Quoi** : [`docs/00_etat_de_l_art.md`](00_etat_de_l_art.md) rédigé à partir d'une lecture complète de Saxena et al. (2008) et de la veille communautaire déjà présente dans le cahier des charges. Une équation du papier (indice de santé `h(t)`) s'est révélée corrompue par l'extraction automatique du PDF — vérifié en la recalculant numériquement (elle diverge hors de [0,1]) — donc non reproduite dans le doc, remplacée par une description qualitative.
+- **Pourquoi** : Phase 0 = pré-requis avant tout code (cahier des charges, Section 5). La fonction de score NASA, elle, a été vérifiée numériquement et confirmée cohérente (retard pénalisé ~2x plus qu'avance à écart égal) — c'est celle-là qui compte pour la Phase 4.
+- **Impact** : aucun sur le code ; Phase 1 a pu démarrer.
 
 ### 2026-09-22 — Correction : main n'est pas protégée techniquement
 - **Qui** : Matisse (avec Claude Code)
