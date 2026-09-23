@@ -6,19 +6,25 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 ## Phase actuelle
 
-**Phase 0 — État de l'art : terminée.** Prochaine étape : Phase 1 (EDA et préparation, FD001).
+**Phase 1 — EDA et préparation (FD001) : en cours.** Étape 1/3 faite (capteurs à variance nulle). Prochaine étape : normalisation par capteur.
 
 ## Dernière modification
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-09-22
-- **Quoi** : Phase 0 validée — [`docs/00_etat_de_l_art.md`](00_etat_de_l_art.md) rédigé à partir d'une lecture complète de Saxena et al. (2008) et de la veille communautaire déjà présente dans le cahier des charges. Une équation du papier (indice de santé `h(t)`) s'est révélée corrompue par l'extraction automatique du PDF — vérifié en la recalculant numériquement (elle diverge hors de [0,1]) — donc non reproduite dans le doc, remplacée par une description qualitative.
-- **Pourquoi** : Phase 0 = pré-requis avant tout code (cahier des charges, Section 5). La fonction de score NASA, elle, a été vérifiée numériquement et confirmée cohérente (retard pénalisé ~2x plus qu'avance à écart égal) — c'est celle-là qui compte pour la Phase 4.
-- **Impact** : aucun sur le code ; Phase 1 peut démarrer.
+- **Quoi** : démarrage Phase 1 — [`notebooks/01_eda_preparation.ipynb`](../notebooks/01_eda_preparation.ipynb) (branche `phase-01/eda-preparation`, pas encore mergée) : chargement de `train_FD001.txt` et détection des capteurs à variance nulle. Un premier critère naïf (`variance == 0`) s'est révélé insuffisant — vérifié en croisant avec `nunique()` : `sensor_5` et `sensor_16` sont réellement constants mais leur variance calculée tombe à ≈1e-29/1e-35 (erreur d'arrondi flottant, pas 0 exact) — remplacé par le critère `nunique() == 1`, fiable. Résultat : 6 capteurs constants (`sensor_1, 5, 10, 16, 18, 19`), 15 capteurs informatifs conservés sur 21.
+- **Pourquoi** : première étape de la Phase 1 (cahier des charges, section Phase 1) — retirer les capteurs non informatifs avant normalisation et lissage.
+- **Impact** : aucun sur le pipeline de modélisation (pas encore commencé) ; travail encore sur une branche de phase, pas sur `main`.
 
 ## Historique
 
 <!-- Nouvelle entrée en haut, même format que ci-dessus (Qui / Date / Quoi / Pourquoi / Impact). -->
+
+### 2026-09-22 — Phase 0 validée
+- **Qui** : Matisse (avec Claude Code)
+- **Quoi** : [`docs/00_etat_de_l_art.md`](00_etat_de_l_art.md) rédigé à partir d'une lecture complète de Saxena et al. (2008) et de la veille communautaire déjà présente dans le cahier des charges. Une équation du papier (indice de santé `h(t)`) s'est révélée corrompue par l'extraction automatique du PDF — vérifié en la recalculant numériquement (elle diverge hors de [0,1]) — donc non reproduite dans le doc, remplacée par une description qualitative.
+- **Pourquoi** : Phase 0 = pré-requis avant tout code (cahier des charges, Section 5). La fonction de score NASA, elle, a été vérifiée numériquement et confirmée cohérente (retard pénalisé ~2x plus qu'avance à écart égal) — c'est celle-là qui compte pour la Phase 4.
+- **Impact** : aucun sur le code ; Phase 1 a pu démarrer.
 
 ### 2026-09-22 — Correction : main n'est pas protégée techniquement
 - **Qui** : Matisse (avec Claude Code)
