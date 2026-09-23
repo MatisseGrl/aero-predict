@@ -57,7 +57,7 @@ Le dénominateur plus petit (10 < 13) sur la branche "retard" fait grimper la p�
 | | Détail |
 |---|---|
 | **Repris tel quel** | Score NASA (formule ci-dessus), RUL plafonnée à 125 (convention communautaire, Section 3 du cahier des charges), FD001 comme point de départ |
-| **Adapté** | Le baseline existant (`notebooks/exploration/baseline_fd001_v0.ipynb`) n'a pas suivi la normalisation ni le lissage prévus en Phase 1 — repris comme benchmark chiffré, pas comme code de départ (voir ADR-0002) |
+| **Adapté** | Le baseline exploratoire n'avait pas suivi la normalisation ni le lissage prévus en Phase 1 — gardé un temps comme benchmark chiffré (ADR-0002), puis le fichier lui-même supprimé (ADR-0006) ; seuls les chiffres (RMSE 18.97, score NASA 1053.9, voir README) sont conservés |
 | **Différenciant** | La Phase 6 (plateforme MLOps — API, base relationnelle, simulateur de flux, Docker Compose) : aucun des 9 dépôts communautaires observés ne va aussi loin (Section 3 du cahier des charges) |
 
 ## Prochaine étape

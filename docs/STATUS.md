@@ -12,7 +12,13 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-09-23
-- **Quoi** : assouplissement temporaire du workflow git — revue obligatoire et PR suspendues tant que Matisse est seul contributeur actif au code, merge/push direct sur `main` autorisé. Détail : [ADR-0005](decisions/0005-assouplissement-workflow-git-periode-solo.md).
+- **Quoi** : suppression du notebook `notebooks/exploration/baseline_fd001_v0.ipynb`, qui remplace la décision d'archivage prise dans ADR-0002. Références corrigées dans `README.md`, `AGENTS.md` et `docs/00_etat_de_l_art.md`. Détail : [ADR-0006](decisions/0006-suppression-baseline-exploratoire.md).
+- **Pourquoi** : le chiffre de référence qu'il contenait (RMSE 18.97, score NASA 1053.9) est déjà dupliqué dans le README et `00_etat_de_l_art.md` depuis la Phase 0 — le fichier n'était donc plus la seule source de ce résultat, et sa présence pouvait laisser croire à tort qu'il fait partie du pipeline actif.
+- **Impact** : aucun sur le pipeline ML/données (le fichier n'a jamais été repris comme code, seulement comme référence chiffrée). Coût accepté : le code source de ce résultat n'est plus auditable/ré-exécutable directement dans le repo (reste récupérable via l'historique git).
+
+### 2026-09-23 — Assouplissement temporaire du workflow git
+- **Qui** : Matisse (avec Claude Code)
+- **Quoi** : revue obligatoire et PR suspendues tant que Matisse est seul contributeur actif au code, merge/push direct sur `main` autorisé. Détail : [ADR-0005](decisions/0005-assouplissement-workflow-git-periode-solo.md).
 - **Pourquoi** : le workflow d'équipe (branche + PR + revue) suppose un second relecteur disponible ; en l'absence des deux autres contributeurs code, exiger une revue n'apportait aucune relecture réelle, juste de la friction.
 - **Impact** : aucun sur le pipeline ML/données. Le workflow complet redevient obligatoire dès qu'un autre contributeur recode sur le projet (condition posée dans l'ADR elle-même).
 
