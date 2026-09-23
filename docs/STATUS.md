@@ -6,15 +6,21 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 ## Phase actuelle
 
-**Phase 1 — EDA et préparation (FD001) : les 3 étapes techniques sont faites** (branche `phase-01/eda-preparation`, pas encore mergée) — capteurs constants supprimés, normalisation, lissage. Reste à faire pour clore la phase : documentation technique (`docs/01_eda_preparation.md`) et résumé vulgarisé équipe, une fois la phase validée par Matisse.
+**Phase 1 — EDA et préparation (FD001) : terminée et validée par Matisse.** Prochaine étape : Phase 2 (target engineering, Piecewise RUL).
 
 ## Dernière modification
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-09-23
-- **Quoi** : dans [`notebooks/01_eda_preparation.ipynb`](../notebooks/01_eda_preparation.ipynb), fin des étapes 2/3 et 3/3 de la Phase 1. Normalisation : comparaison empirique min-max vs `StandardScaler` sur les 15 capteurs (histogrammes de `sensor_9`/`sensor_11`) — les deux sont des transformations linéaires, aucune ne change la forme d'une distribution ; `sensor_9`/`14`/`8` montrent des valeurs extrêmes réelles (z-score jusqu'à +8.12 en standardisé). Min-max retenu : coût nul pour les modèles à arbres de la Phase 3, entrées bornées adaptées au LSTM prévu ensuite, hypothèse gaussienne de la standardisation de toute façon mise à mal par nos données. Lissage : moyenne mobile (fenêtre 5 cycles), appliquée moteur par moteur (`groupby` implicite via un masque booléen sur `unit_number`) pour ne jamais mélanger deux moteurs, causale par construction (`pandas.rolling()` ne regarde que le passé) pour rester valide sur le jeu de test.
+- **Quoi** : Phase 1 validée — [`docs/01_eda_preparation.md`](01_eda_preparation.md) rédigé, avec les deux figures de vérification (`docs/figures/01_normalisation_comparaison_minmax_standard.png`, `docs/figures/01_lissage_moteur1_sensor11.png`) sauvegardées séparément puisque `nbstripout` nettoie les outputs du notebook à chaque commit. Tableau des phases du README et `AGENTS.md` mis à jour (Phase 1 : ✅ Terminée).
+- **Pourquoi** : dernière étape du déroulé obligatoire de phase (`AGENTS.md`) — documentation technique écrite seulement après validation explicite de la phase, jamais avant.
+- **Impact** : aucun sur le code ; Phase 2 peut démarrer.
+
+### 2026-09-23 — Fin des étapes techniques de la Phase 1 (normalisation, lissage)
+- **Qui** : Matisse (avec Claude Code)
+- **Quoi** : dans [`notebooks/01_eda_preparation.ipynb`](../notebooks/01_eda_preparation.ipynb), fin des étapes 2/3 et 3/3 de la Phase 1. Normalisation : comparaison empirique min-max vs `StandardScaler` sur les 15 capteurs (histogrammes de `sensor_9`/`sensor_11`) — les deux sont des transformations linéaires, aucune ne change la forme d'une distribution ; `sensor_9`/`14`/`8` montrent des valeurs extrêmes réelles (z-score jusqu'à +8.12 en standardisé). Min-max retenu : coût nul pour les modèles à arbres de la Phase 3, entrées bornées adaptées au LSTM prévu ensuite, hypothèse gaussienne de la standardisation de toute façon mise à mal par nos données. Lissage : moyenne mobile (fenêtre 5 cycles), appliquée moteur par moteur (masque booléen sur `unit_number`) pour ne jamais mélanger deux moteurs, causale par construction (`pandas.rolling()` ne regarde que le passé) pour rester valide sur le jeu de test.
 - **Pourquoi** : cahier des charges, section Phase 1 (normalisation par capteur, lissage du signal) — méthodes choisies et justifiées plutôt qu'appliquées par défaut, avec vérification empirique sur les vraies données avant de trancher entre min-max et standardisation.
-- **Impact** : aucun sur `main` (travail sur branche de phase). Coût accepté : le choix min-max n'est pas prouvé optimal, seulement argumenté — à revalider en Phase 4 avec un vrai chiffre (RMSE / score NASA) si le LSTM performe mal sur les capteurs asymétriques identifiés.
+- **Impact** : aucun sur `main` (travail sur branche de phase à l'époque). Coût accepté : le choix min-max n'est pas prouvé optimal, seulement argumenté — à revalider en Phase 4 avec un vrai chiffre (RMSE / score NASA) si le LSTM performe mal sur les capteurs asymétriques identifiés.
 
 ## Historique
 
