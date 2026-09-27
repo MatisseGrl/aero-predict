@@ -6,15 +6,21 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 ## Phase actuelle
 
-**Phase 2 — Target Engineering (FD001) : terminée et validée par Matisse.** Prochaine étape : Phase 3 (modélisation).
+**Phase 3 — Modélisation baseline XGBoost (FD001) : terminée et validée par Matisse.** Deep learning (LSTM/CNN, prévu au cahier des charges section 5) pas encore attaqué. Prochaine étape : Phase 4 (évaluation formalisée : comparaison statistique de modèles, optimisation des hyperparamètres) ou extension deep learning de la Phase 3, à trancher avec Matisse.
 
 ## Dernière modification
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-09-27
+- **Quoi** : création de [`src/preprocessing.py`](../src/preprocessing.py) (fonctions réutilisables des Phases 1-2), puis [`notebooks/03_modelisation.ipynb`](../notebooks/03_modelisation.ipynb) : features par fenêtre glissante (moyenne/écart-type sur 5 cycles), score NASA implémenté et vérifié par calcul, XGBoost validé par `GroupKFold` par moteur (RMSE moyen 18.17, score NASA moyen 55 949.6), puis évalué sur le jeu de test officiel `test_FD001.txt`+`RUL_FD001.txt` : **RMSE 18.91, score NASA 1082.6, 14/100 moteurs surestimés de plus de 20 cycles**. Documenté dans [`docs/03_modelisation.md`](03_modelisation.md), figure de validation `docs/figures/03_predictions_vs_vraies_rul_test.png`. Tableau des phases (`README.md`) et "État actuel du projet" (`AGENTS.md`) mis à jour.
+- **Pourquoi** : remplacer les chiffres invérifiables utilisés (par erreur) dans le support de Soutenance 1 — voir l'entrée du 2026-09-27 sur la mise en garde baseline ci-dessous — par un résultat obtenu avec du code présent dans le repo aujourd'hui, reproductible par quiconque exécute le notebook.
+- **Impact** : aucun sur le pipeline des Phases 1-2 (réutilisé tel quel via `src/preprocessing.py`, vérifié identique par exécution). La colonne "aujourd'hui" de la slide 1 et le chiffre de la slide 4 de la Soutenance 1 peuvent maintenant être corrigés avec ces valeurs sourcées.
+
+### 2026-09-27 — Rédaction du rapport de Phase 2
+- **Qui** : Matisse (avec Claude Code)
 - **Quoi** : rédaction de [`docs/02_target_engineering.md`](02_target_engineering.md) (rapport de Phase 2), mise à jour du tableau des phases dans `README.md` et de l'"État actuel du projet" dans `AGENTS.md` (Phase 2 : ✅ Terminée).
 - **Pourquoi** : dernière étape du déroulé obligatoire de phase (`AGENTS.md`) — documentation technique écrite seulement après validation explicite de la phase, jamais avant.
-- **Impact** : aucun sur le code ; Phase 3 peut démarrer.
+- **Impact** : aucun sur le code ; Phase 3 a pu démarrer ensuite.
 
 ### 2026-09-27 — Phase 2 validée : calcul et plafonnement de la RUL
 - **Qui** : Matisse (avec Claude Code)
