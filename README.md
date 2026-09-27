@@ -35,6 +35,8 @@ Avant la mise en place du process ci-dessus, un notebook exploratoire a établi 
 
 Ce notebook n'a pas suivi la normalisation, le lissage ni la documentation par phase prévus dans le cahier des charges — il sert de **référence chiffrée à battre**, le pipeline officiel repart de la Phase 0. Le fichier lui-même a été supprimé depuis (voir [ADR-0006](docs/decisions/0006-suppression-baseline-exploratoire.md)) ; seuls ces chiffres sont conservés.
 
+**Ce notebook n'existe plus et son code n'est pas ré-exécutable.** Les 6 chiffres du tableau ci-dessus sont les seuls conservés, tels quels — **aucune autre statistique ne doit en être dérivée** (ex. un comptage "X moteurs sur 100 dans tel cas") sans recoder et revérifier le calcul depuis zéro, avec un notebook actuel et une source citée. Un chiffre dérivé de ce benchmark sans code reproductible a déjà failli être utilisé sans vérification dans un support de présentation (2026-09-27) — ce tableau ne doit plus jamais influencer une décision ou une affirmation qui ne soit pas directement l'un de ces 6 nombres.
+
 ## Stack technique
 
 Python · scikit-learn, XGBoost, LightGBM · PyTorch · SHAP · FastAPI · SQLite/PostgreSQL · Streamlit/Dash · Docker Compose · MLflow (optionnel) · Matplotlib, Seaborn
