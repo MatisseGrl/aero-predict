@@ -17,7 +17,7 @@ Documentation complète :
 |---|---|---|
 | 0 | État de l'art | ✅ Terminée — [docs/00_etat_de_l_art.md](docs/00_etat_de_l_art.md) |
 | 1 | EDA et préparation des données | ✅ Terminée — [docs/01_eda_preparation.md](docs/01_eda_preparation.md) |
-| 2 | Target engineering (Piecewise RUL) | À faire |
+| 2 | Target engineering (Piecewise RUL) | ✅ Terminée — [docs/02_target_engineering.md](docs/02_target_engineering.md) |
 | 3 | Modélisation (ML classique + Deep Learning) | À faire |
 | 4 | Évaluation (RMSE + Score NASA) | À faire |
 | 5 | Explicabilité (SHAP) + dashboard | À faire |

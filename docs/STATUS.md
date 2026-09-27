@@ -12,9 +12,15 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-09-27
+- **Quoi** : rédaction de [`docs/02_target_engineering.md`](02_target_engineering.md) (rapport de Phase 2), mise à jour du tableau des phases dans `README.md` et de l'"État actuel du projet" dans `AGENTS.md` (Phase 2 : ✅ Terminée).
+- **Pourquoi** : dernière étape du déroulé obligatoire de phase (`AGENTS.md`) — documentation technique écrite seulement après validation explicite de la phase, jamais avant.
+- **Impact** : aucun sur le code ; Phase 3 peut démarrer.
+
+### 2026-09-27 — Phase 2 validée : calcul et plafonnement de la RUL
+- **Qui** : Matisse (avec Claude Code)
 - **Quoi** : [`notebooks/02_target_engineering.ipynb`](../notebooks/02_target_engineering.ipynb) — calcul de la vraie RUL par cycle sur `train_FD001.txt` (`dernier_cycle_du_moteur − cycle_actuel`, vérifié sur le moteur 1 : RUL = 0 exactement au dernier cycle), puis plafonnement à 125 cycles (Piecewise Linear RUL). Argument du plafond vérifié empiriquement plutôt qu'affirmé : sur 3 moteurs (1, 50, 100), `sensor_11` est nettement plus stable en début de vie (RUL > 125, écart-type ≈ 0,09–0,12) qu'en fin de vie (RUL ≤ 125, écart-type ≈ 0,22–0,26, soit 2 à 2,7× plus dispersé), avec une dérive de moyenne de +0,29 à +0,33. Validation visuelle : RUL brute vs plafonnée sur le moteur 1 (`docs/figures/02_rul_brute_vs_plafonnee_moteur1.png`) et signal des 3 moteurs (`docs/figures/02_signal_3_moteurs_sensor11.png`).
 - **Pourquoi** : cahier des charges, section Phase 2 — capping à 125 cycles avec validation attendue (visu RUL brute vs cappée). L'argument "signal plat en début de vie" est vérifié sur des données réelles plutôt que repris tel quel de la littérature communautaire.
-- **Impact** : aucun sur `main` (travail sur branche `phase-02/target-engineering`). La slide de soutenance "Zoom 1, notre plus-value" sera reconstruite à partir de ce résultat réel, à la place de l'ancien benchmark exploratoire non reproductible.
+- **Impact** : aucun sur `main` à l'époque (travail sur branche `phase-02/target-engineering`, mergée depuis). La slide de soutenance "Zoom 1, notre plus-value" sera reconstruite à partir de ce résultat réel, à la place de l'ancien benchmark exploratoire non reproductible.
 
 ### 2026-09-27 — Mise en garde sur le benchmark baseline (README, état de l'art)
 - **Qui** : Matisse (avec Claude Code)
