@@ -12,9 +12,15 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-09-28
-- **Quoi** : ré-exécution complète de `notebooks/03_modelisation.ipynb` dans un environnement différent (venv du projet, Python 3.14, après résolution d'un problème d'installation de xgboost). Les chiffres de validation croisée (`GroupKFold`) ont légèrement changé : RMSE moyen 18.61 (contre 18.17 lors du premier run), malgré `random_state=42` fixé — XGBoost parallélise la construction des arbres, et l'ordre des calculs flottants en parallèle n'est pas garanti identique d'un environnement à l'autre. Le modèle final et son évaluation sur le test officiel sont restés strictement identiques (RMSE 18.91, score NASA 1082.6, 14/100). `docs/03_modelisation.md` mis à jour avec les nouveaux chiffres de validation croisée et une note de reproductibilité expliquant l'écart.
+- **Quoi** : ajout de `shuffle=True, random_state=42` à `GroupKFold` dans `notebooks/03_modelisation.ipynb` — par défaut, `GroupKFold` répartit les moteurs entre les plis selon leur ordre d'apparition dans le fichier, pas au hasard, ce qui aurait pu biaiser la validation croisée si cet ordre correspondait à autre chose qu'un simple ordre de simulation (jamais vérifié jusqu'ici). Testé : avec le mélange, le RMSE moyen passe de 18.61 à 18.64 — écart négligeable, donc pas de biais cachés détecté, mais le mélange (graine fixe) est conservé pour ne plus avoir à le supposer. `docs/03_modelisation.md` mis à jour avec les nouveaux chiffres de plis (16.58/20.22/18.09/18.34/19.97, moyenne 18.64).
+- **Pourquoi** : question soulevée par Matisse en apprenant le fonctionnement de `GroupKFold` (répartition déterministe par défaut, pas aléatoire) — vérifiée plutôt que supposée sans risque, conformément à la règle du projet.
+- **Impact** : slide 4 de la Soutenance 1 (qui cite "RMSE moyen 18,17", puis "18,61") doit être mise à jour avec **18,64**. Les chiffres du test officiel (18,91 / 1082,6 / 14 sur 100) restent inchangés.
+
+### 2026-09-28 — Ré-exécution dans le venv du projet (RMSE CV 18.17 → 18.61)
+- **Qui** : Matisse (avec Claude Code)
+- **Quoi** : ré-exécution complète de `notebooks/03_modelisation.ipynb` dans un environnement différent (venv du projet, Python 3.14, après résolution d'un problème d'installation de xgboost). Les chiffres de validation croisée (`GroupKFold`) ont légèrement changé : RMSE moyen 18.61 (contre 18.17 lors du premier run), malgré `random_state=42` fixé — XGBoost parallélise la construction des arbres, et l'ordre des calculs flottants en parallèle n'est pas garanti identique d'un environnement à l'autre. Le modèle final et son évaluation sur le test officiel sont restés strictement identiques (RMSE 18.91, score NASA 1082.6, 14/100).
 - **Pourquoi** : le notebook a été réexécuté pour vérifier qu'il tournait bien dans l'environnement réellement utilisé (le premier run avait eu lieu dans un environnement différent) — règle du projet : ne jamais committer un notebook dont l'exécution n'a pas été revérifiée.
-- **Impact** : slide 4 de la Soutenance 1 (qui cite "RMSE moyen 18,17") doit être mise à jour avec 18,61. Les chiffres du test officiel (18,91 / 1082,6 / 14 sur 100), utilisés partout ailleurs dans le deck, restent inchangés et n'ont pas besoin d'être corrigés.
+- **Impact** : chiffre remplacé par celui de l'entrée du dessus (18.64) après l'ajout du `shuffle`.
 
 ### 2026-09-27 — Baseline Phase 3 : premier run (XGBoost, score NASA)
 - **Qui** : Matisse (avec Claude Code)

@@ -35,22 +35,29 @@ d'un pli : sinon le modèle risquerait de reconnaître partiellement ce moteur p
 patron général de dégradation, ce qui fausserait l'estimation de performance. Vérifié explicitement à
 chaque pli (intersection vide entre les deux ensembles de moteurs).
 
+`GroupKFold(n_splits=5, shuffle=True, random_state=42)` : par défaut, `GroupKFold` répartit les moteurs
+entre les plis selon leur ordre d'apparition dans le fichier, pas au hasard — un choix qui pourrait
+biaiser chaque pli si cet ordre correspondait à autre chose qu'un simple ordre de simulation. Vérifié :
+avec `shuffle=True`, le RMSE moyen ne change presque pas (18.61 sans mélange vs 18.64 avec) — donc pas de
+biais caché ici — mais le mélange (avec une graine fixe pour rester reproductible) est conservé pour ne
+plus jamais avoir à supposer que l'ordre du fichier n'a pas d'importance.
+
 | Pli | RMSE | Score NASA |
 |---|---|---|
-| 1 | 19.41 | 33 737.0 |
-| 2 | 17.90 | 36 228.3 |
-| 3 | 19.25 | 88 877.7 |
-| 4 | 18.00 | 45 212.8 |
-| 5 | 18.48 | 98 007.7 |
-| **Moyenne** | **18.61** | **60 412.7** |
+| 1 | 16.58 | 34 222.3 |
+| 2 | 20.22 | 32 603.8 |
+| 3 | 18.09 | 74 407.3 |
+| 4 | 18.34 | 64 938.7 |
+| 5 | 19.97 | 105 223.5 |
+| **Moyenne** | **18.64** | **62 279.1** |
 
-**Note de reproductibilité** : ces chiffres de validation croisée varient légèrement d'une exécution à
-l'autre (observé : 18.17 lors du premier run, 18.61 lors d'un second run sur un autre environnement),
-malgré `random_state=42` fixé sur `XGBRegressor`. XGBoost parallélise la construction des arbres sur
-plusieurs cœurs, et l'ordre des opérations flottantes en parallèle n'est pas garanti identique d'un
-environnement à l'autre — un phénomène connu, pas un bug du code. Le modèle final et son évaluation sur
-le test officiel (section 4 ci-dessous), en revanche, sont restés strictement identiques d'un run à
-l'autre.
+**Note de reproductibilité** : ces chiffres de validation croisée peuvent varier légèrement d'une
+exécution à l'autre (observé : 18.17 puis 18.61 sur deux runs successifs, avant l'ajout du `shuffle`
+ci-dessus), malgré `random_state=42` fixé sur `XGBRegressor`. XGBoost parallélise la construction des
+arbres sur plusieurs cœurs, et l'ordre des opérations flottantes en parallèle n'est pas garanti identique
+d'un environnement à l'autre — un phénomène connu, pas un bug du code. Le modèle final et son évaluation
+sur le test officiel (section 4 ci-dessous), en revanche, sont restés strictement identiques sur les
+trois runs.
 
 ### 4. Évaluation sur le jeu de test officiel
 
