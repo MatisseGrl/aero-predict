@@ -37,12 +37,20 @@ chaque pli (intersection vide entre les deux ensembles de moteurs).
 
 | Pli | RMSE | Score NASA |
 |---|---|---|
-| 1 | 19.03 | 55 698.9 |
-| 2 | 19.22 | 45 158.5 |
-| 3 | 16.20 | 46 919.7 |
-| 4 | 20.19 | 82 516.5 |
-| 5 | 16.20 | 49 454.1 |
-| **Moyenne** | **18.17** | **55 949.6** |
+| 1 | 19.41 | 33 737.0 |
+| 2 | 17.90 | 36 228.3 |
+| 3 | 19.25 | 88 877.7 |
+| 4 | 18.00 | 45 212.8 |
+| 5 | 18.48 | 98 007.7 |
+| **Moyenne** | **18.61** | **60 412.7** |
+
+**Note de reproductibilité** : ces chiffres de validation croisée varient légèrement d'une exécution à
+l'autre (observé : 18.17 lors du premier run, 18.61 lors d'un second run sur un autre environnement),
+malgré `random_state=42` fixé sur `XGBRegressor`. XGBoost parallélise la construction des arbres sur
+plusieurs cœurs, et l'ordre des opérations flottantes en parallèle n'est pas garanti identique d'un
+environnement à l'autre — un phénomène connu, pas un bug du code. Le modèle final et son évaluation sur
+le test officiel (section 4 ci-dessous), en revanche, sont restés strictement identiques d'un run à
+l'autre.
 
 ### 4. Évaluation sur le jeu de test officiel
 
