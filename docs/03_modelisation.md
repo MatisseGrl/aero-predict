@@ -175,7 +175,40 @@ exécutions complètes du notebook ont donné les mêmes chiffres.
 plus simple (`max_depth=3` ou moins d'arbres) est noté comme piste pour l'optimisation des hyperparamètres
 en Phase 4, à départager avec un test statistique.
 
+### 7. Échelle de l'erreur : grande ou petite ? (ajouté le 2026-10-21)
+
+Une erreur n'est « grande » ou « petite » que par rapport à une référence. Quatre références sont calculées
+en section 13 du notebook (mêmes plis que les sections précédentes, sans réentraîner le modèle) :
+l'échelle de la cible (RUL de 0 à 125), un modèle « bête » qui prédit toujours la RUL moyenne du train
+(baseline), le R² (`1 - MSE_modèle / variance(y)`, vérifié contre `sklearn.metrics.r2_score` sur un pli),
+et le besoin du sujet.
+
+| Erreur | RMSE | % de la plage 0-125 | R² |
+|---|---|---|---|
+| Validation croisée : baseline (moyenne) | 41.69 | 33.4 % | — |
+| Validation croisée : XGBoost, train | 10.94 | 8.8 % | 0.931 |
+| Validation croisée : XGBoost, validation | 16.86 | 13.5 % | 0.835 |
+| Test officiel : baseline (moyenne) | 43.07 | 34.5 % | — |
+| Test officiel : XGBoost | 19.70 | 15.8 % | 0.775 |
+| Test officiel : benchmark exploratoire RF (README) | 18.97 | 15.2 % | — |
+
+![Erreur comparée à la baseline et au benchmark](figures/03_echelle_erreur_baseline.png)
+
+- **Par rapport à la baseline**, l'erreur est petite : XGBoost fait 2.5 fois mieux que « prédire la
+  moyenne » en validation croisée (R² 0.835), 2.2 fois mieux sur le test officiel (R² 0.775).
+- **Par rapport au besoin du sujet**, elle ne suffit pas encore : le cahier des charges ne fixe aucune
+  erreur acceptable chiffrée, et la seule référence chiffrée sourcée du projet (benchmark exploratoire,
+  RMSE test 18.97) **n'est pas battue** (19.70). L'écart de 0.73 n'est pas testé statistiquement, sur
+  100 moteurs.
+- L'écart R² train / validation (0.931 / 0.835) est la variance déjà mesurée en section 6, exprimée
+  autrement.
+
 ## Trade-offs et limites
+
+- Aucune erreur acceptable chiffrée n'est définie pour le projet : la section 7 juge l'erreur par rapport
+  à la baseline et au benchmark exploratoire seulement. Un seuil métier (ou une référence publiée, vérifiée
+  dans l'article original) reste à fixer en Phase 4. Le RMSE moyen ne dit pas non plus si l'erreur est plus
+  forte près de la panne, là où elle pèse le plus.
 
 - Un seul jeu d'hyperparamètres XGBoost a été retenu (`n_estimators=200, max_depth=5, learning_rate=0.05`),
   sans recherche systématique. Le diagnostic biais/variance (section 6) montre que `max_depth` et
