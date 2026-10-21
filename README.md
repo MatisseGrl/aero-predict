@@ -18,7 +18,7 @@ Full documentation (written in French):
 | 0 | State of the art | ✅ Done: [docs/00_etat_de_l_art.md](docs/00_etat_de_l_art.md) |
 | 1 | EDA and data preparation | ✅ Done: [docs/01_eda_preparation.md](docs/01_eda_preparation.md) |
 | 2 | Target engineering (Piecewise RUL) | ✅ Done: [docs/02_target_engineering.md](docs/02_target_engineering.md) |
-| 3 | Modeling (classical ML + Deep Learning) | ✅ Done (XGBoost baseline): [docs/03_modelisation.md](docs/03_modelisation.md) |
+| 3 | Modeling (classical ML + Deep Learning) | ✅ Done (XGBoost baseline, bias/variance diagnostic): [docs/03_modelisation.md](docs/03_modelisation.md) |
 | 4 | Evaluation (RMSE + NASA Score) | To do |
 | 5 | Explainability (SHAP) + dashboard | To do |
 | 6 | MLOps platform (bonus) | To do |
