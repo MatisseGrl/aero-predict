@@ -228,3 +228,6 @@ mlartifacts/
 *.pth
 *.pkl
 *.joblib
+
+# Sorties de la demo en ligne de commande (python -m src.demo) : figures regenerees a chaque lancement
+sorties/
