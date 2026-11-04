@@ -1,6 +1,7 @@
 # Outils de développement (hooks git, pas liés à une phase)
 pre-commit
 nbstripout
+pytest
 
 # Phase 0-2 : EDA, préparation des données, target engineering
 pandas
@@ -15,6 +16,9 @@ scikit-learn
 xgboost
 lightgbm
 torch
+
+# Phase 4 : optimisation des hyperparamètres
+optuna
 
 # Phase 4-5 : explicabilité
 shap
