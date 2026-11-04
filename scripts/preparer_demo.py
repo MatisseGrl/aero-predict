@@ -3,23 +3,26 @@ Prepare tout ce que le tableau de bord de demo (app/tableau_de_bord.py) lit, en 
 
 Utilisation, depuis la racine du depot :
 
-    python scripts/preparer_demo.py                              # tout : arbres, deep learning, artefact
+    python scripts/preparer_demo.py                              # tout : arbres, deep learning, artefacts
     python scripts/preparer_demo.py --seulement-arbres           # sans l'entrainement deep learning (long)
     python scripts/preparer_demo.py --sous-jeux FD001 FD003      # seulement certains sous-jeux
 
 Etapes, chacune dans un SOUS-PROCESSUS separe, avec le meme interpreteur Python que ce script :
 1. scripts/generer_predictions_arbres.py  -> predictions XGBoost Phase 3 et retenu (sorties/predictions/) ;
 2. scripts/entrainer_deep_learning.py     -> predictions LSTM et CNN 1D (sauf --seulement-arbres) ;
-3. python -m src.demo entrainer           -> artefact du modele retenu (models/modele_retenu.joblib),
-                                             utilise par les pages "Et si..." et "Fiabilite" ;
-4. comptage des tests automatises (pytest --collect-only) et commit courant, ecrits avec leur date dans
-   sorties/demo/infos_reproductibilite.json (lus par l'application, jamais ecrits en dur) ;
+3. python -m src.inference --forcer       -> artefacts des deux XGBoost de l'inference en direct, par sous-jeu
+                                             (models/<SOUS_JEU>__<modele>.joblib, page "Tester un moteur"),
+                                             reentraines pour correspondre aux predictions qui viennent d'etre
+                                             ecrites, puis verification : inference en direct = fichiers precalcules ;
+4. python -m src.demo entrainer           -> artefact du modele retenu (models/modele_retenu.joblib),
+                                             utilise par la demo en ligne de commande (python -m src.demo) ;
 5. etat final : fichiers de predictions disponibles et controle de coherence de chacun.
 
 Pourquoi des sous-processus ? Les scripts 1 et 2 sont ecrits et maintenus a part ; les lancer comme
 en ligne de commande garantit le meme comportement. Et charger PyTorch (deep learning) et
 XGBoost / LightGBM dans le meme processus peut le bloquer (conflit entre leurs bibliotheques de calcul
-parallele OpenMP) : chaque script a donc son propre processus. Ce script-ci n'importe jamais torch.
+parallele OpenMP) : chaque script a donc son propre processus. Ce script-ci n'importe jamais torch
+(src/inference.py, qui le charge, est lui aussi lance dans un sous-processus).
 
 Si un script n'existe pas encore, l'etape est sautee avec un message clair. Le code de sortie vaut 1
 si une etape a echoue, 0 sinon.
@@ -156,36 +159,6 @@ def etape_script(nom, script, sous_jeux):
     return lancer_etape(nom, commande)
 
 
-def etape_reproductibilite():
-    """
-    Compte les tests automatises et releve le commit, puis ecrit sorties/demo/infos_reproductibilite.json.
-
-    Returns
-    -------
-    dict
-        Resultat de l'etape ("etape", "statut", "duree_s").
-    """
-    afficher_bandeau("Reproductibilite : nombre de tests (pytest --collect-only) et commit courant")
-    debut = time.perf_counter()
-    infos = dd.compter_tests_pytest()  # lance pytest --collect-only dans un sous-processus
-    git = dd.informations_git()  # commandes git en lecture seule
-    for cle in git:
-        infos[cle] = git[cle]
-    chemin = dd.ecrire_infos_reproductibilite(infos)
-    duree = time.perf_counter() - debut
-    resultat = {}
-    resultat["etape"] = "Reproductibilite"
-    resultat["duree_s"] = duree
-    if infos["nb_tests"] is None:
-        resultat["statut"] = f"ECHEC (collecte pytest, code {infos['code_retour']})"
-    else:
-        resultat["statut"] = "reussie"
-        print(f"  {infos['nb_tests']} tests collectes ; commit {git['commit']} (branche {git['branche']}, "
-              f"modifications locales : {git['modifications_locales']})")
-    print(f"  ecrit dans {os.path.relpath(chemin, RACINE_DEPOT)}", flush=True)
-    return resultat
-
-
 def afficher_etat_final():
     """
     Affiche les fichiers de predictions disponibles et le controle de coherence de chacun.
@@ -232,7 +205,7 @@ def construire_parseur():
     """
     parseur = argparse.ArgumentParser(
         prog="python scripts/preparer_demo.py",
-        description="Prepare les fichiers lus par le tableau de bord de demo (predictions, artefact, tests).",
+        description="Prepare les fichiers lus par l'application de demo (predictions, artefacts).",
     )
     parseur.add_argument(
         "--seulement-arbres", action="store_true",
@@ -270,11 +243,17 @@ def main(argv=None):
     else:
         resultats.append(etape_script("Predictions deep learning (LSTM, CNN 1D)", SCRIPT_DEEP_LEARNING, arguments.sous_jeux))
 
-    # 3. artefact du modele retenu (demo en ligne de commande, page "Et si...")
-    resultats.append(lancer_etape("Artefact du modele retenu", [sys.executable, "-m", "src.demo", "entrainer"]))
+    # 3. artefacts XGBoost de l'inference en direct (un par sous-jeu et par modele), reentraines pour
+    #    correspondre aux predictions qui viennent d'etre ecrites, puis comparaison directe / precalcule
+    commande_inference = [sys.executable, "-m", "src.inference", "--forcer"]
+    if arguments.sous_jeux is not None:
+        commande_inference.append("--sous-jeux")
+        for sous_jeu in arguments.sous_jeux:
+            commande_inference.append(sous_jeu)
+    resultats.append(lancer_etape("Artefacts de l'inference en direct", commande_inference))
 
-    # 4. nombre de tests et commit, ecrits avec leur date
-    resultats.append(etape_reproductibilite())
+    # 4. artefact du modele retenu (demo en ligne de commande)
+    resultats.append(lancer_etape("Artefact du modele retenu", [sys.executable, "-m", "src.demo", "entrainer"]))
 
     # 5. etat final
     tout_coherent = afficher_etat_final()

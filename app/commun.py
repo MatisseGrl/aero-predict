@@ -1,10 +1,9 @@
 """
-Outils Streamlit partages par toutes les pages du tableau de bord : caches, messages, mise en forme.
+Outils Streamlit partages par les deux pages de l'application : caches, mise en forme, petits elements.
 
 Les caches (`st.cache_data`, `st.cache_resource`) rendent l'application instantanee apres le premier
-affichage. Leur cle contient la "signature" des fichiers lus (date de modification + taille) : si un
-script reecrit un fichier de predictions pendant que l'application tourne, la nouvelle version est
-relue automatiquement, sans redemarrer.
+affichage. Leur cle contient la "signature" des fichiers lus (date de modification + taille) : si un script
+reecrit un fichier de predictions ou de modele pendant que l'application tourne, il est relu automatiquement.
 """
 
 import os
@@ -12,8 +11,6 @@ import os
 import streamlit as st
 
 from src import donnees_demo as dd
-from src.config_modele import CHEMIN_CONFIG_RETENUE, RACINE_DEPOT
-from src.contrat_predictions import chemin_metadonnees, chemin_predictions
 from src.demo import STATUT_ALERTE_CORRECTE, STATUT_ALERTE_MANQUEE, STATUT_FAUSSE_ALERTE, STATUT_RIEN_A_SIGNALER
 
 # couleur du badge Streamlit de chaque statut (rouge reserve au cas dangereux)
@@ -24,9 +21,11 @@ COULEURS_BADGES = {
     STATUT_RIEN_A_SIGNALER: "gray",
 }
 
-# commande a lancer pour produire les fichiers de predictions (affichee quand il n'y en a aucun)
+# racine du depot = dossier parent de app/
+RACINE_DEPOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# commande a lancer pour produire les fichiers de predictions et les modeles (affichee s'il en manque)
 COMMANDE_PREPARATION = "python scripts/preparer_demo.py"
-COMMANDE_ARBRES_FD001 = "python scripts/generer_predictions_arbres.py --sous-jeux FD001"
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -52,7 +51,7 @@ def fr(valeur, decimales=1):
     texte_anglais = f"{float(valeur):,.{decimales}f}"  # "1,053.9"
     texte_temporaire = texte_anglais.replace(",", "_")  # "1_053.9"
     texte_virgule = texte_temporaire.replace(".", ",")  # "1_053,9"
-    return texte_virgule.replace("_", " ")  # espace fine insecable pour les milliers
+    return texte_virgule.replace("_", " ")  # espace fine insecable pour les milliers
 
 
 def fr_signe(valeur, decimales=1):
@@ -77,42 +76,6 @@ def fr_signe(valeur, decimales=1):
     return "-" + fr(abs(float(valeur)), decimales)
 
 
-def delta_comparaison(valeur, reference, decimales, libelle_reference):
-    """
-    Prepare l'ecart affiche sous un st.metric quand on compare une valeur a une reference.
-
-    Ecart nul (a la precision affichee) : texte "identique a ...", gris, sans fleche. Sinon : ecart signe,
-    couleurs inversees (pour une metrique ou "plus petit = mieux" : une hausse est en rouge).
-
-    Parameters
-    ----------
-    valeur : float
-        La valeur affichee.
-    reference : float
-        La valeur de reference.
-    decimales : int
-        Precision d'affichage.
-    libelle_reference : str
-        Le nom de la reference (ex. "XGBoost Phase 3").
-
-    Returns
-    -------
-    dict
-        Arguments a passer a st.metric : delta, delta_color, delta_arrow.
-    """
-    ecart = round(float(valeur) - float(reference), decimales)
-    arguments = {}
-    if ecart == 0:
-        arguments["delta"] = f"identique à {libelle_reference}"
-        arguments["delta_color"] = "gray"
-        arguments["delta_arrow"] = "off"
-    else:
-        arguments["delta"] = f"{fr_signe(ecart, decimales)} vs {libelle_reference}"
-        arguments["delta_color"] = "inverse"
-        arguments["delta_arrow"] = "auto"
-    return arguments
-
-
 def chemin_lisible(chemin):
     """
     Raccourcit un chemin pour l'affichage : relatif a la racine du depot s'il est dedans.
@@ -134,7 +97,7 @@ def chemin_lisible(chemin):
 
 
 # ---------------------------------------------------------------------------------------------------
-# Caches : predictions (via le contrat)
+# Caches : fichiers de predictions (page "Comparer les modeles")
 # ---------------------------------------------------------------------------------------------------
 
 @st.cache_data(show_spinner=False)
@@ -170,145 +133,15 @@ def inventaire():
     return _inventaire_en_cache(dossier, dd.signature_dossier(dossier))
 
 
-@st.cache_data(show_spinner="Lecture du fichier de prédictions…")
-def _predictions_en_cache(sous_jeu, modele, dossier, signature):
+@st.cache_data(show_spinner="Lecture des fichiers de prédictions…")
+def _comparaison_en_cache(sous_jeu, dossier, signature):
     """
-    Version en cache de `charger_predictions`.
+    Version en cache de `tableau_comparaison_sous_jeu`.
 
     Parameters
     ----------
-    sous_jeu, modele : str
-        Le couple a lire.
-    dossier : str
-        Le dossier des predictions.
-    signature : tuple
-        Signatures du CSV et du JSON (cle de cache).
-
-    Returns
-    -------
-    tuple
-        (DataFrame, metadonnees).
-    """
-    return dd.charger_predictions(sous_jeu, modele, dossier)
-
-
-def predictions(sous_jeu, modele):
-    """
-    Lit les predictions d'un (sous-jeu, modele), depuis le cache si le fichier n'a pas change.
-
-    Parameters
-    ----------
-    sous_jeu, modele : str
-        Le couple a lire.
-
-    Returns
-    -------
-    tuple
-        (DataFrame des predictions, metadonnees).
-    """
-    dossier = dd.dossier_predictions()
-    signature = (
-        dd.signature_fichier(chemin_predictions(sous_jeu, modele, dossier)),
-        dd.signature_fichier(chemin_metadonnees(sous_jeu, modele, dossier)),
-    )
-    return _predictions_en_cache(sous_jeu, modele, dossier, signature)
-
-
-@st.cache_data(show_spinner="Calcul du tableau de la flotte…")
-def _flotte_en_cache(sous_jeu, modele, dossier, signature, seuil_alerte):
-    """
-    Version en cache du tableau de flotte et de son resume (dependent du seuil d'alerte).
-
-    Parameters
-    ----------
-    sous_jeu, modele, dossier : str
-        Le fichier concerne.
-    signature : tuple
-        Signature des fichiers (cle de cache).
-    seuil_alerte : float
-        Le seuil d'alerte.
-
-    Returns
-    -------
-    tuple
-        (tableau de flotte, resume des indicateurs).
-    """
-    df, meta = dd.charger_predictions(sous_jeu, modele, dossier)
-    tableau = dd.tableau_flotte(df, seuil_alerte)
-    resume = dd.resumer_tableau_flotte(tableau, seuil_alerte)
-    return tableau, resume
-
-
-def flotte(sous_jeu, modele, seuil_alerte):
-    """
-    Renvoie le tableau de flotte et son resume, depuis le cache si possible.
-
-    Parameters
-    ----------
-    sous_jeu, modele : str
-        Le couple a afficher.
-    seuil_alerte : float
-        Le seuil d'alerte.
-
-    Returns
-    -------
-    tuple
-        (tableau de flotte, resume).
-    """
-    dossier = dd.dossier_predictions()
-    signature = (
-        dd.signature_fichier(chemin_predictions(sous_jeu, modele, dossier)),
-        dd.signature_fichier(chemin_metadonnees(sous_jeu, modele, dossier)),
-    )
-    return _flotte_en_cache(sous_jeu, modele, dossier, signature, float(seuil_alerte))
-
-
-@st.cache_data(show_spinner="Lecture des métadonnées…")
-def _comparaison_en_cache(dossier, signature):
-    """
-    Version en cache du tableau de comparaison, du detail de validation et des controles de coherence.
-
-    Parameters
-    ----------
-    dossier : str
-        Le dossier des predictions.
-    signature : tuple
-        Signature du dossier (cle de cache).
-
-    Returns
-    -------
-    tuple
-        (tableau_comparaison, tableau_validation_detaille, controler_tous_les_fichiers).
-    """
-    liste = dd.inventaire_predictions(dossier)
-    comparaison = dd.tableau_comparaison(liste, dossier)
-    validation = dd.tableau_validation_detaille(liste, dossier)
-    controles = dd.controler_tous_les_fichiers(liste, dossier)
-    return comparaison, validation, controles
-
-
-def comparaison():
-    """
-    Renvoie (tableau de comparaison, detail de validation, controles de coherence) pour tous les fichiers.
-
-    Returns
-    -------
-    tuple
-        Voir `_comparaison_en_cache`.
-    """
-    dossier = dd.dossier_predictions()
-    return _comparaison_en_cache(dossier, dd.signature_dossier(dossier))
-
-
-@st.cache_data(show_spinner="Tests appariés…")
-def _tests_apparies_en_cache(modele_a, modele_b, dossier, signature):
-    """
-    Version en cache de `comparer_deux_modeles`.
-
-    Parameters
-    ----------
-    modele_a, modele_b : str
-        Les deux modeles compares.
+    sous_jeu : str
+        Le sous-jeu.
     dossier : str
         Le dossier des predictions.
     signature : tuple
@@ -317,38 +150,15 @@ def _tests_apparies_en_cache(modele_a, modele_b, dossier, signature):
     Returns
     -------
     pandas.DataFrame
-        Le resultat de `comparer_deux_modeles`.
+        Le tableau de comparaison du sous-jeu.
     """
     liste = dd.inventaire_predictions(dossier)
-    return dd.comparer_deux_modeles(liste, modele_a, modele_b, dossier)
+    return dd.tableau_comparaison_sous_jeu(liste, sous_jeu, dossier)
 
 
-def tests_apparies(modele_a, modele_b):
+def comparaison(sous_jeu):
     """
-    Compare deux modeles moteur par moteur sur chaque sous-jeu commun (depuis le cache si possible).
-
-    Parameters
-    ----------
-    modele_a, modele_b : str
-        Les deux modeles compares.
-
-    Returns
-    -------
-    pandas.DataFrame
-        Le resultat de `comparer_deux_modeles`.
-    """
-    dossier = dd.dossier_predictions()
-    return _tests_apparies_en_cache(modele_a, modele_b, dossier, dd.signature_dossier(dossier))
-
-
-# ---------------------------------------------------------------------------------------------------
-# Caches : donnees brutes, resultats de la Phase 4, artefact
-# ---------------------------------------------------------------------------------------------------
-
-@st.cache_data(show_spinner="Lecture des données capteurs brutes…")
-def donnees_brutes_test(sous_jeu):
-    """
-    Donnees capteurs brutes du jeu de test d'un sous-jeu (en cache : le fichier ne change pas).
+    Tableau de comparaison des modeles affiches d'un sous-jeu, depuis le cache si possible.
 
     Parameters
     ----------
@@ -358,214 +168,88 @@ def donnees_brutes_test(sous_jeu):
     Returns
     -------
     pandas.DataFrame
-        Le resultat de `charger_donnees_brutes_test`.
+        Le resultat de `tableau_comparaison_sous_jeu`.
     """
-    return dd.charger_donnees_brutes_test(sous_jeu)
+    dossier = dd.dossier_predictions()
+    return _comparaison_en_cache(sous_jeu, dossier, dd.signature_dossier(dossier))
 
 
-@st.cache_data(show_spinner=False)
-def _csv_resultat_en_cache(nom_fichier, signature):
+# ---------------------------------------------------------------------------------------------------
+# Caches : inference en direct (page "Tester un moteur")
+# ---------------------------------------------------------------------------------------------------
+
+@st.cache_resource(show_spinner="Chargement des modèles entraînés…")
+def _modeles_inference_en_cache(sous_jeu, dossier, signatures):
     """
-    Version en cache de `lire_csv_resultat`.
+    Charge une seule fois par sous-jeu (et par version des fichiers de modeles) l'objet d'inference.
 
     Parameters
     ----------
-    nom_fichier : str
-        Le nom du CSV dans docs/resultats/.
-    signature : tuple
-        Signature du fichier (cle de cache).
+    sous_jeu : str
+        Le sous-jeu.
+    dossier : str
+        Le dossier des modeles.
+    signatures : tuple
+        Signatures des fichiers de modeles du sous-jeu (cle de cache : un modele regenere est relu).
 
     Returns
     -------
-    pandas.DataFrame ou None
-        Le tableau, ou None s'il n'existe pas.
+    dict
+        Le resultat de `src.inference.charger_modeles`.
     """
-    return dd.lire_csv_resultat(nom_fichier)
+    from src import inference as inf  # import ici : seule cette page charge PyTorch
+
+    return inf.charger_modeles(sous_jeu, dossier=dossier)
 
 
-def csv_resultat(nom_fichier):
+def modeles_inference(sous_jeu):
     """
-    Lit un CSV de docs/resultats/ (None s'il n'existe pas), depuis le cache si possible.
+    Renvoie l'objet d'inference d'un sous-jeu (preparation apprise sur le train + modeles), en cache.
 
     Parameters
     ----------
-    nom_fichier : str
-        Le nom du fichier.
+    sous_jeu : str
+        Le sous-jeu.
 
     Returns
     -------
-    pandas.DataFrame ou None
-        Le tableau.
+    dict
+        Le resultat de `src.inference.charger_modeles`.
     """
-    chemin = os.path.join(dd.DOSSIER_RESULTATS, nom_fichier)
-    return _csv_resultat_en_cache(nom_fichier, dd.signature_fichier(chemin))
+    from src import inference as inf
 
-
-@st.cache_data(show_spinner=False)
-def _config_retenue_en_cache(signature):
-    """
-    Version en cache de `lire_config_retenue`.
-
-    Parameters
-    ----------
-    signature : tuple
-        Signature du fichier (cle de cache).
-
-    Returns
-    -------
-    dict ou None
-        La configuration retenue.
-    """
-    return dd.lire_config_retenue()
-
-
-def config_retenue():
-    """
-    Lit docs/resultats/04_config_retenue.json (None s'il n'existe pas).
-
-    Returns
-    -------
-    dict ou None
-        La configuration retenue.
-    """
-    return _config_retenue_en_cache(dd.signature_fichier(CHEMIN_CONFIG_RETENUE))
-
-
-@st.cache_data(show_spinner="Reconstruction du front de Pareto…")
-def _optuna_en_cache(signature):
-    """
-    Version en cache de `analyser_optuna`.
-
-    Parameters
-    ----------
-    signature : tuple
-        Signatures des CSV Optuna et de la configuration (cle de cache).
-
-    Returns
-    -------
-    dict ou None
-        Le resultat de `analyser_optuna`.
-    """
-    return dd.analyser_optuna()
-
-
-def optuna():
-    """
-    Analyse des essais Optuna (front de Pareto, regle de choix rejouee), depuis le cache si possible.
-
-    Returns
-    -------
-    dict ou None
-        Le resultat de `analyser_optuna`.
-    """
+    dossier = inf.dossier_modeles()
     signatures = []
-    for nom in sorted(os.listdir(dd.DOSSIER_RESULTATS)):
-        if nom.startswith("04_optuna_"):
-            signatures.append(dd.signature_fichier(os.path.join(dd.DOSSIER_RESULTATS, nom)))
-    signatures.append(dd.signature_fichier(CHEMIN_CONFIG_RETENUE))
-    return _optuna_en_cache(tuple(signatures))
-
-
-@st.cache_resource(show_spinner="Chargement du modèle retenu (entraînement automatique s'il manque)…")
-def _artefact_en_cache(chemin, signature):
-    """
-    Charge l'artefact (et l'entraine s'il manque) une seule fois par version du fichier.
-
-    Parameters
-    ----------
-    chemin : str
-        Le fichier de l'artefact.
-    signature : tuple
-        Signature du fichier (cle de cache).
-
-    Returns
-    -------
-    dict
-        L'artefact.
-    """
-    return dd.charger_artefact_demo(chemin)
-
-
-def artefact():
-    """
-    Renvoie l'artefact du modele retenu (modele + preparation apprise sur le train).
-
-    Returns
-    -------
-    dict
-        L'artefact pret a predire.
-    """
-    chemin = dd.chemin_artefact_demo()
-    return _artefact_en_cache(chemin, dd.signature_fichier(chemin))
-
-
-@st.cache_resource(show_spinner=False)
-def _artefact_si_present_en_cache(chemin, signature):
-    """
-    Charge l'artefact s'il existe, sans jamais l'entrainer (page d'accueil).
-
-    Parameters
-    ----------
-    chemin : str
-        Le fichier de l'artefact.
-    signature : tuple
-        Signature du fichier (cle de cache).
-
-    Returns
-    -------
-    dict ou None
-        L'artefact, ou None s'il n'existe pas.
-    """
-    return dd.charger_artefact_si_present(chemin)
-
-
-def artefact_si_present():
-    """
-    Renvoie l'artefact s'il existe deja sur le disque (None sinon), sans entrainement.
-
-    Returns
-    -------
-    dict ou None
-        L'artefact.
-    """
-    chemin = dd.chemin_artefact_demo()
-    return _artefact_si_present_en_cache(chemin, dd.signature_fichier(chemin))
+    for modele in inf.MODELES_ARBRES:
+        signatures.append(dd.signature_fichier(inf.chemin_artefact_arbres(sous_jeu, modele, dossier)))
+    for modele in inf.MODELES_RESEAUX:
+        signatures.append(dd.signature_fichier(inf.chemin_poids_reseau(sous_jeu, modele, dossier)))
+    return _modeles_inference_en_cache(sous_jeu, dossier, tuple(signatures))
 
 
 @st.cache_data(show_spinner=False)
-def donnees_test_fd001():
+def moteurs_test(sous_jeu):
     """
-    Donnees test brutes FD001 et RUL vraie au dernier cycle (en cache).
+    Numeros des moteurs du jeu de test d'un sous-jeu (en cache : le fichier ne change pas).
+
+    Parameters
+    ----------
+    sous_jeu : str
+        Le sous-jeu.
 
     Returns
     -------
-    tuple
-        (DataFrame brut, tableau numpy des 100 RUL).
+    list de int
+        Les numeros de moteurs.
     """
-    return dd.donnees_test_fd001()
+    from src import inference as inf
+
+    return inf.lister_moteurs_test(sous_jeu)
 
 
 # ---------------------------------------------------------------------------------------------------
 # Elements d'interface reutilises
 # ---------------------------------------------------------------------------------------------------
-
-def message_aucun_fichier():
-    """
-    Affiche le message "aucun fichier de predictions", avec le dossier lu et la commande a lancer.
-
-    Returns
-    -------
-    None
-    """
-    dossier = dd.dossier_predictions()
-    st.warning(
-        f"Aucun fichier de prédictions trouvé dans `{chemin_lisible(dossier)}`.\n\n"
-        f"Pour les produire, lancer depuis la racine du dépôt : `{COMMANDE_PREPARATION}` "
-        f"(ou, pour les seuls modèles à arbres sur FD001 : `{COMMANDE_ARBRES_FD001}`).\n\n"
-        "Les pages « Et si… » et « Fiabilité » fonctionnent sans ces fichiers.",
-        icon=":material/folder_off:",
-    )
-
 
 def badge_statut(statut):
     """
@@ -644,22 +328,3 @@ def memoriser_choix(cle):
     """
     if cle in st.session_state:
         st.session_state["memo_" + cle] = st.session_state[cle]
-
-
-def sources(*fichiers):
-    """
-    Affiche, en petit, la liste des fichiers d'ou viennent les chiffres de la section.
-
-    Parameters
-    ----------
-    *fichiers : str
-        Les chemins (relatifs a la racine du depot) des fichiers lus.
-
-    Returns
-    -------
-    None
-    """
-    morceaux = []
-    for fichier in fichiers:
-        morceaux.append(f"`{fichier}`")
-    st.caption("Source : " + ", ".join(morceaux))
