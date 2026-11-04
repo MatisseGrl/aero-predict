@@ -1,14 +1,14 @@
 """
-Configuration du modele retenu (Phase 4) : lecture, validation, ecriture et construction du modele.
+Configuration d'un modele : validation, description et construction d'une fabrique de modeles neufs.
 
-Pourquoi ce module ? L'optimisation des hyperparametres (Phase 4) choisit UN modele : une famille
-(XGBoost, LightGBM, ...), une perte d'apprentissage (native, quadratique asymetrique, forme NASA),
-les parametres de cette perte et les hyperparametres. Ce choix est ecrit dans un petit fichier JSON
-(docs/resultats/04_config_retenue.json), lisible par un humain et versionne avec le code. La demo,
-le notebook de la Phase 4 et les scripts relisent ce fichier : un seul endroit decrit "le modele
-retenu", et personne n'a a recopier les reglages a la main.
+Pourquoi ce module ? Un modele est decrit par un petit dictionnaire (une "configuration") : une famille
+(XGBoost, LightGBM, ...), une perte d'apprentissage (native, quadratique asymetrique, forme NASA), les
+parametres de cette perte et les hyperparametres. Les scripts (scripts/generer_predictions_arbres.py),
+l'inference en direct (src/inference.py) et les notebooks construisent leurs modeles a partir de ces
+configurations, au lieu de recopier les reglages a la main. La configuration de reference est
+CONFIG_PHASE3 : le XGBoost de la Phase 3 (notebook 03).
 
-Schema d'une configuration (un dictionnaire Python, ou un objet JSON) :
+Schema d'une configuration (un dictionnaire Python) :
 
 - "famille" : "xgboost", "lightgbm", "random_forest" ou "reference_naive" ;
 - "perte" : "native", "quadratique_asymetrique" ou "nasa" ;
@@ -23,7 +23,6 @@ avec la perte "native" seulement (les pertes sur mesure n'existent que pour le b
 """
 
 import copy
-import json
 import numbers
 import os
 
@@ -41,12 +40,11 @@ from src.modeles import (
     fabrique_xgboost_nasa,
 )
 
-# Chemin ABSOLU du fichier de configuration retenue, calcule depuis l'emplacement de ce fichier
-# (meme principe que DATA_DIR dans src/preprocessing.py) : il est le meme quel que soit le dossier
-# depuis lequel Python est lance (racine du depot, notebooks/, tests/, scripts/).
+# Chemin ABSOLU de la racine du depot, calcule depuis l'emplacement de ce fichier (meme principe que
+# DATA_DIR dans src/preprocessing.py) : il est le meme quel que soit le dossier depuis lequel Python est
+# lance (racine du depot, notebooks/, tests/, scripts/). Utilise par les autres modules pour leurs chemins.
 DOSSIER_SRC = os.path.dirname(os.path.abspath(__file__))  # dossier qui contient ce fichier : src/
 RACINE_DEPOT = os.path.normpath(os.path.join(DOSSIER_SRC, ".."))  # src/.. simplifie en <racine du depot>
-CHEMIN_CONFIG_RETENUE = os.path.join(RACINE_DEPOT, "docs", "resultats", "04_config_retenue.json")
 
 # Familles de modeles connues, et pertes acceptees pour chacune d'elles
 FAMILLES_VALIDES = ["xgboost", "lightgbm", "random_forest", "reference_naive"]
@@ -70,8 +68,8 @@ PARAMETRES_PERTE_OPTIONNELS = {
     "nasa": ["d_max"],  # seuil du prolongement quadratique, D_MAX_DEFAUT (50) s'il est absent
 }
 
-# Configuration de reference : le XGBoost de la Phase 3 (notebook 03), utilisee si aucun fichier
-# de configuration retenue n'existe encore
+# Configuration de reference : le XGBoost de la Phase 3 (notebook 03), modele a arbres des scripts,
+# de l'inference en direct et de l'application
 CONFIG_PHASE3 = {
     "famille": "xgboost",
     "perte": "native",
@@ -227,7 +225,7 @@ def convertir_en_types_python(valeur):
     Convertit recursivement une valeur en types Python simples, ecrivables en JSON.
 
     Le module json ne sait pas ecrire les types numpy (numpy.int64, numpy.bool_, numpy.ndarray),
-    qui sortent pourtant souvent d'Optuna ou des calculs de metriques. On les remplace par leurs
+    qui sortent pourtant souvent des calculs de metriques. On les remplace par leurs
     equivalents Python (int, float, bool, list). Les dictionnaires et listes sont parcourus en
     profondeur ; les tuples deviennent des listes (JSON n'a pas de tuple).
 
@@ -275,98 +273,13 @@ def convertir_en_types_python(valeur):
     return valeur
 
 
-def charger_config(chemin=None):
-    """
-    Lit une configuration de modele depuis un fichier JSON et la valide.
-
-    Si le fichier n'existe pas (par exemple avant que l'optimisation de la Phase 4 n'ait ecrit son
-    resultat), on l'explique a l'ecran et on renvoie une copie de CONFIG_PHASE3 : la demo reste
-    utilisable avec le modele de reference de la Phase 3.
-
-    Parameters
-    ----------
-    chemin : str, optionnel
-        Chemin du fichier JSON. Par defaut : CHEMIN_CONFIG_RETENUE (docs/resultats/04_config_retenue.json).
-
-    Returns
-    -------
-    dict
-        La configuration lue et validee, ou une copie independante de CONFIG_PHASE3.
-
-    Raises
-    ------
-    ValueError
-        Si le fichier existe mais n'est pas un JSON valide, ou si la configuration est invalide.
-    """
-    if chemin is None:  # aucun chemin donne : on lit la configuration retenue par defaut
-        chemin = CHEMIN_CONFIG_RETENUE
-
-    # fichier absent : message explicite puis repli sur la configuration de la Phase 3
-    if not os.path.exists(chemin):
-        print(f"[config] Fichier de configuration introuvable : {chemin}")
-        print(f"[config] -> on utilise la configuration de reference : {CONFIG_PHASE3['nom']}.")
-        return copy.deepcopy(CONFIG_PHASE3)  # copie profonde : modifier le resultat ne touche pas CONFIG_PHASE3
-
-    # lecture du fichier JSON (UTF-8, comme a l'ecriture)
-    with open(chemin, "r", encoding="utf-8") as fichier:
-        try:
-            config = json.load(fichier)
-        except json.JSONDecodeError as erreur:
-            raise ValueError(f"Le fichier {chemin} n'est pas un JSON valide : {erreur}") from erreur
-
-    valider_config(config)  # leve une ValueError claire si la configuration est incoherente
-    return config
-
-
-def sauvegarder_config(config, chemin=None):
-    """
-    Valide une configuration puis l'ecrit en JSON indente (UTF-8), en creant le dossier si besoin.
-
-    Les types numpy eventuels (numpy.float64, numpy.int64, tableaux, ...) sont convertis en types
-    Python avant l'ecriture (voir `convertir_en_types_python`). Si la configuration est invalide,
-    rien n'est ecrit.
-
-    Parameters
-    ----------
-    config : dict
-        La configuration a ecrire (n'est pas modifiee).
-    chemin : str, optionnel
-        Chemin du fichier JSON. Par defaut : CHEMIN_CONFIG_RETENUE.
-
-    Returns
-    -------
-    str
-        Le chemin du fichier ecrit.
-
-    Raises
-    ------
-    ValueError
-        Si la configuration est invalide (voir `valider_config`).
-    """
-    if chemin is None:  # aucun chemin donne : on ecrit la configuration retenue par defaut
-        chemin = CHEMIN_CONFIG_RETENUE
-
-    config_python = convertir_en_types_python(config)  # copie en types Python simples
-    valider_config(config_python)  # on valide AVANT d'ecrire : un fichier invalide n'est jamais cree
-
-    # creation du dossier parent s'il n'existe pas encore (ex. docs/resultats/)
-    dossier_parent = os.path.dirname(os.path.abspath(chemin))
-    os.makedirs(dossier_parent, exist_ok=True)
-
-    # ecriture : indentation de 2 espaces (lisible dans une revue de code), accents gardes tels quels
-    with open(chemin, "w", encoding="utf-8") as fichier:
-        json.dump(config_python, fichier, indent=2, ensure_ascii=False)
-        fichier.write("\n")  # fin de ligne finale, comme tout fichier texte du depot
-    return chemin
-
-
 def construire_fabrique_depuis_config(config):
     """
     Construit, a partir d'une configuration, une fabrique de modeles : une fonction SANS argument
     qui renvoie a chaque appel un modele NEUF, non entraine, correspondant a la configuration.
 
     C'est exactement ce qu'attend `evaluer_en_validation_croisee` (src/evaluation.py), qui appelle la
-    fabrique une fois par pli, et c'est aussi ce qu'utilise la demo pour l'entrainement final.
+    fabrique une fois par pli ; les scripts et l'inference en direct l'utilisent aussi pour le modele final.
     La configuration est validee puis recopiee au moment de l'appel : la modifier ensuite ne change
     pas les modeles produits par la fabrique.
 
@@ -438,7 +351,7 @@ def construire_fabrique_depuis_config(config):
 
 def decrire_config(config):
     """
-    Resume une configuration en une ligne lisible, pour l'affichage (demo, notebook, logs).
+    Resume une configuration en une ligne lisible, pour l'affichage (scripts, notebooks, metadonnees).
 
     Exemples : "XGBoost Phase 3 (xgboost, perte native)" ou
     "LightGBM NASA (lightgbm, perte nasa, h_sous=13, h_sur=8)".

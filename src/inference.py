@@ -7,7 +7,7 @@ train de travailler : on lui donne un moteur qu'il n'a jamais vu (jeu de TEST), 
 par cycle, et a chaque cycle t on prepare les mesures 1..t avec ce qui a ete appris sur le TRAIN, puis on
 predit. Rien n'est lu dans un fichier de predictions, rien n'est reappris.
 
-Interface publique (utilisee par l'application et par le notebook 04) :
+Interface publique (utilisee par l'application et par le notebook 05) :
 
 - `charger_modeles(sous_jeu)` : prepare le sous-jeu (parametres appris sur train_FD00X : regimes, capteurs
   retires, min / max des capteurs), recharge le XGBoost (models/<SOUS_JEU>__xgboost_phase3.joblib, entraine
@@ -71,8 +71,7 @@ import torch  # noqa: E402  (apres les modules du projet, voir ci-dessus)
 # Constantes
 # ---------------------------------------------------------------------------------------------------
 
-# les trois modeles de la demo, dans l'ordre d'affichage (memes cles que src/contrat_predictions.py). Le
-# "XGBoost retenu (Optuna)" n'en fait plus partie : la Phase 4 a conclu de garder les reglages de la Phase 3.
+# les trois modeles de la demo, dans l'ordre d'affichage (memes cles que src/contrat_predictions.py)
 MODELES_ARBRES = ["xgboost_phase3"]  # reentraine ici s'il manque (moins d'une seconde mesuree)
 MODELES_RESEAUX = ["lstm", "cnn1d"]  # jamais reentraines ici (poids produits par scripts/entrainer_deep_learning.py)
 MODELES_INFERENCE = []
@@ -545,7 +544,7 @@ def sauvegarder_artefact_arbres(artefact, chemin):
     Ecrit un artefact XGBoost avec joblib, le modele etant serialise par cloudpickle (dossier cree si besoin).
 
     Pourquoi cloudpickle ? Une perte sur mesure (src/modeles.py) est une fonction definie dans une autre
-    fonction : le module pickle standard ne sait pas l'ecrire, cloudpickle si (meme methode que src/demo.py).
+    fonction : le module pickle standard ne sait pas l'ecrire, cloudpickle si.
 
     Parameters
     ----------

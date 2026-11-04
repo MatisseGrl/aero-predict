@@ -1,34 +1,33 @@
 """
-Genere les fichiers de predictions des modeles a arbres (XGBoost) sur les sous-jeux C-MAPSS.
+Genere les fichiers de predictions du modele a arbres (XGBoost Phase 3) sur les sous-jeux C-MAPSS.
 
 Pour chaque sous-jeu (FD001 a FD004) et chaque modele demande :
 
 1. preparation des donnees (src/sous_jeux.py : regimes, normalisation, lissage, features glissantes) ;
-2. validation croisee par moteur : GroupKFold, 5 plis melanges (graine 42), les MEMES plis pour les
-   deux modeles d'un meme sous-jeu (calcules une seule fois par `calculer_plis`) ;
+2. validation croisee par moteur : GroupKFold, 5 plis melanges (graine 42), calcules une seule fois par
+   sous-jeu (`calculer_plis`) : ce sont aussi les plis des reseaux (scripts/entrainer_deep_learning.py) ;
 3. entrainement final sur TOUS les moteurs d'entrainement du sous-jeu ;
 4. prediction a CHAQUE cycle de CHAQUE moteur test (clippee a 0), ecrite au format du contrat
    (src/contrat_predictions.py) dans sorties/predictions/<SOUS_JEU>__<modele>.csv.gz + .json ;
 5. ecriture (ou mise a jour) des resultats versionnes dans docs/resultats/ :
-   - 04b_sous_jeux_arbres.csv : une ligne par (sous-jeu, modele) : CV moyenne +- ecart-type, test, durees ;
-   - 04b_metriques_par_moteur_cv.csv : erreurs hors-pli de chaque moteur d'entrainement (tests apparies) ;
-   - 04b_predictions_test_dernier_cycle.csv : prediction au dernier cycle de chaque moteur test.
+   - 01b_sous_jeux_arbres.csv : une ligne par (sous-jeu, modele) : CV moyenne +- ecart-type, test, durees ;
+   - 01b_metriques_par_moteur_cv.csv : erreurs hors-pli de chaque moteur d'entrainement (tests apparies) ;
+   - 01b_predictions_test_dernier_cycle.csv : prediction au dernier cycle de chaque moteur test.
 
-Les deux modeles :
-- xgboost_phase3 : CONFIG_PHASE3 de src/config_modele.py (XGBoost de la Phase 3, perte native) ;
-- xgboost_retenu : docs/resultats/04_config_retenue.json (XGBoost, perte quadratique asymetrique).
-Les reglages sont ceux choisis sur FD001 et ne sont PAS reoptimises par sous-jeu : c'est une limite connue.
+Le modele : xgboost_phase3, c'est-a-dire CONFIG_PHASE3 de src/config_modele.py (XGBoost de la Phase 3,
+perte native). Ses reglages ont ete choisis sur FD001 et ne sont PAS reoptimises par sous-jeu : c'est une
+limite connue.
 
 Option --ablations : compare, en validation croisee seulement (le test n'est jamais regarde), plusieurs
 variantes de preparation sur FD002 et FD004 (normalisation globale vs par regime, regime ajoute ou non
-comme feature one-hot). Resultats dans docs/resultats/04b_ablations_preparation.csv et
-docs/resultats/04b_ablations_par_moteur_cv.csv.
+comme feature one-hot). Resultats dans docs/resultats/01b_ablations_preparation.csv et
+docs/resultats/01b_ablations_par_moteur_cv.csv.
 
 Exemples, depuis la racine du depot :
 
-    python scripts/generer_predictions_arbres.py                          # 4 sous-jeux, 2 modeles
+    python scripts/generer_predictions_arbres.py                          # 4 sous-jeux
     python scripts/generer_predictions_arbres.py --sous-jeux FD001        # FD001 seulement
-    python scripts/generer_predictions_arbres.py --modeles xgboost_retenu --sous-jeux FD002 FD004
+    python scripts/generer_predictions_arbres.py --sous-jeux FD002 FD004  # deux sous-jeux
     python scripts/generer_predictions_arbres.py --ablations              # variantes de preparation (CV)
 """
 
@@ -47,13 +46,7 @@ sys.path.insert(0, RACINE_DEPOT)
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 
-from src.config_modele import (  # noqa: E402
-    CHEMIN_CONFIG_RETENUE,
-    CONFIG_PHASE3,
-    charger_config,
-    construire_fabrique_depuis_config,
-    decrire_config,
-)
+from src.config_modele import CONFIG_PHASE3, construire_fabrique_depuis_config, decrire_config  # noqa: E402
 from src.contrat_predictions import (  # noqa: E402
     MODELES_CONNUS,
     ecrire_predictions,
@@ -75,37 +68,36 @@ from src.sous_jeux import SOUS_JEUX, preparer_sous_jeu  # noqa: E402
 # Constantes
 # ---------------------------------------------------------------------------------------------------
 
-# les deux modeles a arbres de ce script, dans l'ordre d'execution et d'affichage
-MODELES_ARBRES = ["xgboost_phase3", "xgboost_retenu"]
+# les modeles a arbres de ce script, dans l'ordre d'execution et d'affichage (cles du contrat de predictions)
+MODELES_ARBRES = ["xgboost_phase3"]
 
-# dossier des resultats versionnes (petits CSV relus par le notebook 04b)
+# dossier des resultats versionnes (petits CSV relus par les notebooks 01b et 03b)
 DOSSIER_RESULTATS = os.path.join(RACINE_DEPOT, "docs", "resultats")
-CHEMIN_RESUME = os.path.join(DOSSIER_RESULTATS, "04b_sous_jeux_arbres.csv")
-CHEMIN_PAR_MOTEUR_CV = os.path.join(DOSSIER_RESULTATS, "04b_metriques_par_moteur_cv.csv")
-CHEMIN_TEST_DERNIER_CYCLE = os.path.join(DOSSIER_RESULTATS, "04b_predictions_test_dernier_cycle.csv")
-CHEMIN_ABLATIONS = os.path.join(DOSSIER_RESULTATS, "04b_ablations_preparation.csv")
-CHEMIN_ABLATIONS_PAR_MOTEUR = os.path.join(DOSSIER_RESULTATS, "04b_ablations_par_moteur_cv.csv")
+CHEMIN_RESUME = os.path.join(DOSSIER_RESULTATS, "01b_sous_jeux_arbres.csv")
+CHEMIN_PAR_MOTEUR_CV = os.path.join(DOSSIER_RESULTATS, "01b_metriques_par_moteur_cv.csv")
+CHEMIN_TEST_DERNIER_CYCLE = os.path.join(DOSSIER_RESULTATS, "01b_predictions_test_dernier_cycle.csv")
+CHEMIN_ABLATIONS = os.path.join(DOSSIER_RESULTATS, "01b_ablations_preparation.csv")
+CHEMIN_ABLATIONS_PAR_MOTEUR = os.path.join(DOSSIER_RESULTATS, "01b_ablations_par_moteur_cv.csv")
 
-# reglages communs (memes valeurs que la Phase 3 et le notebook 04)
+# reglages communs (memes valeurs que la Phase 3 et le notebook 05)
 FENETRE = 5                # cycles : lissage ET features glissantes
 PLAFOND_RUL = 125          # plafond de la RUL (Phase 2)
 N_PLIS = 5                 # nombre de plis de la validation croisee par moteur
 GRAINE_PLIS = 42           # graine du melange des moteurs entre plis
 SEUIL_SURESTIMATION = 20   # cycles : surestimation comptee comme dangereuse (choix Phase 3)
-SEUIL_ALERTE = 30          # cycles : seuil d'envoi en maintenance (HYPOTHESE DE TRAVAIL, notebook 04)
+SEUIL_ALERTE = 30          # cycles : seuil d'envoi en maintenance (HYPOTHESE DE TRAVAIL, notebook 05)
 N_JOBS_DEFAUT = 4          # coeurs utilises par XGBoost (ne change pas les resultats, seulement la vitesse)
 
-# chiffres de test FD001 deja publies (docs/STATUS.md, notebook 04) : controle de reproduction
+# chiffres de test FD001 deja publies (docs/03_modelisation.md, notebook 05) : controle de reproduction
 ATTENDU_FD001 = {
     "xgboost_phase3": {"rmse": 19.70, "score_nasa": 852.9, "nb_surestimes": 9},
-    "xgboost_retenu": {"rmse": 19.73, "score_nasa": 675.4, "nb_surestimes": 9},
 }
 
 # description du protocole, recopiee dans chaque fichier de metadonnees
 PROTOCOLE_VALIDATION = (
     "Validation croisee par moteur : GroupKFold, 5 plis, shuffle=True, random_state=42 (aucun moteur a la fois "
-    "en entrainement et en validation ; chaque moteur en validation exactement une fois) ; memes plis pour "
-    "xgboost_phase3 et xgboost_retenu sur un meme sous-jeu ; un modele neuf par pli ; metriques par pli puis "
+    "en entrainement et en validation ; chaque moteur en validation exactement une fois) ; plis calcules une "
+    "seule fois par sous-jeu (calculer_plis) ; un modele neuf par pli ; metriques par pli puis "
     "moyenne et ecart-type entre plis (ddof=0) ; predictions de validation non clippees ; metriques _oof sur "
     "toutes les predictions hors-pli. Preparation (regimes K-Means, scalers, capteurs retires) apprise sur tout "
     "le train du sous-jeu avant la validation croisee (meme protocole que la Phase 3 pour le scaler). Modele "
@@ -130,15 +122,15 @@ SOUS_JEUX_ABLATION = ["FD002", "FD004"]  # les deux sous-jeux a plusieurs regime
 
 def configuration_modele(cle_modele, n_jobs=N_JOBS_DEFAUT):
     """
-    Renvoie la configuration (format de src/config_modele.py) d'un des deux modeles a arbres.
+    Renvoie la configuration (format de src/config_modele.py) d'un modele a arbres de MODELES_ARBRES.
 
-    Le nombre de coeurs (n_jobs) est impose a la meme valeur pour les deux modeles : il ne change pas
-    les predictions (verifie sur FD001 par le controle de reproduction de ce script), seulement la vitesse.
+    Le nombre de coeurs (n_jobs) est impose : il ne change pas les predictions (verifie sur FD001 par le
+    controle de reproduction de ce script), seulement la vitesse.
 
     Parameters
     ----------
     cle_modele : str
-        "xgboost_phase3" ou "xgboost_retenu".
+        "xgboost_phase3".
     n_jobs : int, optionnel
         Nombre de coeurs donnes a XGBoost (4 par defaut).
 
@@ -154,12 +146,10 @@ def configuration_modele(cle_modele, n_jobs=N_JOBS_DEFAUT):
     """
     if cle_modele == "xgboost_phase3":
         config = copy.deepcopy(CONFIG_PHASE3)  # copie : CONFIG_PHASE3 reste intact
-    elif cle_modele == "xgboost_retenu":
-        config = charger_config(CHEMIN_CONFIG_RETENUE)  # relu depuis docs/resultats/04_config_retenue.json
     else:
         raise ValueError(f"Modele inconnu pour ce script : {cle_modele!r} (attendus : {MODELES_ARBRES}).")
 
-    config["hyperparametres"]["n_jobs"] = int(n_jobs)  # meme nombre de coeurs pour les deux modeles
+    config["hyperparametres"]["n_jobs"] = int(n_jobs)  # nombre de coeurs impose (vitesse seulement)
     return config
 
 
@@ -172,7 +162,7 @@ def metriques_par_moteur(y_vrai, y_predit, groupes, seuil_surestimation=SEUIL_SU
     Calcule, moteur par moteur, le RMSE, la penalite NASA et le nombre de cycles surestimes.
 
     Reprend `erreurs_par_moteur` (src/evaluation.py) et y ajoute deux colonnes utiles aux tests apparies
-    (meme definition que la fonction `metriques_par_moteur` du notebook 04) : la somme des penalites NASA
+    (meme definition que la fonction `metriques_par_moteur` du notebook 05) : la somme des penalites NASA
     des lignes du moteur, et le nombre de ses lignes surestimees de plus de `seuil_surestimation` cycles.
 
     Parameters
@@ -285,11 +275,11 @@ def evaluer_modele_sur_sous_jeu(contexte, cle_modele, config, plis, dossier_pred
     contexte : dict
         Le contexte renvoye par `preparer_sous_jeu`.
     cle_modele : str
-        "xgboost_phase3" ou "xgboost_retenu" (cle du contrat de predictions).
+        "xgboost_phase3" (cle du contrat de predictions).
     config : dict
         La configuration du modele (voir `configuration_modele`).
     plis : list de (numpy.ndarray, numpy.ndarray)
-        Les plis de `calculer_plis`, les memes pour les deux modeles du sous-jeu.
+        Les plis de `calculer_plis`, calcules une seule fois pour le sous-jeu.
     dossier_predictions : str ou None
         Dossier de sortie des predictions (None : dossier par defaut du contrat).
     duree_preparation : float
@@ -468,7 +458,7 @@ def evaluer_modele_sur_sous_jeu(contexte, cle_modele, config, plis, dossier_pred
     ligne["duree_prediction_test_s"] = float(duree_prediction)
     ligne["date"] = metadonnees["date"]
 
-    # 10. metriques hors-pli par moteur d'entrainement (pour les tests apparies du notebook 04b)
+    # 10. metriques hors-pli par moteur d'entrainement (tests apparies du notebook 03b : reseaux contre arbres)
     par_moteur_cv = metriques_par_moteur(y, resultats_cv["predictions_oof"], groups)
     par_moteur_cv.insert(0, "modele", cle_modele)
     par_moteur_cv.insert(0, "sous_jeu", sous_jeu)
@@ -481,7 +471,9 @@ def evaluer_modele_sur_sous_jeu(contexte, cle_modele, config, plis, dossier_pred
     test_dernier["modele"] = [cle_modele] * len(dernier)
     test_dernier["unit_number"] = dernier["unit_number"].to_numpy()
     test_dernier["rul_vraie"] = contexte["y_test_vraie"]
-    test_dernier["rul_predite"] = controle["predictions"]
+    # en float64 : XGBoost predit en float32, et un CSV ecrit en float32 arrondit a 7 chiffres significatifs
+    # (ecart jusqu'a 4e-6 cycle avec le fichier de predictions complet, ecrit en float64)
+    test_dernier["rul_predite"] = np.asarray(controle["predictions"], dtype=float)
     test_dernier["nb_cycles_observes"] = nb_cycles_par_moteur.loc[dernier["unit_number"]].to_numpy()
     test_dernier["regime_dernier_cycle"] = dernier["regime"].to_numpy(dtype=int)
 
@@ -507,7 +499,7 @@ def generer_predictions(sous_jeux, cles_modeles, dossier_predictions=None, n_job
     Returns
     -------
     pandas.DataFrame
-        Le resume complet (docs/resultats/04b_sous_jeux_arbres.csv apres mise a jour).
+        Le resume complet (docs/resultats/01b_sous_jeux_arbres.csv apres mise a jour).
     """
     lignes_resume = []
     tableaux_par_moteur = []
@@ -560,7 +552,7 @@ def lancer_ablations(cles_modeles, n_jobs=N_JOBS_DEFAUT):
     donc identiques pour toutes les variantes et tous les modeles. Le jeu de test n'est jamais utilise.
 
     Regle de decision pour le one-hot, fixee AVANT de lancer les ablations : on n'ajoute le regime comme
-    feature que si, pour les deux modeles, le RMSE CV moyen baisse ET le test de Wilcoxon apparie sur le
+    feature que si, pour XGBoost Phase 3, le RMSE CV moyen baisse ET le test de Wilcoxon apparie sur le
     RMSE hors-pli par moteur (variante one-hot contre variante par_regime) donne p < 0,05. Sinon on garde
     le modele le plus simple (sans one-hot).
 
@@ -574,7 +566,7 @@ def lancer_ablations(cles_modeles, n_jobs=N_JOBS_DEFAUT):
     Returns
     -------
     pandas.DataFrame
-        Une ligne par (sous-jeu, variante, modele), ecrite dans docs/resultats/04b_ablations_preparation.csv.
+        Une ligne par (sous-jeu, variante, modele), ecrite dans docs/resultats/01b_ablations_preparation.csv.
     """
     lignes = []
     tableaux_par_moteur = []
@@ -676,12 +668,12 @@ def lire_arguments(argv=None):
         sous_jeux (list de str), modeles (list de str), dossier (str ou None), n_jobs (int), ablations (bool).
     """
     parseur = argparse.ArgumentParser(
-        description="Predictions des modeles a arbres (XGBoost Phase 3 et retenu) sur les sous-jeux C-MAPSS."
+        description="Predictions du modele a arbres (XGBoost Phase 3) sur les sous-jeux C-MAPSS."
     )
     parseur.add_argument("--sous-jeux", nargs="+", default=list(SOUS_JEUX), choices=list(SOUS_JEUX),
                          help="sous-jeux a traiter (defaut : les quatre)")
     parseur.add_argument("--modeles", nargs="+", default=list(MODELES_ARBRES), choices=list(MODELES_ARBRES),
-                         help="modeles a evaluer (defaut : les deux)")
+                         help="modeles a evaluer (defaut : tous)")
     parseur.add_argument("--dossier", default=None,
                          help="dossier des fichiers de predictions (defaut : sorties/predictions/)")
     parseur.add_argument("--n-jobs", type=int, default=N_JOBS_DEFAUT,

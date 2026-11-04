@@ -179,7 +179,7 @@ def figure_prediction_en_direct(predictions, seuil_alerte, titre, cycle_max_axe,
             x=[cycles[-1]], y=[valeurs[-1]], mode="markers", showlegend=False, legendgroup=modele, hoverinfo="skip",
             marker={"color": couleur, "size": 13, "line": {"color": "white", "width": 2}},
         ))
-        for position in range(len(valeurs)):  # premiere alerte : RUL predite <= seuil (regle de src/demo.py)
+        for position in range(len(valeurs)):  # premiere alerte : RUL predite <= seuil (regle de src/alertes.py)
             if valeurs[position] <= seuil_alerte:
                 fig.add_trace(go.Scatter(
                     x=[cycles[position]], y=[valeurs[position]], mode="markers", showlegend=False,

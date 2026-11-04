@@ -8,15 +8,13 @@ Utilisation, depuis la racine du depot :
     python scripts/preparer_demo.py --sous-jeux FD001 FD003      # seulement certains sous-jeux
 
 Etapes, chacune dans un SOUS-PROCESSUS separe, avec le meme interpreteur Python que ce script :
-1. scripts/generer_predictions_arbres.py  -> predictions XGBoost Phase 3 et retenu (sorties/predictions/) ;
-2. scripts/entrainer_deep_learning.py     -> predictions LSTM et CNN 1D (sauf --seulement-arbres) ;
-3. python -m src.inference --forcer       -> artefacts des deux XGBoost de l'inference en direct, par sous-jeu
-                                             (models/<SOUS_JEU>__<modele>.joblib, page "Tester un moteur"),
-                                             reentraines pour correspondre aux predictions qui viennent d'etre
+1. scripts/generer_predictions_arbres.py  -> predictions XGBoost Phase 3 (sorties/predictions/) ;
+2. scripts/entrainer_deep_learning.py     -> predictions LSTM et CNN 1D (sauf --seulement-arbres, car long) ;
+3. python -m src.inference --forcer       -> artefact XGBoost de l'inference en direct, par sous-jeu
+                                             (models/<SOUS_JEU>__xgboost_phase3.joblib, page "Tester un moteur"),
+                                             reentraine pour correspondre aux predictions qui viennent d'etre
                                              ecrites, puis verification : inference en direct = fichiers precalcules ;
-4. python -m src.demo entrainer           -> artefact du modele retenu (models/modele_retenu.joblib),
-                                             utilise par la demo en ligne de commande (python -m src.demo) ;
-5. etat final : fichiers de predictions disponibles et controle de coherence de chacun.
+4. etat final : fichiers de predictions disponibles et controle de coherence de chacun.
 
 Pourquoi des sous-processus ? Les scripts 1 et 2 sont ecrits et maintenus a part ; les lancer comme
 en ligne de commande garantit le meme comportement. Et charger PyTorch (deep learning) et
@@ -243,8 +241,8 @@ def main(argv=None):
     else:
         resultats.append(etape_script("Predictions deep learning (LSTM, CNN 1D)", SCRIPT_DEEP_LEARNING, arguments.sous_jeux))
 
-    # 3. artefacts XGBoost de l'inference en direct (un par sous-jeu et par modele), reentraines pour
-    #    correspondre aux predictions qui viennent d'etre ecrites, puis comparaison directe / precalcule
+    # 3. artefacts XGBoost de l'inference en direct (un par sous-jeu), reentraines pour correspondre aux
+    #    predictions qui viennent d'etre ecrites, puis comparaison directe / precalcule
     commande_inference = [sys.executable, "-m", "src.inference", "--forcer"]
     if arguments.sous_jeux is not None:
         commande_inference.append("--sous-jeux")
@@ -252,10 +250,7 @@ def main(argv=None):
             commande_inference.append(sous_jeu)
     resultats.append(lancer_etape("Artefacts de l'inference en direct", commande_inference))
 
-    # 4. artefact du modele retenu (demo en ligne de commande)
-    resultats.append(lancer_etape("Artefact du modele retenu", [sys.executable, "-m", "src.demo", "entrainer"]))
-
-    # 5. etat final
+    # 4. etat final
     tout_coherent = afficher_etat_final()
 
     afficher_bandeau("Resume")

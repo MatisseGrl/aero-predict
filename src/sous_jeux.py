@@ -59,7 +59,7 @@ N_INIT_KMEANS = 10  # nombre d'initialisations differentes ; K-Means garde la me
 # - nb_moteurs_* et nb_lignes_* : COMPTES sur les fichiers data/train_FD00X.txt et data/test_FD00X.txt
 #   (verifies par tests/test_sous_jeux.py) ;
 # - nb_regimes : data/readme.txt ("Conditions: ONE / SIX"), confirme sur les donnees par K-Means
-#   (silhouette maximale a k = 6 pour FD002 et FD004, voir `choisir_nombre_regimes` et le notebook 04b) ;
+#   (silhouette maximale a k = 6 pour FD002 et FD004, voir `choisir_nombre_regimes` et le notebook 01b) ;
 # - modes_de_panne : data/readme.txt ("Fault Modes"), NON verifiable sur les fichiers (aucune colonne ne
 #   dit quel mode de panne touche quel moteur).
 # Attention : data/readme.txt annonce pour FD004 248 moteurs train et 249 moteurs test ; les fichiers en
@@ -101,9 +101,9 @@ DESCRIPTION_SOUS_JEUX = {
 }
 
 # Faut-il ajouter le regime courant comme feature (one-hot) ? Decide par la validation croisee
-# (scripts/generer_predictions_arbres.py --ablations, docs/resultats/04b_ablations_preparation.csv),
-# jamais par le test. Regle fixee avant les ablations : seulement si le RMSE CV baisse ET le test de
-# Wilcoxon apparie par moteur donne p < 0,05, pour les deux modeles. Valeur par defaut par sous-jeu.
+# (scripts/generer_predictions_arbres.py --ablations, docs/resultats/01b_ablations_preparation.csv),
+# jamais par le test. Regle fixee avant les ablations : seulement si le RMSE CV de XGBoost Phase 3 baisse
+# ET le test de Wilcoxon apparie par moteur donne p < 0,05. Valeur par defaut par sous-jeu.
 REGIME_EN_FEATURE_PAR_DEFAUT = {
     "FD001": False,
     "FD002": False,
@@ -315,7 +315,7 @@ def tableau_valeurs_distinctes_par_regime(df, capteurs, colonne_regime="regime")
     """
     Compte le nombre de valeurs distinctes de chaque capteur a l'interieur de chaque regime.
 
-    Sert a documenter le critere de retrait des capteurs (notebook 04b) : un capteur qui ne prend qu'une
+    Sert a documenter le critere de retrait des capteurs (notebook 01b) : un capteur qui ne prend qu'une
     seule valeur dans chaque regime ne porte aucune information une fois le regime connu.
 
     Parameters

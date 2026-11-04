@@ -11,7 +11,7 @@ import os
 import streamlit as st
 
 from src import donnees_demo as dd
-from src.demo import STATUT_ALERTE_CORRECTE, STATUT_ALERTE_MANQUEE, STATUT_FAUSSE_ALERTE, STATUT_RIEN_A_SIGNALER
+from src.alertes import STATUT_ALERTE_CORRECTE, STATUT_ALERTE_MANQUEE, STATUT_FAUSSE_ALERTE, STATUT_RIEN_A_SIGNALER
 
 # couleur du badge Streamlit de chaque statut (rouge reserve au cas dangereux)
 COULEURS_BADGES = {
@@ -258,7 +258,7 @@ def badge_statut(statut):
     Parameters
     ----------
     statut : str
-        Un statut de src/demo.py.
+        Un statut de src/alertes.py.
 
     Returns
     -------

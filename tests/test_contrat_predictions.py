@@ -56,7 +56,7 @@ def fabriquer_predictions():
     return df
 
 
-def fabriquer_metadonnees(df, sous_jeu="FD001", modele="xgboost_retenu"):
+def fabriquer_metadonnees(df, sous_jeu="FD001", modele="xgboost_phase3"):
     """
     Fabrique des metadonnees valides pour les predictions donnees.
 
@@ -91,8 +91,8 @@ def fabriquer_metadonnees(df, sous_jeu="FD001", modele="xgboost_retenu"):
 def test_constantes_du_contrat():
     """Les constantes ont exactement les valeurs du contrat partage entre les agents."""
     assert SOUS_JEUX == ["FD001", "FD002", "FD003", "FD004"]
-    assert list(MODELES_CONNUS.keys()) == ["xgboost_phase3", "xgboost_retenu", "lstm", "cnn1d"]
-    assert MODELES_CONNUS["xgboost_retenu"] == "XGBoost retenu (Optuna)"
+    assert list(MODELES_CONNUS.keys()) == ["xgboost_phase3", "lstm", "cnn1d"]
+    assert MODELES_CONNUS["xgboost_phase3"] == "XGBoost Phase 3"
     assert COLONNES_OBLIGATOIRES == ["unit_number", "time_cycles", "rul_predite", "rul_vraie", "rul_vraie_cappee", "regime"]
     assert os.path.isabs(DOSSIER_PREDICTIONS)
     assert DOSSIER_PREDICTIONS.endswith(os.path.join("sorties", "predictions"))
@@ -138,10 +138,10 @@ def test_aller_retour_ecrire_lire(tmp_path):
     meta = fabriquer_metadonnees(df)
 
     chemin_csv, chemin_json = ecrire_predictions(melange, meta, dossier=tmp_path / "sous_dossier")
-    assert os.path.isfile(chemin_csv) and chemin_csv.endswith("FD001__xgboost_retenu.csv.gz")
+    assert os.path.isfile(chemin_csv) and chemin_csv.endswith("FD001__xgboost_phase3.csv.gz")
     assert os.path.isfile(chemin_json)
 
-    relu, meta_relue = lire_predictions("FD001", "xgboost_retenu", dossier=tmp_path / "sous_dossier")
+    relu, meta_relue = lire_predictions("FD001", "xgboost_phase3", dossier=tmp_path / "sous_dossier")
     # memes valeurs, dans l'ordre (moteur, cycle), colonnes obligatoires en premier
     assert relu.columns.tolist()[:6] == COLONNES_OBLIGATOIRES
     assert relu["colonne_libre"].tolist() == [1, 2, 3, 4, 5]
@@ -232,7 +232,7 @@ def test_ecrire_refuse_des_predictions_invalides(tmp_path):
     df.loc[0, "rul_predite"] = -5.0
     with pytest.raises(ValueError):
         ecrire_predictions(df, meta, dossier=tmp_path)
-    assert not os.path.exists(chemin_predictions("FD001", "xgboost_retenu", tmp_path))
+    assert not os.path.exists(chemin_predictions("FD001", "xgboost_phase3", tmp_path))
 
 
 def test_lister_predictions(tmp_path):
