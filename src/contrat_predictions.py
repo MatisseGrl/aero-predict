@@ -9,7 +9,7 @@ ecrit et relu uniquement par les fonctions de ce module :
     sorties/predictions/<SOUS_JEU>__<modele>.csv.gz   -> les predictions, une ligne par (moteur, cycle)
     sorties/predictions/<SOUS_JEU>__<modele>.json     -> les metadonnees (metriques, protocole, date...)
 
-Exemple : sorties/predictions/FD001__xgboost_retenu.csv.gz et sorties/predictions/FD001__xgboost_retenu.json
+Exemple : sorties/predictions/FD001__xgboost_phase3.csv.gz et sorties/predictions/FD001__xgboost_phase3.json
 
 Colonnes obligatoires du CSV (une ligne par moteur test ET par cycle observe, TOUS les cycles) :
 - unit_number      : numero du moteur test ;
@@ -60,7 +60,6 @@ SOUS_JEUX = ["FD001", "FD002", "FD003", "FD004"]
 # les modeles connus : cle (utilisee dans les noms de fichiers) -> nom affiche ; l'ordre sert a l'affichage
 MODELES_CONNUS = {
     "xgboost_phase3": "XGBoost Phase 3",
-    "xgboost_retenu": "XGBoost retenu (Optuna)",
     "lstm": "LSTM",
     "cnn1d": "CNN 1D",
 }
@@ -175,7 +174,7 @@ def verifier_modele(modele):
     Parameters
     ----------
     modele : str
-        La cle a verifier (ex. "xgboost_retenu").
+        La cle a verifier (ex. "xgboost_phase3").
 
     Raises
     ------
@@ -196,7 +195,7 @@ def chemin_predictions(sous_jeu, modele, dossier=None):
     sous_jeu : str
         Le sous-jeu (ex. "FD001").
     modele : str
-        La cle du modele (ex. "xgboost_retenu").
+        La cle du modele (ex. "xgboost_phase3").
     dossier : str ou None, optionnel
         Dossier des predictions ; None pour le dossier par defaut.
 
@@ -225,7 +224,7 @@ def chemin_metadonnees(sous_jeu, modele, dossier=None):
     sous_jeu : str
         Le sous-jeu (ex. "FD001").
     modele : str
-        La cle du modele (ex. "xgboost_retenu").
+        La cle du modele (ex. "xgboost_phase3").
     dossier : str ou None, optionnel
         Dossier des predictions ; None pour le dossier par defaut.
 
@@ -591,7 +590,7 @@ def lire_metadonnees(sous_jeu, modele, dossier=None):
     sous_jeu : str
         Le sous-jeu (ex. "FD001").
     modele : str
-        La cle du modele (ex. "xgboost_retenu").
+        La cle du modele (ex. "xgboost_phase3").
     dossier : str ou None, optionnel
         Dossier des predictions ; None pour le dossier par defaut.
 
@@ -623,7 +622,7 @@ def lire_predictions(sous_jeu, modele, dossier=None):
     sous_jeu : str
         Le sous-jeu (ex. "FD001").
     modele : str
-        La cle du modele (ex. "xgboost_retenu").
+        La cle du modele (ex. "xgboost_phase3").
     dossier : str ou None, optionnel
         Dossier des predictions ; None pour le dossier par defaut.
 

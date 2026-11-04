@@ -6,7 +6,7 @@ au lieu de tout recalculer : il s'execute ainsi en quelques minutes.
 
 Ce que fait le script, dans l'ordre :
 
-FD001 (protocole complet, memes plis que les arbres de la Phase 4) :
+FD001 (protocole complet, memes plis que les arbres du notebook 05) :
 1. "appareils"     : mesure de vitesse CPU / MPS et de reproductibilite (docs/resultats/03b_cpu_vs_mps.csv) ;
 2. "choix_entrees" : faut-il donner time_cycles aux reseaux ? Decide sur UNE separation de validation par
                      moteurs du train (jamais sur le test), regle fixee avant de regarder les resultats
@@ -16,8 +16,9 @@ FD001 (protocole complet, memes plis que les arbres de la Phase 4) :
 4. "final"         : modele final sur les 100 moteurs, nombre d'epoques = mediane des meilleures epoques
                      des 5 plis (jamais choisi sur le test), 3 graines ; test officiel evalue une fois ;
                      fichiers de predictions (src/contrat_predictions.py) et poids (models/FD001__<modele>.pt) ;
-5. "asymetrique"   : validation croisee du meilleur des deux reseaux avec la perte asymetrique alpha = 2,26
-                     (valeur retenue en Phase 4, docs/resultats/04_config_retenue.json).
+5. "asymetrique"   : validation croisee du meilleur des deux reseaux avec la perte asymetrique
+                     alpha = 2,26 (ALPHA_ASYMETRIQUE, valeur fixee avant l'experience, non optimisee
+                     pour les reseaux).
 
 FD002, FD003, FD004 (src/sous_jeux.py) : separation 80 / 20 des moteurs du train (graine fixe) pour
 l'arret precoce et le nombre d'epoques, puis modele final sur tout le train, prediction a chaque cycle de
@@ -93,7 +94,12 @@ import torch  # noqa: E402  (apres les modules du projet)
 
 # dossier des resultats versionnes (lus par le notebook 03b)
 DOSSIER_RESULTATS = os.path.join(RACINE_DEPOT, "docs", "resultats")
-CHEMIN_CONFIG_RETENUE = os.path.join(DOSSIER_RESULTATS, "04_config_retenue.json")
+
+# coefficient de la perte quadratique asymetrique de l'etape "asymetrique" (erreur^2 x alpha si le reseau
+# surestime, x 1 sinon). Valeur fixee AVANT l'experience : c'est celle d'un premier essai de reglage de cette
+# perte sur XGBoost (FD001, validation croisee), recopiee ici en entier pour reproduire exactement les
+# resultats deja ecrits dans docs/resultats/03b_cv_fd001.csv. Elle n'a pas ete optimisee pour les reseaux.
+ALPHA_ASYMETRIQUE = 2.2563503313740805
 
 SOUS_JEUX = ["FD001", "FD002", "FD003", "FD004"]
 ETAPES_FD001 = ["appareils", "choix_entrees", "cv", "final", "asymetrique"]
@@ -101,7 +107,7 @@ SEUIL_SURESTIMATION = 20  # cycles (choix de la Phase 3)
 SEUIL_ALERTE = 30  # cycles, hypothese de travail (pas de valeur officielle)
 PLAFOND_RUL = 125
 N_PLIS = 5
-GRAINE_PLIS = 42  # memes plis que les arbres (Phase 3, Phase 4, scripts/generer_predictions_arbres.py)
+GRAINE_PLIS = 42  # memes plis que les arbres (Phase 3, notebook 05, scripts/generer_predictions_arbres.py)
 FRACTION_VALIDATION = 0.2  # 20 % des moteurs pour l'arret precoce (et pour la decision des entrees)
 NB_GRAINES_ROBUSTESSE = 3  # le modele final FD001 est entraine avec 3 graines
 NB_GRAINES_CHOIX_ENTREES = 3  # chaque variante du choix des entrees est entrainee avec 3 graines
@@ -328,7 +334,7 @@ def creer_tache(type_modele, graine, fenetres_entrainement, y_entrainement, regl
 
 def resumer_cv(nom, type_modele, resultats, nb_moteurs, alpha, colonnes_entree):
     """
-    Resume une validation croisee en une ligne de tableau (memes colonnes que docs/resultats/04_comparaison_cv.csv).
+    Resume une validation croisee en une ligne de tableau (memes colonnes que docs/resultats/05_comparaison_cv.csv).
 
     Parameters
     ----------
@@ -1202,7 +1208,7 @@ def traiter_fd001(arguments, avec_time_cycles):
 
                 historiques[f"final_{type_modele}_graine{graine}"] = historiques_simplifies([resultat["historique"]])[0]
 
-            # robustesse : moyenne et ecart-type (ddof=1, comme pandas .std du notebook 04) sur les 3 graines
+            # robustesse : moyenne et ecart-type (ddof=1, comme pandas .std du notebook 05) sur les 3 graines
             robustesse = {}
             for cle in ["rmse", "rmse_contre_rul_plafonnee", "mae", "score_nasa", "nb_surestimes", "alertes_manquees",
                         "fausses_alertes"]:
@@ -1255,8 +1261,7 @@ def traiter_fd001(arguments, avec_time_cycles):
 
     # --- variante asymetrique du meilleur reseau ---
     if "asymetrique" in arguments.etapes:
-        config_retenue = lire_json(CHEMIN_CONFIG_RETENUE, None)
-        alpha = float(config_retenue["parametres_perte"]["alpha"])
+        alpha = ALPHA_ASYMETRIQUE  # valeur fixee avant l'experience (voir la constante)
         lignes_alpha_1 = tableau_cv[tableau_cv["alpha"] == 1.0]
         meilleur = str(lignes_alpha_1.sort_values("rmse_cv_moyen").iloc[0]["type_modele"])
         afficher(f"Variante asymetrique : meilleur reseau en CV = {meilleur}, alpha = {alpha:.4f}")
@@ -1459,7 +1464,7 @@ def traiter_autres_sous_jeux(sous_jeux, arguments, avec_time_cycles):
 
 def metriques_par_moteur_cv(sous_jeu, type_modele, y, predictions_oof, groups):
     """
-    Calcule les metriques hors-pli de chaque moteur (format de docs/resultats/04b_metriques_par_moteur_cv.csv).
+    Calcule les metriques hors-pli de chaque moteur (format de docs/resultats/01b_metriques_par_moteur_cv.csv).
 
     Parameters
     ----------
@@ -1643,7 +1648,7 @@ def ecrire_derniers_cycles(arguments):
     """
     Ecrit docs/resultats/03b_predictions_test_dernier_cycle.csv a partir des fichiers de predictions.
 
-    Meme format que docs/resultats/04b_predictions_test_dernier_cycle.csv (modeles a arbres) : une ligne par
+    Meme format que docs/resultats/01b_predictions_test_dernier_cycle.csv (modeles a arbres) : une ligne par
     (sous-jeu, modele, moteur test), au dernier cycle observe. Ce fichier est versionne, contrairement aux
     fichiers de predictions complets (sorties/, ignore par git) : le notebook 03b peut ainsi faire ses tests
     apparies sur le test sans relancer l'apprentissage.

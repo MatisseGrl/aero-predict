@@ -92,7 +92,8 @@ def ecrire_fichier(df, dossier, sous_jeu, modele):
 # ---------------------------------------------------------------------------------------------------
 
 def test_modeles_affiches_filtrent_l_inventaire():
-    """Un modele du contrat absent de MODELES_AFFICHES est ignore ; l'ordre est celui de MODELES_AFFICHES."""
+    """Un modele absent de MODELES_AFFICHES est ignore ; l'ordre est celui de MODELES_AFFICHES."""
+    assert dd.MODELES_AFFICHES == list(MODELES_CONNUS.keys())  # tous les modeles du contrat, meme ordre
     lignes = []
     for modele in ["cnn1d", "modele_non_affiche", "xgboost_phase3"]:
         lignes.append({"sous_jeu": "FD002", "modele": modele})
@@ -171,8 +172,9 @@ def test_descriptions_seuils_et_libelles():
 
 def test_preparer_demo_scripts_absents(tmp_path, monkeypatch, capsys):
     """
-    Scripts de production absents : etapes sautees avec un message clair ; les etapes longues (artefacts) sont
-    remplacees par un simulacre qui note les commandes ; etat final lu dans le dossier des predictions.
+    Scripts de production absents : etapes sautees avec un message clair ; l'etape longue (artefacts de
+    l'inference) est remplacee par un simulacre qui note la commande ; etat final lu dans le dossier des
+    predictions.
     """
     racine = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # dossier parent de tests/
     sys.path.insert(0, os.path.join(racine, "scripts"))  # pour "import preparer_demo"
@@ -201,7 +203,6 @@ def test_preparer_demo_scripts_absents(tmp_path, monkeypatch, capsys):
     assert sortie.count("n'existe pas encore : etape sautee") == 2
     assert commandes_lancees == [
         [sys.executable, "-m", "src.inference", "--forcer", "--sous-jeux", "FD001"],  # artefacts de l'inference
-        [sys.executable, "-m", "src.demo", "entrainer"],
     ]
     assert "FD001" in sortie and "[coherent]" in sortie
 

@@ -1,5 +1,5 @@
 """
-Tests de src/config_modele.py : validation du schema, aller-retour JSON, repli sur la Phase 3 et
+Tests de src/config_modele.py : validation du schema, conversion en types Python (JSON), racine du depot et
 construction des modeles depuis une configuration.
 """
 
@@ -11,13 +11,11 @@ import numpy as np
 import pytest
 
 from src.config_modele import (
-    CHEMIN_CONFIG_RETENUE,
     CONFIG_PHASE3,
-    charger_config,
+    RACINE_DEPOT,
     construire_fabrique_depuis_config,
     convertir_en_types_python,
     decrire_config,
-    sauvegarder_config,
     valider_config,
 )
 from src.modeles import RegresseurCentre
@@ -88,12 +86,11 @@ def jeu_synthetique():
 # Constantes
 # ---------------------------------------------------------------------------------------------------
 
-def test_chemin_config_retenue_absolu():
-    """Le chemin par defaut est absolu et pointe vers docs/resultats/04_config_retenue.json du depot."""
-    assert os.path.isabs(CHEMIN_CONFIG_RETENUE)
-    assert CHEMIN_CONFIG_RETENUE.endswith(os.path.join("docs", "resultats", "04_config_retenue.json"))
+def test_racine_depot_absolue():
+    """RACINE_DEPOT est un chemin absolu : le dossier parent de tests/ (la racine du depot)."""
+    assert os.path.isabs(RACINE_DEPOT)
     racine = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # tests/.. = racine du depot
-    assert os.path.dirname(os.path.dirname(os.path.dirname(CHEMIN_CONFIG_RETENUE))) == racine
+    assert RACINE_DEPOT == racine
 
 
 def test_config_phase3_valide_et_conforme():
@@ -162,17 +159,17 @@ def test_validation_cas_invalides(config, morceau_du_message):
 
 
 def test_validation_accepte_types_numpy():
-    """Un alpha numpy (numpy.float64, numpy.int64), typique d'une sortie Optuna, est accepte."""
+    """Un alpha numpy (numpy.float64, numpy.int64), typique d'un resultat de calcul numpy, est accepte."""
     valider_config(construire_config("xgboost", "quadratique_asymetrique", {"alpha": np.float64(2.5)}))
     valider_config(construire_config("lightgbm", "quadratique_asymetrique", {"alpha": np.int64(2)}))
 
 
 # ---------------------------------------------------------------------------------------------------
-# Sauvegarde / chargement
+# Conversion en types Python (ecriture JSON)
 # ---------------------------------------------------------------------------------------------------
 
-def test_aller_retour_sauvegarder_charger(tmp_path):
-    """Sauvegarder puis recharger redonne la meme configuration, types numpy convertis en types Python."""
+def test_convertir_en_types_python_ecrivable_en_json():
+    """Les types numpy (entiers, reels, booleens, tableaux) deviennent des types Python, ecrivables en JSON."""
     config = construire_config(
         "lightgbm",
         "nasa",
@@ -180,66 +177,21 @@ def test_aller_retour_sauvegarder_charger(tmp_path):
         {"n_estimators": np.int64(300), "num_leaves": 15, "learning_rate": np.float64(0.03)},
     )
     config["metriques_cv"] = {"rmse": np.float64(15.2), "rmse_par_pli": np.array([15.0, 15.4]), "ok": np.bool_(True)}
-    config["metriques_test"] = {"rmse": 16.1, "nb": np.int32(100)}
-    config["date"] = "2026-11-04"
+    config["metriques_test"] = {"rmse": 16.1, "nb": np.int32(100), "plis": (1, 2)}
 
-    # dossier parent qui n'existe pas encore : il doit etre cree
-    chemin = tmp_path / "sous_dossier" / "encore" / "config.json"
-    chemin_ecrit = sauvegarder_config(config, chemin=str(chemin))
-    assert chemin_ecrit == str(chemin)
-    assert chemin.exists()
+    convertie = convertir_en_types_python(config)
+    assert type(convertie["hyperparametres"]["n_estimators"]) is int  # numpy.int64 -> int
+    assert type(convertie["parametres_perte"]["h_sur"]) is float  # numpy.float32 -> float
+    assert convertie["metriques_cv"]["rmse_par_pli"] == [15.0, 15.4]  # tableau numpy -> liste
+    assert convertie["metriques_cv"]["ok"] is True  # numpy.bool_ -> bool
+    assert convertie["metriques_test"]["plis"] == [1, 2]  # tuple -> liste (JSON n'a pas de tuple)
+    valider_config(convertie)  # la configuration convertie reste valide
 
-    relue = charger_config(str(chemin))
-    assert relue == convertir_en_types_python(config)
-    assert type(relue["hyperparametres"]["n_estimators"]) is int  # numpy.int64 -> int
-    assert type(relue["parametres_perte"]["h_sur"]) is float  # numpy.float32 -> float
-    assert relue["metriques_cv"]["rmse_par_pli"] == [15.0, 15.4]  # tableau numpy -> liste
-    assert relue["metriques_cv"]["ok"] is True  # numpy.bool_ -> bool
+    # aller-retour JSON : le texte ecrit puis relu redonne exactement la valeur convertie
+    assert json.loads(json.dumps(convertie)) == convertie
 
-    # le fichier est bien du JSON indente, lisible a l'oeil
-    texte = chemin.read_text(encoding="utf-8")
-    assert texte.startswith("{\n  ")
-    assert json.loads(texte) == relue
-
-
-def test_sauvegarder_config_invalide_n_ecrit_rien(tmp_path):
-    """Une configuration invalide n'est jamais ecrite sur le disque."""
-    chemin = tmp_path / "config.json"
-    with pytest.raises(ValueError):
-        sauvegarder_config({"famille": "random_forest", "perte": "nasa"}, chemin=str(chemin))
-    assert not chemin.exists()
-
-
-def test_charger_config_fichier_absent(tmp_path, capsys):
-    """Fichier absent : message explicite et copie independante de CONFIG_PHASE3."""
-    chemin_absent = tmp_path / "n_existe_pas.json"
-    config = charger_config(str(chemin_absent))
-
-    assert config == CONFIG_PHASE3
-    sortie = capsys.readouterr().out
-    assert "introuvable" in sortie
-    assert "XGBoost Phase 3" in sortie
-
-    # c'est une COPIE profonde : la modifier ne touche pas la constante du module
-    config["hyperparametres"]["max_depth"] = 99
-    assert CONFIG_PHASE3["hyperparametres"]["max_depth"] == 5
-
-
-def test_charger_config_json_invalide(tmp_path):
-    """Un fichier qui n'est pas du JSON leve une ValueError claire."""
-    chemin = tmp_path / "casse.json"
-    chemin.write_text("{ ceci n'est pas du json", encoding="utf-8")
-    with pytest.raises(ValueError, match="JSON valide"):
-        charger_config(str(chemin))
-
-
-def test_charger_config_contenu_invalide(tmp_path):
-    """Un JSON valide mais au schema incoherent leve une ValueError."""
-    chemin = tmp_path / "incoherent.json"
-    contenu = {"famille": "xgboost", "perte": "nasa", "parametres_perte": {"h_sous": 13}}  # h_sur manque
-    chemin.write_text(json.dumps(contenu), encoding="utf-8")
-    with pytest.raises(ValueError, match="manquant"):
-        charger_config(str(chemin))
+    # l'original n'est pas modifie (on renvoie une NOUVELLE valeur)
+    assert type(config["hyperparametres"]["n_estimators"]) is np.int64
 
 
 # ---------------------------------------------------------------------------------------------------

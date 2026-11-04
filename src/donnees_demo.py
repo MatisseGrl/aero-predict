@@ -5,7 +5,7 @@ Pourquoi ce module existe : l'application ne doit contenir que de l'affichage. C
 recalcule une metrique est ici, dans des fonctions simples, testees par tests/test_donnees_demo.py :
 
 - fichiers de predictions precalcules (page "Comparer les modeles") : contrat `src/contrat_predictions.py` ;
-- decision d'alerte (page "Tester un moteur") : `classer_alerte` de `src/demo.py`, libelles affiches ici ;
+- decision d'alerte (page "Tester un moteur") : `classer_alerte` de `src/alertes.py`, libelles affiches ici ;
 - signatures de fichiers : cles de cache de l'application (un fichier reecrit est relu automatiquement).
 
 L'inference en direct elle-meme est dans `src/inference.py`. Aucun chiffre affiche par l'application n'est
@@ -17,6 +17,7 @@ import os
 
 import pandas as pd
 
+from src.alertes import STATUT_ALERTE_CORRECTE, STATUT_ALERTE_MANQUEE, STATUT_FAUSSE_ALERTE, STATUT_RIEN_A_SIGNALER
 from src.contrat_predictions import (
     MODELES_CONNUS,
     SOUS_JEUX,
@@ -26,19 +27,19 @@ from src.contrat_predictions import (
     metriques_dernier_cycle,
     verifier_coherence,
 )
-from src.demo import STATUT_ALERTE_CORRECTE, STATUT_ALERTE_MANQUEE, STATUT_FAUSSE_ALERTE, STATUT_RIEN_A_SIGNALER
 from src.sous_jeux import DESCRIPTION_SOUS_JEUX
 
 # ---------------------------------------------------------------------------------------------------
 # Constantes
 # ---------------------------------------------------------------------------------------------------
 
-# LE SEUL ENDROIT A MODIFIER pour choisir les modeles affiches par l'application (ordre d'affichage).
-# "xgboost_retenu" n'y est plus : la Phase 4 a conclu de garder les reglages de la Phase 3 ; ses fichiers
-# eventuels dans sorties/predictions/ sont donc ignores par la page "Comparer les modeles".
-MODELES_AFFICHES = ["xgboost_phase3", "lstm", "cnn1d"]
+# les modeles affiches par l'application, dans l'ordre d'affichage : tous les modeles du contrat
+# (src/contrat_predictions.py), dans le meme ordre ; un fichier d'un autre modele serait ignore
+MODELES_AFFICHES = []
+for _cle_modele in MODELES_CONNUS:
+    MODELES_AFFICHES.append(_cle_modele)
 
-# libelles affiches a l'ecran (avec accents) pour chaque statut de src/demo.py
+# libelles affiches a l'ecran (avec accents) pour chaque statut de src/alertes.py
 LIBELLES_STATUTS = {
     STATUT_ALERTE_MANQUEE: "ALERTE MANQUÉE",
     STATUT_ALERTE_CORRECTE: "Alerte correcte",

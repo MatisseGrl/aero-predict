@@ -229,5 +229,5 @@ mlartifacts/
 *.pkl
 *.joblib
 
-# Sorties de la demo en ligne de commande (python -m src.demo) : figures regenerees a chaque lancement
+# Fichiers de predictions de l'application (sorties/predictions/), regeneres par scripts/preparer_demo.py
 sorties/

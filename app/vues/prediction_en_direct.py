@@ -16,7 +16,7 @@ from app import commun, figures
 from src import donnees_demo as dd
 from src import inference as inf
 from src.contrat_predictions import PLAFOND_RUL, SOUS_JEUX
-from src.demo import SEUIL_ALERTE_DEFAUT, classer_alerte
+from src.alertes import SEUIL_ALERTE_DEFAUT, classer_alerte
 
 # rythme de la lecture : une image toutes les 0,5 s, 6 nouveaux cycles calcules par image (12 cycles par seconde)
 INTERVALLE_LECTURE_S = 0.5
@@ -292,7 +292,7 @@ def afficher_carte(modele, predictions, cycle, verite, seuil_alerte, temps):
             delta = f"{commun.fr_signe(rul_predite - rul_vraie)} vs vraie"
         st.metric("RUL prédite (cycles)", commun.fr(rul_predite), delta=delta, delta_color="inverse")
         if verite is not None:
-            alerte, statut = classer_alerte(rul_predite, rul_vraie, seuil_alerte)  # regle de src/demo.py
+            alerte, statut = classer_alerte(rul_predite, rul_vraie, seuil_alerte)  # regle de src/alertes.py
             commun.badge_statut(statut)
         elif rul_predite <= seuil_alerte:
             st.badge("ALERTE", color="red")

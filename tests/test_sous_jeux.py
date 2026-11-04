@@ -347,7 +347,7 @@ def test_appliquer_preparation_refuse_les_entrees_invalides(contexte_fd002):
 
 
 # ---------------------------------------------------------------------------------------------------
-# Aides du script scripts/generer_predictions_arbres.py (elles ecrivent les CSV relus par le notebook 04b)
+# Aides du script scripts/generer_predictions_arbres.py (elles ecrivent les CSV relus par le notebook 01b)
 # ---------------------------------------------------------------------------------------------------
 
 def charger_module_script():
