@@ -6,12 +6,22 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 ## Phase actuelle
 
-**Phase 4 — Comparaison de modèles et évaluation (FD001) : premier prototype sur la branche `phase-04/prototype-ben` (Benjamin), pas encore validé par l'équipe ni comparé au travail mené en parallèle par Matisse.** Phase 3 (baseline XGBoost) terminée et validée par Matisse. Deep learning (LSTM/CNN, prévu au cahier des charges section 5) pas encore attaqué.
+**Prototype de la soutenance 2, sur la branche `phase-04/prototype-ben` (Benjamin), en revue par Pull Request : Phase 4 (comparaison de modèles, Optuna) sur FD001, extension des modèles à arbres à FD002–FD004, LSTM et CNN 1D sur FD001–FD004, démo interactive Streamlit. Rien n'est encore validé par l'équipe ni comparé au travail mené en parallèle par Matisse.** Phase 3 (baseline XGBoost) terminée et validée par Matisse. Le workflow complet de `CONTRIBUTING.md` (PR + revue) s'applique de nouveau : un second contributeur code (fin de la période solo, ADR-0005).
 
 ## Dernière modification
 
 - **Qui** : Benjamin (avec Claude Code)
 - **Date** : 2026-11-04
+- **Quoi** : extension du prototype, sur la même branche.
+  - Sous-jeux FD002–FD004 ([`notebooks/04b_sous_jeux_fd002_fd004.ipynb`](../notebooks/04b_sous_jeux_fd002_fd004.ipynb), `src/sous_jeux.py`) : 6 régimes opératoires pour FD002/FD004 (K-Means appris sur le train, silhouette 0,9997), un MinMaxScaler par régime, puis lissage et features par moteur ; FD001 reste identique bit à bit. Normalisation par régime en validation croisée : RMSE 16,41 contre 19,48 sans (FD002, XGBoost Phase 3). Test, XGBoost Phase 3 : FD002 27,23, FD003 18,09, FD004 28,24 ; 22 % (FD002) et 27 % (FD004) des moteurs test ont une RUL vraie supérieure au plafond de 125. Le XGBoost retenu (réglé sur FD001) est significativement moins bon que la Phase 3 sur le test de FD002 et FD004 (p ≤ 0,0002).
+  - Deep learning ([`notebooks/03b_deep_learning_lstm_cnn.ipynb`](../notebooks/03b_deep_learning_lstm_cnn.ipynb), `src/deep_learning.py`) : fenêtres de 30 cycles, LSTM 2×64 et CNN 1D, réglages fixés à l'avance (non optimisés). FD001, mêmes 5 plis : RMSE CV LSTM 13,70, CNN 16,96, XGBoost Phase 3 16,87. Test FD001 : LSTM 13,86 / score NASA 293,2 / 8 surestimés / 0 alerte manquée, contre 19,70 / 852,9 / 9 / 7 pour XGBoost Phase 3 (p = 0,0009 sur l'erreur absolue par moteur) ; 3 graines : 14,22 ± 0,30. CNN 1D non différent de XGBoost (p ≥ 0,14) et instable selon la graine (17,3 à 21,3). Test LSTM sur FD002 / FD003 / FD004 : 25,45 / 16,80 / 26,14 (meilleur que XGBoost Phase 3 sur FD002 et FD004, non significatif sur FD003). Recalcul indépendant du test LSTM FD001 : mêmes chiffres ; fenêtres mélangées entre moteurs : RMSE 56,4.
+  - Démo interactive Streamlit (`app/`, lancement : `streamlit run app/tableau_de_bord.py`), alimentée par un format commun de fichiers de prédictions (`src/contrat_predictions.py`, fichiers régénérés par `scripts/preparer_demo.py`, non versionnés).
+  - Blocage et erreur de segmentation quand torch et xgboost tournent dans le même processus (trois copies d'OpenMP) : corrigé par torch sur 1 cœur et l'import de xgboost avant torch (`src/deep_learning.py`).
+- **Pourquoi** : cahier des charges, section 5 (LSTM obligatoire, CNN 1D recommandé, FD001 puis FD002–FD004) ; soutenance 2 : démontrer un prototype qui prédit sur des moteurs jamais vus.
+- **Impact** : l'ADR-0007 (proposée) ne couvre que le choix parmi les modèles à arbres ; le choix entre arbres et LSTM reste à décider par l'équipe. `docs/0X_*.md` et résumés Notion non rédigés (phases non validées).
+
+### 2026-11-04 — Premier prototype de Phase 4 (comparaison de modèles, Optuna)
+- **Qui** : Benjamin (avec Claude Code)
 - **Quoi** : premier prototype de Phase 4, sur la branche `phase-04/prototype-ben` (non mergée).
   - Socle réutilisable : `src/features.py`, `src/evaluation.py`, `src/modeles.py`, `src/config_modele.py`, `src/optimisation.py` ; dans `src/preprocessing.py`, `DATA_DIR` devient un chemin absolu (seule modification). 125 tests pytest.
   - [`notebooks/04_comparaison_evaluation.ipynb`](../notebooks/04_comparaison_evaluation.ipynb), mêmes 5 plis `GroupKFold` pour tous les modèles : RMSE CV XGBoost 16,87, LightGBM 16,85, Random Forest 16,96, référence naïve 41,69. Écarts entre les trois modèles non significatifs (tests appariés sur le RMSE par moteur, 100 moteurs, p ≥ 0,58). Entraînement 5 plis : 3,9 s (XGBoost) contre 28 s (Random Forest).
