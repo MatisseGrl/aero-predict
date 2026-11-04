@@ -8,10 +8,18 @@ Il existe pour que le notebook de la Phase 3 puisse reutiliser ces etapes
 sans les recopier une 3e fois - la logique elle-meme n'a pas change.
 """
 
+import os
+
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-DATA_DIR = "../data"  # chemin relatif depuis notebooks/ vers le dossier data
+# Chemin ABSOLU vers le dossier data/, calcule a partir de l'emplacement de ce fichier (src/preprocessing.py).
+# Avant, DATA_DIR valait "../data" : un chemin relatif se lit depuis le dossier ou Python a ete lance,
+# il ne marchait donc que depuis notebooks/ (depuis la racine du depot, "../data" sort du depot).
+# En partant de __file__, le chemin est le meme quel que soit le dossier de lancement (racine, notebooks/,
+# tests/, scripts/). DATA_DIR reste une chaine de caracteres : f"{DATA_DIR}/RUL_FD001.txt" marche toujours.
+DOSSIER_SRC = os.path.dirname(os.path.abspath(__file__))  # dossier qui contient ce fichier, c'est-a-dire src/
+DATA_DIR = os.path.normpath(os.path.join(DOSSIER_SRC, "..", "data"))  # src/../data, simplifie en <racine>/data
 
 # Noms des 26 colonnes du fichier brut NASA (voir data/readme.txt) - les fichiers texte
 # n'ont pas de ligne d'en-tete, donc on doit fournir les noms de colonnes nous-memes
