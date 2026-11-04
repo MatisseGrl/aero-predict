@@ -54,6 +54,7 @@ Ce projet est une pièce de portfolio technique pour l'équipe (code versionné,
 8. **Toujours identifier ton interlocuteur avant d'adapter ton niveau d'explication** — voir le protocole d'identification ci-dessus.
 9. **Aucun changement hors-sujet, ni aucun changement qui dégrade une solution déjà validée sans justification explicite.** Remplacer quelque chose qui marche par autre chose doit être un progrès net et expliqué (plus précis, plus simple, plus proche du cahier des charges) — pas juste "différent" ou "une autre idée". Si la justification n'est pas claire, la demander avant de committer. Détail du process de revue : [`CONTRIBUTING.md`](CONTRIBUTING.md).
 10. **Aucune réécriture silencieuse de l'historique du projet** (`STATUS.md`, ADR). Voir section "Ton d'écriture" ci-dessous — une correction s'ajoute, elle ne remplace jamais discrètement ce qui a été écrit avant.
+11. **Tout modèle est évalué selon [`docs/protocole_evaluation.md`](docs/protocole_evaluation.md), en entier**, et le modèle n'est pas « évalué » avant : plusieurs métriques de régression comparées entre elles, baselines naïves, métriques de classification, diagnostic sur-apprentissage/sous-apprentissage, optimisation des hyperparamètres et features justifiées par ablation. Ça vaut pour XGBoost comme pour les futurs LSTM, CNN 1D ou Transformer. **Ton rôle de senior inclut de signaler de toi-même, sans attendre qu'on te pose la question, toute étape du protocole qui manque** dans le travail en cours ou dans un rapport. Ajouté le 2026-11-04 après des manques constatés sur la Phase 3 ([ADR-0007](docs/decisions/0007-protocole-evaluation-obligatoire.md)).
 
 ## Déroulé obligatoire pour chaque phase (sans en sauter aucune)
 
@@ -73,7 +74,7 @@ Une phase n'est **terminée** que si les 5 étapes ci-dessus sont faites — voi
 | 1 | EDA et préparation (FD001 d'abord, puis FD002-004) — capteurs constants, normalisation, lissage | `docs/01_eda_preparation.md` |
 | 2 | Target engineering — Piecewise RUL cappée à 125 | `docs/02_target_engineering.md` |
 | 3 | Modélisation — RF/XGBoost/LightGBM puis LSTM/CNN1D, Transformer optionnel | `docs/03_modelisation.md` |
-| 4 | Évaluation — RMSE + Score NASA + test de significativité statistique | `docs/04_evaluation.md` |
+| 4 | Évaluation selon [`docs/protocole_evaluation.md`](docs/protocole_evaluation.md) — métriques de régression et de classification, baselines, sur/sous-apprentissage, hyperparamètres, features, test de significativité statistique | `docs/04_evaluation.md` |
 | 5 | Explicabilité (SHAP) + dashboard | `docs/05_explicabilite_dashboard.md` |
 | 6 | Bonus plateforme MLOps — FastAPI + DB relationnelle + simulateur de flux + Docker Compose + MLflow (optionnel) | `docs/06_plateforme_mlops.md` |
 
@@ -85,7 +86,8 @@ Avant de coder le schéma SQL (`engines` / `sensor_readings` / `predictions`), m
 
 - **Phase 1 (EDA et préparation) : terminée**, voir [`docs/01_eda_preparation.md`](docs/01_eda_preparation.md).
 - **Phase 2 (Target engineering) : terminée**, voir [`docs/02_target_engineering.md`](docs/02_target_engineering.md).
-- **Phase 3 (Modélisation baseline XGBoost) : terminée**, voir [`docs/03_modelisation.md`](docs/03_modelisation.md).
+- **Phase 3 (Modélisation baseline XGBoost) : terminée**, voir [`docs/03_modelisation.md`](docs/03_modelisation.md) (dont le diagnostic biais/variance, section 6 : RMSE train 10.94 vs validation 16.86 ; et l'échelle de l'erreur, section 7 : 2.5 fois mieux que la baseline moyenne, R² validation 0.835, benchmark exploratoire 18.97 pas encore battu sur le test).
+- **Phase 4 (Évaluation) : commencée le 2026-11-04** avec le protocole d'évaluation ([`docs/protocole_evaluation.md`](docs/protocole_evaluation.md)). Sa section 0 liste ce qui manque au modèle XGBoost de la Phase 3 au regard du protocole.
 - Un notebook exploratoire pré-existant avait établi un **benchmark empirique** sur FD001 avant la mise en place de ce process : Random Forest, RMSE test = 18.97, Score NASA test = 1053.9 (détail dans le README). Il n'a suivi ni la normalisation, ni le lissage, ni la documentation par phase. Le fichier a depuis été supprimé (voir [ADR-0006](docs/decisions/0006-suppression-baseline-exploratoire.md)) ; seul le chiffre de référence est conservé, dans le README et `docs/00_etat_de_l_art.md`.
 
 ## Workflow git en équipe
