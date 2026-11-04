@@ -1,25 +1,36 @@
 """
-Preuves essentielles que les modeles ne trichent pas. Lancement, depuis la racine du depot : python -m pytest -q
+Preuves essentielles que le prototype ne triche pas. Lancement, depuis la racine du depot : python -m pytest -q
 
+(a) `test_direct_egal_precalcule` : au cycle t, la prediction calculee EN DIRECT a partir des seules mesures 1..t
+    est egale (a 1e-4 cycle pres) a la prediction precalculee de sorties/predictions/<SOUS_JEU>__<modele>.csv.gz ;
+(b) `test_cycles_futurs_sans_effet` : remplacer les mesures des cycles > t par n'importe quoi ne change pas la
+    prediction au cycle t (le modele ne lit jamais le futur) ;
 (c) `test_fenetres_sans_autre_moteur_ni_futur` : chaque fenetre du LSTM / CNN 1D ne contient que des cycles <= t
     du moteur de la ligne ;
 (d) `test_preparation_apprise_sur_le_train` : scalers min-max et K-Means des regimes appris sur le train seulement ;
 (e) `test_ecart_etat_initial_causal_et_par_moteur` : la variable "ecart a l'etat initial" (option ecart_initial,
     notebook 04e) au cycle t ne depend ni des cycles > t ni des autres moteurs.
 
-Les preuves (a) et (b), qui portent sur la prediction en direct de la demo, arrivent avec la demo (src/inference.py).
+(a) et (b) portent sur les six modeles de la demo (reference naive, Random Forest, XGBoost, LightGBM, LSTM,
+CNN 1D) et utilisent les vrais modeles de models/ : un modele dont les fichiers n'ont pas encore ete generes
+(python scripts/preparer_demo.py) est saute, avec la raison. Rien n'est ecrit sur le disque. Pour tenir en moins
+d'une minute, (a) compare un echantillon fixe : deux moteurs test par sous-jeu et cinq cycles par moteur.
 """
 
 import os
 import sys
 
 import numpy as np
+import pytest
 
 # racine du depot (dossier parent de tests/) importable, pour "import src..." quel que soit le dossier de lancement
 RACINE_DEPOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if RACINE_DEPOT not in sys.path:
     sys.path.insert(0, RACINE_DEPOT)
 
+# src.inference importe xgboost AVANT torch (ordre voulu, voir src/deep_learning.py)
+from src import inference as inf  # noqa: E402
+from src.contrat_predictions import SOUS_JEUX, chemin_metadonnees, chemin_predictions  # noqa: E402
 from src.deep_learning import construire_fenetres  # noqa: E402
 from src.features import calculer_ecart_etat_initial, preparer_train  # noqa: E402
 from src.preprocessing import COLUMNS  # noqa: E402
@@ -31,6 +42,100 @@ from src.sous_jeux import (  # noqa: E402
     creer_kmeans,
     preparer_sous_jeu,
 )
+
+TOLERANCE_EGALITE = 1e-4  # cycles : ecart maximal admis entre inference en direct et fichier precalcule
+COMMANDE_PREPARATION = "python scripts/preparer_demo.py"
+
+# l'objet d'inference du DERNIER sous-jeu charge : un seul a la fois en memoire (une Random Forest pese lourd)
+_INFERENCE_COURANTE = {}
+
+# les cas de (a), sous-jeu par sous-jeu : les six modeles d'un sous-jeu sont testes a la suite (un chargement)
+CAS_DIRECT = []
+for _sous_jeu in SOUS_JEUX:
+    for _modele in inf.MODELES_INFERENCE:
+        CAS_DIRECT.append((_sous_jeu, _modele))
+
+
+def inference_reelle(sous_jeu):
+    """
+    Charge les vrais modeles de models/ pour un sous-jeu (garde en memoire tant qu'on reste sur ce sous-jeu).
+
+    Rien n'est ecrit sur le disque : un modele a arbres absent est entraine en memoire, un reseau absent est
+    indisponible.
+
+    Parameters
+    ----------
+    sous_jeu : str
+        "FD001" a "FD004".
+
+    Returns
+    -------
+    dict
+        Le resultat de `src.inference.charger_modeles`.
+    """
+    if _INFERENCE_COURANTE.get("sous_jeu") != sous_jeu:
+        _INFERENCE_COURANTE.clear()  # libere les modeles du sous-jeu precedent
+        _INFERENCE_COURANTE["sous_jeu"] = sous_jeu
+        _INFERENCE_COURANTE["inference"] = inf.charger_modeles(sous_jeu, entrainer_si_absent=True, sauvegarder=False)
+    return _INFERENCE_COURANTE["inference"]
+
+
+def test_cycles_futurs_sans_effet():
+    """(b) Mesures des cycles > t multipliees par 1000 ou effacees (NaN) : predictions au cycle t identiques."""
+    inference = inference_reelle("FD001")
+    moteur = inf.mesures_moteur_test("FD001", 1)
+    mesures = moteur["mesures"]
+
+    # les colonnes de mesure : 3 reglages et 21 capteurs (unit_number et time_cycles restent intacts)
+    colonnes_mesures = []
+    for colonne in COLUMNS:
+        if colonne.startswith("sensor_") or colonne.startswith("op_setting_"):
+            colonnes_mesures.append(colonne)
+
+    for cycle in [1, 15, 31, moteur["nb_cycles"] - 1]:
+        reference = inf.predire_au_cycle(inference, mesures, cycle)
+
+        # futur multiplie par 1000 : un modele qui lirait le futur changerait completement d'avis
+        absurdes = mesures.copy()
+        masque_futur = absurdes["time_cycles"] > cycle
+        absurdes.loc[masque_futur, colonnes_mesures] = absurdes.loc[masque_futur, colonnes_mesures] * 1000.0
+        avec_absurdes = inf.predire_au_cycle(inference, absurdes, cycle)
+
+        # futur efface (NaN) : la preparation refuserait des NaN si elle les recevait
+        effacees = mesures.copy()
+        effacees.loc[effacees["time_cycles"] > cycle, colonnes_mesures] = np.nan
+        avec_effacees = inf.predire_au_cycle(inference, effacees, cycle)
+
+        assert reference["nb_cycles_recus"] == cycle  # seuls les cycles 1..t ont ete transmis
+        assert len(reference["predictions"]) > 0
+        for modele in reference["predictions"]:
+            assert avec_absurdes["predictions"][modele] == reference["predictions"][modele]
+            assert avec_effacees["predictions"][modele] == reference["predictions"][modele]
+
+
+@pytest.mark.parametrize("sous_jeu, modele", CAS_DIRECT)
+def test_direct_egal_precalcule(sous_jeu, modele):
+    """(a) Prediction en direct au cycle t (mesures 1..t seulement) = prediction precalculee, a 1e-4 pres."""
+    # fichiers precalcules absents (sorties/ n'est pas versionne) : test saute, avec la commande a lancer
+    if not os.path.exists(chemin_predictions(sous_jeu, modele)) or not os.path.exists(chemin_metadonnees(sous_jeu, modele)):
+        pytest.skip(f"{sous_jeu}/{modele} : predictions precalculees absentes (lancer {COMMANDE_PREPARATION})")
+    inference = inference_reelle(sous_jeu)
+    if modele not in inference["modeles"]:
+        pytest.skip(f"{sous_jeu}/{modele} : {inference['indisponibles'].get(modele)}")
+
+    # premier et dernier moteur test ; cycles 1, 30, 31 (bord de la fenetre des reseaux), milieu et dernier
+    moteurs = inf.lister_moteurs_test(sous_jeu)
+    for moteur in [moteurs[0], moteurs[-1]]:
+        nb_cycles = inf.mesures_moteur_test(sous_jeu, moteur)["nb_cycles"]
+        cycles = []
+        for cycle in [1, 30, 31, nb_cycles // 2, nb_cycles]:
+            if 1 <= cycle <= nb_cycles and cycle not in cycles:
+                cycles.append(cycle)
+        tableau, absents = inf.ecarts_aux_predictions_precalculees(inference, moteur, cycles, modeles=[modele])
+        assert len(absents) == 0, absents
+        assert len(tableau) == len(cycles)  # une comparaison par cycle demande
+        ecart_max = float(tableau["ecart_absolu"].max())
+        assert ecart_max <= TOLERANCE_EGALITE, f"{sous_jeu}/{modele}, moteur {moteur} :\n{tableau.to_string()}"
 
 
 def test_fenetres_sans_autre_moteur_ni_futur():
