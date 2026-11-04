@@ -6,10 +6,24 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 ## Phase actuelle
 
-**Phase 3 — Modélisation baseline XGBoost (FD001) : terminée et validée par Matisse.** Deep learning (LSTM/CNN, prévu au cahier des charges section 5) pas encore attaqué. Prochaine étape : Phase 4 (évaluation formalisée : comparaison statistique de modèles, optimisation des hyperparamètres) ou extension deep learning de la Phase 3, à trancher avec Matisse.
+**Phase 4 — Comparaison de modèles et évaluation (FD001) : premier prototype sur la branche `phase-04/prototype-ben` (Benjamin), pas encore validé par l'équipe ni comparé au travail mené en parallèle par Matisse.** Phase 3 (baseline XGBoost) terminée et validée par Matisse. Deep learning (LSTM/CNN, prévu au cahier des charges section 5) pas encore attaqué.
 
 ## Dernière modification
 
+- **Qui** : Benjamin (avec Claude Code)
+- **Date** : 2026-11-04
+- **Quoi** : premier prototype de Phase 4, sur la branche `phase-04/prototype-ben` (non mergée).
+  - Socle réutilisable : `src/features.py`, `src/evaluation.py`, `src/modeles.py`, `src/config_modele.py`, `src/optimisation.py` ; dans `src/preprocessing.py`, `DATA_DIR` devient un chemin absolu (seule modification). 125 tests pytest.
+  - [`notebooks/04_comparaison_evaluation.ipynb`](../notebooks/04_comparaison_evaluation.ipynb), mêmes 5 plis `GroupKFold` pour tous les modèles : RMSE CV XGBoost 16,87, LightGBM 16,85, Random Forest 16,96, référence naïve 41,69. Écarts entre les trois modèles non significatifs (tests appariés sur le RMSE par moteur, 100 moteurs, p ≥ 0,58). Entraînement 5 plis : 3,9 s (XGBoost) contre 28 s (Random Forest).
+  - Pénalité des surestimations placée dans l'apprentissage (perte quadratique asymétrique `alpha`, perte de forme NASA `h_sous`/`h_sur`), puis Optuna multi-objectif (RMSE CV, score NASA CV) : 160 essais, 3 études, TPE graine 42, règle de choix fixée avant le test (RMSE ≤ 1,05 × meilleur RMSE du front de Pareto, puis plus petit score NASA). Retenu : XGBoost, perte quadratique, `alpha` = 2,26 ([`docs/resultats/04_config_retenue.json`](resultats/04_config_retenue.json)). En CV, par rapport à la Phase 3 : surestimations > 20 cycles −36 % (p < 0,0001), score NASA −29 % (p = 0,007), RMSE 17,28 contre 16,87 (différence par moteur non significative, p = 0,67).
+  - Test officiel, évalué une fois : retenu RMSE 19,73, score NASA 675,4, 9/100 surestimés de plus de 20 cycles, 7 alertes manquées (seuil 30 cycles, hypothèse de travail) ; Phase 3 : 19,70 / 852,9 / 9 / 7. Différence non significative sur 100 moteurs (p = 0,94) ; l'écart de score NASA vient presque entièrement du moteur 37 (sans lui : 646,1 contre 629,3). Résultat non concluant sur le test.
+  - Perte de forme NASA une fois convergée (1 000 arbres) : moins bonne que la Phase 3 en CV, en RMSE comme en score NASA ; son bon résultat à 200 arbres tient à l'arrêt précoce, pas à la perte seule.
+  - Changer les constantes 13/10 du score d'évaluation ne change aucune prédiction (score 852,9 → 0,13 pour un facteur 1 000) : ces constantes restent fixes pour évaluer.
+  - Démo `python -m src.demo` (`entrainer`, `moteur`, `flotte`, `benchmark`) : préparation + prédiction d'un moteur en 35,6 ms au 95e centile (cible 200 ms), mesuré sous charge.
+- **Pourquoi** : soutenance 2 du 12/11 : justifier XGBoost face à des alternatives mesurées (demande du coach, réunion du 29/10), tester la piste « pénaliser davantage les surestimations » et Optuna, disposer d'un prototype démontrable.
+- **Impact** : dans le venv du projet (Python 3.13), la validation croisée de la Phase 3 donne 16,87 / 29 782,6 (doc de Phase 3 : 16,86 / 29 729,3, obtenus dans un autre environnement ; notebook 03 réexécuté identique au code refactoré). Chiffres de test de la Phase 3 inchangés. Branche à comparer avec le travail de Matisse avant toute intégration. `docs/04_evaluation.md` non rédigé (phase non validée).
+
+### 2026-09-30 — Ajout de `time_cycles` aux features (test d'ablation)
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-09-30
 - **Quoi** : ajout de `time_cycles` (numéro du cycle en cours) aux features de `notebooks/03_modelisation.ipynb` : 46 features au lieu de 45. Décision prise sur un test d'ablation (nouvelle section 11 du notebook, validation croisée uniquement, jeu de test non utilisé) comparant 7 jeux de features : les colonnes glissantes (moyennes, écarts-types) n'améliorent pas le RMSE de façon mesurable (18.54 à 18.73 pour 15, 30 et 45 features, contre un bruit d'environ 1.3 entre plis), alors que `time_cycles` fait passer le RMSE moyen de 18.64 à 16.86 et le score NASA moyen de 62 279 à 29 729. « 15 capteurs + `time_cycles` » (16 features) fait aussi bien (16.95) — simplification possible en Phase 4. Nouveaux résultats sur le test officiel : **RMSE 19.70, score NASA 852.9, 9/100 moteurs surestimés de plus de 20 cycles** (contre 18.91 / 1082.6 / 14/100 à 45 features, commit `a97a82d`) — résultat mixte, non concluant avec 100 points. `docs/03_modelisation.md` réécrit en conséquence, figure de validation regénérée ; deux compréhensions de liste du notebook remplacées par des boucles explicites (règle du projet).

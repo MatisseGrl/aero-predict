@@ -1,0 +1,43 @@
+{
+  "famille": "xgboost",
+  "perte": "quadratique_asymetrique",
+  "parametres_perte": {
+    "alpha": 2.2563503313740805
+  },
+  "hyperparametres": {
+    "colsample_bytree": 0.7712722862528931,
+    "learning_rate": 0.02147023992742088,
+    "max_depth": 3,
+    "min_child_weight": 8.695062848173155,
+    "n_estimators": 200,
+    "n_jobs": 4,
+    "random_state": 42,
+    "reg_lambda": 1.1143130850112006,
+    "subsample": 0.8161608159242292
+  },
+  "nom": "Optuna retenu (xgb_quadratique n°17)",
+  "regle_de_choix": "Parmi tous les essais Pareto-optimaux (RMSE CV moyen, score NASA CV moyen) de toutes les etudes Optuna, garder ceux dont le RMSE CV moyen est <= 1,05 x le plus petit RMSE CV moyen du front, puis prendre celui qui a le plus petit score NASA CV moyen ; en cas d'egalite, le moins de surestimations hors-pli > 20 cycles. Regle fixee avant tout resultat ; le jeu de test n'intervient pas.",
+  "metriques_cv": {
+    "rmse_cv_moyen": 17.279585756497802,
+    "rmse_cv_ecart_type": 2.1014046845167287,
+    "mae_cv_moyen": 12.723852989516123,
+    "nasa_cv_moyen": 21075.220620940054,
+    "surestimes_oof": 1517,
+    "alertes_manquees_oof": 492,
+    "fausses_alertes_oof": 381,
+    "biais_oof": -4.303569820973934
+  },
+  "metriques_test": {
+    "rmse": 19.729939531203193,
+    "rmse_contre_rul_plafonnee": 18.30551223116019,
+    "mae": 14.318611244551878,
+    "score_nasa": 675.3724372266781,
+    "nb_surestimes": 9,
+    "alertes_manquees": 7,
+    "fausses_alertes": 1,
+    "rmse_moyenne_5_graines": 19.65225608508576,
+    "rmse_ecart_type_5_graines": 0.05437479108721958
+  },
+  "source": "notebooks/04_comparaison_evaluation.ipynb ; essai 17 de docs/resultats/04_optuna_xgb_quadratique.csv",
+  "date": "2026-11-04"
+}
