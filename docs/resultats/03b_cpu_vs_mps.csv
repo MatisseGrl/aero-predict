@@ -1,0 +1,15 @@
+mesure,type_modele,appareil,nb_threads_cpu,valeur,charge_machine_1min
+debit_lots_par_s,lstm,cpu,1,58.92161657955355,9.49658203125
+debit_lots_par_s,lstm,cpu,6,40.749567927950196,9.49658203125
+debit_lots_par_s,lstm,mps,1,251.85936421375288,9.49658203125
+ecart_max_predictions_cpu1_vs_cpu1,lstm,cpu/cpu,1/1,0.0,9.49658203125
+ecart_max_predictions_cpu1_vs_cpu6,lstm,cpu/cpu,1/6,0.0,9.49658203125
+ecart_max_predictions_mps1_vs_mps1,lstm,mps/mps,1/1,0.0,9.49658203125
+ecart_max_predictions_cpu1_vs_mps1,lstm,cpu/mps,1/1,0.9761303663253784,9.49658203125
+debit_lots_par_s,cnn1d,cpu,1,15.866705394492431,9.49658203125
+debit_lots_par_s,cnn1d,cpu,6,12.797397520969927,9.49658203125
+debit_lots_par_s,cnn1d,mps,1,389.3321398195456,9.49658203125
+ecart_max_predictions_cpu1_vs_cpu1,cnn1d,cpu/cpu,1/1,0.0,9.49658203125
+ecart_max_predictions_cpu1_vs_cpu6,cnn1d,cpu/cpu,1/6,0.0,9.49658203125
+ecart_max_predictions_mps1_vs_mps1,cnn1d,mps/mps,1/1,0.0,9.49658203125
+ecart_max_predictions_cpu1_vs_mps1,cnn1d,cpu/mps,1/1,28.76357629429549,9.49658203125

@@ -1,0 +1,7 @@
+{
+ "regle": "Separation unique des 100 moteurs du train FD001 (graine 42) : 20 moteurs de decision, 80 moteurs d'entrainement eux-memes separes en 64 d'apprentissage et 16 d'arret precoce. Chaque reseau (LSTM, CNN 1D) est entraine avec et sans time_cycles, 3 graines chacun ; on mesure le RMSE sur les 20 moteurs de decision (tous leurs cycles). time_cycles est garde si la moyenne, sur les deux reseaux et les 3 graines, de ce RMSE est plus basse avec time_cycles que sans ; sinon on garde les capteurs seuls (variante la plus simple). Le jeu de test n'intervient pas. Decision prise une fois sur FD001 et appliquee a FD002-FD004.",
+ "rmse_moyen_avec_time_cycles": 12.984783621626006,
+ "rmse_moyen_sans_time_cycles": 14.987942948704545,
+ "garder_time_cycles": true,
+ "date": "2026-11-04"
+}
