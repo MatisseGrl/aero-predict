@@ -14,6 +14,19 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 - **Qui** : Benjamin (avec Claude Code)
 - **Date** : 2026-11-05
+- **Quoi** : démo Streamlit du prototype (branche `phase-04/demo-ben`, empilée sur `phase-04/modeles-ben`). Lancement : `streamlit run app/tableau_de_bord.py`.
+  - Page « Tester un moteur » : un moteur de `test_FD00X.txt` est tiré au hasard (ou choisi) ; à chaque cycle reçu, XGBoost, LSTM et CNN 1D (au choix parmi les 6 modèles) prédisent la RUL **en direct** (`src/inference.py`) à partir des seuls cycles 1..t ; la vraie RUL (`RUL_FD00X.txt`) reste cachée jusqu'à la révélation. Règle d'alerte dans `src/alertes.py`.
+  - Page « Comparer les modèles » : RMSE, score NASA, surestimés de plus de 20 cycles et alertes manquées au test, pour les 6 modèles et les 4 sous-jeux (fichiers de `sorties/predictions/`).
+  - Les modèles de la démo sont les versions retenues de la PR des modèles (avec `ecartinit_20`) ; le nom affiché « XGBoost Phase 3 » devient « XGBoost » (version à 31 variables).
+  - Section J du notebook 05 : la même démo dans le notebook (moteur mystère, prédiction en direct, révélation), puis lancement et arrêt de l'application.
+  - Tests anti-triche (a) et (b) : la prédiction en direct au cycle t est égale aux prédictions précalculées pour les 24 couples sous-jeu × modèle (écart maximal 1,4e-14), et modifier les cycles après t ne la change pas. 28 tests pytest au total.
+- **Pourquoi** : soutenance 2 (12/11) : montrer un prototype qui prédit la RUL de moteurs que les modèles n'ont jamais vus.
+- **Impact** : `scripts/preparer_demo.py` régénère les prédictions et les modèles (non versionnés). Sur FD004, le CNN 1D reste proposé dans la démo malgré sa dégradation au test (voir l'entrée suivante).
+
+### 2026-11-05 — Variable `ecartinit_20` sur les 6 modèles, protocole d'évaluation et littérature
+
+- **Qui** : Benjamin (avec Claude Code)
+- **Date** : 2026-11-05
 - **Quoi** : la variable `ecartinit_20` de Matisse (notebook 04e : écart de chaque capteur lissé à sa moyenne sur les 20 premiers cycles du moteur) est ajoutée à `src/features.py` et `src/sous_jeux.py` (option `ecart_initial`, causale, calculée moteur par moteur ; un test le vérifie), puis testée sur nos 6 modèles. Le notebook 05 est réorganisé : partie 1 inchangée (sections A à E, 46 variables), section F (améliorations testées), G (protocole d'évaluation, FD001), H (littérature), I (synthèse).
   - Reproduction du XGBoost de Matisse : validation croisée 9,27 (moyenne de 3 graines de plis), test FD001 13,10 / score NASA 237,0, identiques au notebook 04e.
   - Règle de décision écrite avant les résultats : une amélioration est gardée si le RMSE de validation croisée FD001 baisse d'au moins 0,3 cycle et si le test de Wilcoxon apparié par moteur donne p < 0,05 ; le choix fait sur FD001 est appliqué tel quel à FD002–FD004.

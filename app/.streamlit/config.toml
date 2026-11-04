@@ -1,0 +1,19 @@
+# Reglages Streamlit du tableau de bord (lus automatiquement car ce dossier est a cote du script principal).
+# Theme clair, contraste eleve et police un peu plus grande : pense pour un videoprojecteur.
+
+[theme]
+base = "light"
+primaryColor = "#0072B2"
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F2F4F7"
+textColor = "#111111"
+baseFontSize = 17
+# marge au-dessus du contenu reduite (8rem par defaut avec le menu en haut) : plus de place pour les graphiques
+paddingTop = "1rem"
+
+[browser]
+# aucune statistique d'usage envoyee a l'exterieur (demo locale)
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
