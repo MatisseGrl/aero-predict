@@ -50,14 +50,14 @@ d'importance.
 
 Résultats avec les 46 features :
 
-| Pli | RMSE | Score NASA |
-|---|---|---|
-| 1 | 15.17 | 19 024.1 |
-| 2 | 18.79 | 24 855.2 |
-| 3 | 17.29 | 40 402.5 |
-| 4 | 15.90 | 30 488.2 |
-| 5 | 17.13 | 33 876.7 |
-| **Moyenne** | **16.86** | **29 729.3** |
+| Pli | RMSE validation | Score NASA validation | RMSE train (ajouté le 2026-10-21, voir section 6) |
+|---|---|---|---|
+| 1 | 15.17 | 19 024.1 | 11.17 |
+| 2 | 18.79 | 24 855.2 | 10.56 |
+| 3 | 17.29 | 40 402.5 | 11.03 |
+| 4 | 15.90 | 30 488.2 | 11.00 |
+| 5 | 17.13 | 33 876.7 | 10.94 |
+| **Moyenne** | **16.86** | **29 729.3** | **10.94** |
 
 **Note de reproductibilité** : ces chiffres de validation croisée peuvent varier légèrement d'une
 exécution à l'autre (observé avec 45 features : 18.17 puis 18.61 sur deux runs successifs, avant l'ajout
@@ -124,11 +124,99 @@ sans jamais utiliser le jeu de test (section 11 du notebook) :
   statistiques glissantes pour la baseline classique ; passer à 16 features est une simplification possible
   en Phase 4.
 
+### 6. Diagnostic biais / variance (ajouté le 2026-10-21)
+
+Les sections précédentes mesuraient l'erreur sur des moteurs jamais vus (validation croisée, test
+officiel), jamais sur les moteurs appris. Sans cette erreur train, on ne peut pas dire si le modèle
+sur-apprend (variance : train bas, validation nettement plus haute) ou sous-apprend (biais : les deux
+hautes et proches). Ce diagnostic a été ajouté en section 12 du notebook, entièrement en validation
+croisée (mêmes 5 plis par moteur), sans utiliser le jeu de test officiel.
+
+**Aux réglages actuels** (`n_estimators=200, max_depth=5, learning_rate=0.05`) : RMSE train moyen 10.94,
+RMSE validation moyen 16.86, soit un écart de **+5.91 cycles**, présent sur les 5 plis (de +3.99 à +8.23,
+tableau de la section 3).
+
+![RMSE train vs validation par pli](figures/03_biais_variance_train_vs_val_par_pli.png)
+
+**Courbe de validation sur `max_depth`** (200 arbres, tout le reste fixe) :
+
+| `max_depth` | 1 | 2 | 3 | 4 | **5 (actuel)** | 6 | 7 | 8 | 10 |
+|---|---|---|---|---|---|---|---|---|---|
+| RMSE train | 16.71 | 15.17 | 14.13 | 12.69 | **10.94** | 8.82 | 6.79 | 4.76 | 1.84 |
+| RMSE validation | 17.54 | 16.62 | 16.55 | 16.60 | **16.86** | 17.05 | 17.13 | 17.25 | 17.32 |
+| Écart | +0.83 | +1.45 | +2.42 | +3.91 | **+5.91** | +8.23 | +10.34 | +12.48 | +15.48 |
+
+L'écart-type de la validation entre plis est compris entre 1.13 et 1.31 pour toutes les profondeurs.
+
+![Courbe de validation max_depth](figures/03_biais_variance_courbe_max_depth.png)
+
+**Courbe de validation sur `n_estimators`** (`max_depth=5`, un entraînement de 1000 arbres par pli,
+RMSE mesuré après chaque arbre via `eval_set`) : validation au plus bas à 90 arbres (16.72), 16.86 à
+200 arbres (actuel), 17.24 à 1000 arbres ; le RMSE train passe de 12.59 (100 arbres) à 5.44 (1000 arbres).
+
+![Courbe de validation n_estimators](figures/03_biais_variance_courbe_n_estimators.png)
+
+Sanity checks : le RMSE train est inférieur au RMSE validation sur chaque pli, et `max_depth=5` /
+200 arbres redonnent exactement le 16.86 de la section 3 (vérifiés par `assert` dans le notebook). Deux
+exécutions complètes du notebook ont donné les mêmes chiffres.
+
+**Interprétation** :
+- Le modèle actuel **sur-apprend modérément** : il se situe du côté « variance » du point optimal
+  (l'erreur train continue de baisser avec la complexité, l'erreur de validation remonte légèrement).
+- Ce sur-apprentissage **coûte peu** : le meilleur réglage trouvé (`max_depth=3`, 16.55) ne gagne que
+  0.31 cycle de RMSE de validation, environ quatre fois moins que l'écart-type entre plis (≈ 1.2) — non
+  significatif en l'état.
+- La validation reste **au-dessus d'environ 16.5 quel que soit le réglage**. Ce plancher ne vient pas d'un
+  excès de complexité : il reflète ce que les features ne capturent pas (biais) ou le bruit propre aux
+  données. Le dépasser demandera d'autres features ou d'autres modèles (séquences complètes avec un LSTM /
+  CNN 1D), pas seulement un réglage plus prudent.
+
+**Décision** : réglages inchangés (gain non significatif, chiffres de la Phase 3 déjà validés). Un modèle
+plus simple (`max_depth=3` ou moins d'arbres) est noté comme piste pour l'optimisation des hyperparamètres
+en Phase 4, à départager avec un test statistique.
+
+### 7. Échelle de l'erreur : grande ou petite ? (ajouté le 2026-10-21)
+
+Une erreur n'est « grande » ou « petite » que par rapport à une référence. Quatre références sont calculées
+en section 13 du notebook (mêmes plis que les sections précédentes, sans réentraîner le modèle) :
+l'échelle de la cible (RUL de 0 à 125), un modèle « bête » qui prédit toujours la RUL moyenne du train
+(baseline), le R² (`1 - MSE_modèle / variance(y)`, vérifié contre `sklearn.metrics.r2_score` sur un pli),
+et le besoin du sujet.
+
+| Erreur | RMSE | % de la plage 0-125 | R² |
+|---|---|---|---|
+| Validation croisée : baseline (moyenne) | 41.69 | 33.4 % | — |
+| Validation croisée : XGBoost, train | 10.94 | 8.8 % | 0.931 |
+| Validation croisée : XGBoost, validation | 16.86 | 13.5 % | 0.835 |
+| Test officiel : baseline (moyenne) | 43.07 | 34.5 % | — |
+| Test officiel : XGBoost | 19.70 | 15.8 % | 0.775 |
+| Test officiel : benchmark exploratoire RF (README) | 18.97 | 15.2 % | — |
+
+![Erreur comparée à la baseline et au benchmark](figures/03_echelle_erreur_baseline.png)
+
+- **Par rapport à la baseline**, l'erreur est petite : XGBoost fait 2.5 fois mieux que « prédire la
+  moyenne » en validation croisée (R² 0.835), 2.2 fois mieux sur le test officiel (R² 0.775).
+- **Par rapport au besoin du sujet**, elle ne suffit pas encore : le cahier des charges ne fixe aucune
+  erreur acceptable chiffrée, et la seule référence chiffrée sourcée du projet (benchmark exploratoire,
+  RMSE test 18.97) **n'est pas battue** (19.70). L'écart de 0.73 n'est pas testé statistiquement, sur
+  100 moteurs.
+- L'écart R² train / validation (0.931 / 0.835) est la variance déjà mesurée en section 6, exprimée
+  autrement.
+
 ## Trade-offs et limites
 
-- Un seul jeu d'hyperparamètres XGBoost a été testé (`n_estimators=200, max_depth=5, learning_rate=0.05`),
-  choisi raisonnablement mais sans recherche systématique — une optimisation (grid/random search) pourrait
-  améliorer ces chiffres, à envisager en Phase 4 si le temps le permet.
+- Aucune erreur acceptable chiffrée n'est définie pour le projet : la section 7 juge l'erreur par rapport
+  à la baseline et au benchmark exploratoire seulement. Un seuil métier (ou une référence publiée, vérifiée
+  dans l'article original) reste à fixer en Phase 4. Le RMSE moyen ne dit pas non plus si l'erreur est plus
+  forte près de la panne, là où elle pèse le plus.
+
+- Un seul jeu d'hyperparamètres XGBoost a été retenu (`n_estimators=200, max_depth=5, learning_rate=0.05`),
+  sans recherche systématique. Le diagnostic biais/variance (section 6) montre que `max_depth` et
+  `n_estimators` ne changent le RMSE de validation que de quelques dixièmes, à l'intérieur du bruit entre
+  plis ; `learning_rate` et les paramètres de régularisation n'ont pas été explorés — à faire en Phase 4.
+- Le diagnostic biais/variance utilise la validation croisée, qui évalue tous les cycles des moteurs mis de
+  côté : ses conclusions ne se transfèrent pas forcément à l'identique au test officiel (un seul point par
+  moteur, voir plus bas).
 - Seul XGBoost a été testé (le cahier des charges section 5 en liste trois : XGBoost, LightGBM, SVR) ;
   une comparaison entre les trois n'a pas été faite à ce stade.
 - La validation croisée évalue tous les cycles des moteurs mis de côté, alors que le test officiel

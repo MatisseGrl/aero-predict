@@ -17,7 +17,7 @@ xgboost
 lightgbm
 torch
 
-# Phase 4 : optimisation des hyperparamètres
+# Phase 4 : optimisation des hyperparamètres (recherche guidée TPE)
 optuna
 
 # Phase 4-5 : explicabilité
