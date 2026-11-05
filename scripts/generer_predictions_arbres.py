@@ -33,7 +33,9 @@ Pour chaque sous-jeu (FD001 a FD004) et chaque modele de MODELES_ARBRES :
 
 Les modeles (MODELES_ARBRES) : les quatre modeles compares a "reglages de base" dans le notebook 05 (section B),
 avec exactement ces reglages (src/config_modele.py) : reference naive (moyenne), Random Forest, XGBoost Phase 3
-(CONFIG_PHASE3, reglages choisis sur FD001) et LightGBM. Aucun n'est reoptimise par sous-jeu : limite connue.
+(CONFIG_PHASE3, reglages choisis sur FD001) et LightGBM. Ces reglages de base servent a choisir les features ;
+le modele final (fichiers du contrat, demo) utilise les reglages finaux des notebooks 04f et 04g (CONFIGS_FINALES)
+quand le jeu ecart_initial_20 est retenu. Aucun n'est reoptimise par sous-jeu : limite connue.
 
 Option --ablations : compare, en validation croisee seulement (le test n'est jamais regarde), plusieurs
 variantes de preparation sur FD002 et FD004 (normalisation globale vs par regime, regime ajoute ou non
@@ -66,9 +68,12 @@ from scipy import stats  # noqa: E402
 
 from src.config_modele import (  # noqa: E402
     CONFIG_LIGHTGBM_BASE,
+    CONFIG_LIGHTGBM_FINAL,
     CONFIG_PHASE3,
     CONFIG_RANDOM_FOREST_BASE,
+    CONFIG_RANDOM_FOREST_FINAL,
     CONFIG_REFERENCE_NAIVE,
+    CONFIG_XGBOOST_FINAL,
     construire_fabrique_depuis_config,
     decrire_config,
 )
@@ -104,6 +109,13 @@ CONFIGS_ARBRES = {
 MODELES_ARBRES = []
 for _cle in CONFIGS_ARBRES:
     MODELES_ARBRES.append(_cle)
+# reglages FINAUX (Optuna de Matisse, notebooks 04f et 04g), regles pour le jeu ecart_initial_20 : ils
+# remplacent les reglages de base pour le modele final, si ce jeu est retenu. La reference naive n'en a pas.
+CONFIGS_FINALES = {
+    "random_forest": CONFIG_RANDOM_FOREST_FINAL,
+    "xgboost_phase3": CONFIG_XGBOOST_FINAL,
+    "lightgbm": CONFIG_LIGHTGBM_FINAL,
+}
 MODELES_ABLATION = ["xgboost_phase3"]  # --ablations : le modele de la regle de decision (notebook 01b, section D)
 
 # les deux jeux de features compares : cle -> valeur de l'option `ecart_initial` de preparer_sous_jeu
@@ -157,6 +169,13 @@ ATTENDU_FD001 = {
     ("xgboost_phase3", JEU_BASE): {"rmse": 19.70, "score_nasa": 852.9, "nb_surestimes": 9},
     ("xgboost_phase3", JEU_CANDIDAT): {"rmse": 13.10, "score_nasa": 237.0, "nb_surestimes": 2},
 }
+# meme controle pour les modeles finaux (31 features + reglages finaux) : chiffres du notebook 04g (Matisse),
+# sauf XGBoost, recalcule sur 1 coeur (le 04g, sur tous les coeurs d'une machine a 16 coeurs, donne 12,70 / 220,0)
+ATTENDU_FD001_FINAL = {
+    ("random_forest", JEU_CANDIDAT): {"rmse": 13.14, "score_nasa": 243.3, "nb_surestimes": 3},
+    ("xgboost_phase3", JEU_CANDIDAT): {"rmse": 12.73, "score_nasa": 223.5, "nb_surestimes": 2},
+    ("lightgbm", JEU_CANDIDAT): {"rmse": 12.76, "score_nasa": 234.6, "nb_surestimes": 3},
+}
 
 # description du protocole, recopiee dans chaque fichier de metadonnees
 PROTOCOLE_VALIDATION = (
@@ -170,9 +189,11 @@ PROTOCOLE_VALIDATION = (
     "script (baisse du RMSE CV >= 0,3 cycle ET Wilcoxon apparie par moteur p < 0,05), applique tel quel a "
     "FD002-FD004. Modele final entraine sur tous les moteurs d'entrainement ; test : prediction a chaque "
     "cycle de chaque moteur test, clippee a 0, metriques au dernier cycle observe contre la RUL brute de "
-    "RUL_FD00X.txt (et contre la RUL plafonnee a 125). Hyperparametres : ceux de la Phase 3 pour XGBoost "
-    "(choisis sur FD001), reglages de base du notebook 05 pour Random Forest et LightGBM ; non reoptimises "
-    "par sous-jeu ni par jeu de features."
+    "RUL_FD00X.txt (et contre la RUL plafonnee a 125). Hyperparametres : pour choisir les features, ceux de "
+    "la Phase 3 pour XGBoost et les reglages de base du notebook 05 pour Random Forest et LightGBM ; pour le "
+    "modele final (fichiers du contrat), les reglages finaux d'Optuna (notebooks 04f et 04g, cherches sur FD001 "
+    "avec le jeu ecart_initial_20), validation croisee refaite avec eux sur les memes plis ; non reoptimises "
+    "par sous-jeu."
 )
 
 # variantes de preparation comparees par --ablations (en validation croisee uniquement)
@@ -219,6 +240,62 @@ def configuration_modele(cle_modele, n_jobs=N_JOBS_DEFAUT):
     config = copy.deepcopy(CONFIGS_ARBRES[cle_modele])  # copie : la configuration d'origine reste intacte
     if cle_modele == "xgboost_phase3":
         config["hyperparametres"]["n_jobs"] = int(n_jobs)  # nombre de coeurs impose (vitesse seulement)
+    return config
+
+
+def a_des_reglages_finaux(cle_modele, jeu_retenu):
+    """
+    Dit si le modele final utilise les reglages finaux (Optuna, notebooks 04f et 04g) plutot que ceux de base.
+
+    Les reglages finaux ont ete cherches pour le jeu ecart_initial_20 seulement : ils ne s'appliquent que si
+    ce jeu est retenu, et seulement aux modeles qui en ont (pas a la reference naive).
+
+    Parameters
+    ----------
+    cle_modele : str
+        Une cle de MODELES_ARBRES.
+    jeu_retenu : str
+        Le jeu de features retenu par la regle de decision sur FD001.
+
+    Returns
+    -------
+    bool
+        Vrai si le modele final doit utiliser CONFIGS_FINALES[cle_modele].
+    """
+    return jeu_retenu == JEU_CANDIDAT and cle_modele in CONFIGS_FINALES
+
+
+def configuration_version_retenue(cle_modele, jeu_retenu, n_jobs=N_JOBS_DEFAUT):
+    """
+    Configuration du modele FINAL (celui des fichiers du contrat et de la demo) d'un modele de MODELES_ARBRES.
+
+    Deux temps, comme les notebooks 04e puis 04f : les features sont choisies avec les reglages de base
+    (`configuration_modele`), puis le modele final utilise les reglages finaux s'il en a pour ce jeu
+    (`a_des_reglages_finaux`). src/inference.py appelle cette fonction : la demo entraine donc le meme modele.
+
+    Parameters
+    ----------
+    cle_modele : str
+        Une cle de MODELES_ARBRES (ex. "xgboost_phase3").
+    jeu_retenu : str
+        Le jeu de features retenu ("base" ou "ecart_initial_20").
+    n_jobs : int, optionnel
+        Nombre de coeurs donnes a XGBoost a reglages de base (4 par defaut ; vitesse seulement). Le XGBoost
+        final tourne toujours sur 1 coeur (voir le commentaire dans le code).
+
+    Returns
+    -------
+    dict
+        Une copie independante de la configuration.
+    """
+    if not a_des_reglages_finaux(cle_modele, jeu_retenu):
+        return configuration_modele(cle_modele, n_jobs=n_jobs)  # pas de reglages finaux : ceux de base
+    config = copy.deepcopy(CONFIGS_FINALES[cle_modele])  # copie : la configuration d'origine reste intacte
+    if config["famille"] == "xgboost":
+        # 1 coeur IMPOSE (n_jobs ignore ici) : avec subsample < 1, XGBoost ne donne pas les memes arbres selon
+        # le nombre de coeurs (mesure sur FD001, 16 coeurs : RMSE test 12,70 avec tous, 12,73 avec 1, 12,78
+        # avec 4). Sur 1 coeur, le resultat ne depend plus de la machine ; cout : environ 2 s d'entrainement.
+        config["hyperparametres"]["n_jobs"] = 1
     return config
 
 
@@ -479,7 +556,7 @@ def appliquer_regle_de_decision(resultats_base, resultats_candidat, par_moteur_b
 # ---------------------------------------------------------------------------------------------------
 
 def evaluer_version_finale(contexte, cle_modele, jeu, config, ecrire_contrat, resultats_cv, duree_preparation,
-                           duree_cv):
+                           duree_cv, attendus=None):
     """
     Entraine le modele final sur tout le train, predit chaque cycle du test et calcule les metriques de test.
 
@@ -502,6 +579,8 @@ def evaluer_version_finale(contexte, cle_modele, jeu, config, ecrire_contrat, re
         Les resultats de validation croisee de ce jeu (recopies dans les metadonnees).
     duree_preparation, duree_cv : float
         Durees de la preparation et de la validation croisee, en secondes (metadonnees).
+    attendus : dict, optionnel
+        Chiffres de test FD001 a retrouver, cle (modele, jeu) ; ATTENDU_FD001 par defaut.
 
     Returns
     -------
@@ -553,8 +632,10 @@ def evaluer_version_finale(contexte, cle_modele, jeu, config, ecrire_contrat, re
           f"{metriques_test['alertes_manquees']} | entrainement final {duree_entrainement:.1f} s")
 
     # 5. controle de reproduction sur FD001 : les chiffres deja publies doivent etre retrouves
-    if sous_jeu == "FD001" and (cle_modele, jeu) in ATTENDU_FD001:
-        attendu = ATTENDU_FD001[(cle_modele, jeu)]
+    if attendus is None:
+        attendus = ATTENDU_FD001  # chiffres des versions a reglages de base
+    if sous_jeu == "FD001" and (cle_modele, jeu) in attendus:
+        attendu = attendus[(cle_modele, jeu)]
         assert round(metriques_test["rmse"], 2) == attendu["rmse"], (
             f"FD001/{cle_modele}/{jeu} : RMSE test {metriques_test['rmse']:.4f} au lieu de {attendu['rmse']}"
         )
@@ -815,6 +896,9 @@ def generer_predictions(sous_jeux):
             ligne_choix["origine_du_choix"] = origine
             lignes_choix.append(ligne_choix)
 
+            # avec des reglages finaux, le fichier du contrat vient de l'etape 4 bis, pas de la version a reglages de base
+            reglages_finaux = a_des_reglages_finaux(cle_modele, jeu_retenu)
+
             # 4. modele final et test : version retenue (fichiers du contrat) et version de base seulement
             for jeu in JEUX_FEATURES:
                 contexte = contextes[jeu]
@@ -822,8 +906,9 @@ def generer_predictions(sous_jeux):
                 durees = {"preparation_s": float(durees_preparation[jeu]), "cv_s": float(durees_cv[jeu])}
                 metriques_test = None
                 if jeu == JEU_BASE or retenu:
+                    ecrire_contrat = retenu and not reglages_finaux
                     metriques_test, test_dernier, durees_finales = evaluer_version_finale(
-                        contexte, cle_modele, jeu, config, retenu, resultats_cv[jeu], durees_preparation[jeu],
+                        contexte, cle_modele, jeu, config, ecrire_contrat, resultats_cv[jeu], durees_preparation[jeu],
                         durees_cv[jeu],
                     )
                     durees["entrainement_final_s"] = durees_finales["entrainement_final_s"]
@@ -859,6 +944,21 @@ def generer_predictions(sous_jeux):
                 oof["rul_cappee"] = contexte["y"].to_numpy(dtype=float)
                 oof["rul_predite_oof"] = np.asarray(resultats_cv[jeu]["predictions_oof"], dtype=float)
                 oof_05.append(oof)
+
+            # 4 bis. modele FINAL avec les reglages finaux (notebooks 04f et 04g) : c'est lui qu'utilise la demo.
+            # Les resultats 05_* ci-dessus gardent la version a reglages de base (comparaison du notebook 05).
+            if reglages_finaux:
+                config_finale = configuration_version_retenue(cle_modele, jeu_retenu)
+                print(f"  Version finale : {decrire_config(config_finale)}")
+                # validation croisee refaite avec ces reglages, sur les memes plis : les metadonnees du contrat
+                # decrivent ainsi le modele qu'elles accompagnent
+                resultats_cv_final, _, duree_cv_final = valider_un_jeu(contextes[jeu_retenu], config_finale, plis)
+                print(f"  CV version finale      : RMSE {resultats_cv_final['rmse_moyen']:.3f} +- "
+                      f"{resultats_cv_final['rmse_ecart_type']:.3f} ({duree_cv_final:.1f} s)")
+                evaluer_version_finale(
+                    contextes[jeu_retenu], cle_modele, jeu_retenu, config_finale, True, resultats_cv_final,
+                    durees_preparation[jeu_retenu], duree_cv_final, attendus=ATTENDU_FD001_FINAL,
+                )
 
     # 5. mise a jour des resultats (les lignes non recalculees sont conservees)
     cle_05 = ["sous_jeu", "modele", "jeu_features"]

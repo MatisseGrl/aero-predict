@@ -327,20 +327,32 @@ def module_script_arbres():
 
 def configuration_arbres(modele):
     """
-    Configuration d'un modele de MODELES_ARBRES, telle que l'utilise scripts/generer_predictions_arbres.py.
+    Configuration du modele FINAL d'un modele de MODELES_ARBRES, telle que l'utilise scripts/generer_predictions_arbres.py.
+
+    Reglages finaux des notebooks 04f et 04g si le jeu ecart_initial_20 est retenu, reglages de base sinon
+    (`configuration_version_retenue` du script) : la demo entraine le meme modele que les fichiers du contrat.
 
     Parameters
     ----------
     modele : str
-        Un modele de MODELES_ARBRES (configurations de src/config_modele.py, reglages du notebook 05).
+        Un modele de MODELES_ARBRES (configurations de src/config_modele.py).
 
     Returns
     -------
     dict
         La configuration (format de src/config_modele.py), nombre de coeurs du script compris.
+
+    Raises
+    ------
+    ValueError
+        Si le choix des features est introuvable (script des arbres pas encore lance).
     """
     script = module_script_arbres()
-    return script.configuration_modele(modele, n_jobs=script.N_JOBS_DEFAUT)
+    try:
+        choix = script.lire_choix_fd001()  # jeu de features retenu sur FD001, modele par modele
+    except FileNotFoundError as erreur:
+        raise ValueError(str(erreur)) from erreur
+    return script.configuration_version_retenue(modele, choix[modele], n_jobs=script.N_JOBS_DEFAUT)
 
 
 def preparer_contexte(sous_jeu):
