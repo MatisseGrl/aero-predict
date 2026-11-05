@@ -1,6 +1,7 @@
 # Outils de développement (hooks git, pas liés à une phase)
 pre-commit
 nbstripout
+pytest
 
 # Phase 0-2 : EDA, préparation des données, target engineering
 pandas
@@ -24,6 +25,7 @@ shap
 
 # Phase 5 : dashboard
 streamlit
+plotly
 
 # Phase 6 : plateforme MLOps (bonus)
 fastapi

@@ -228,3 +228,10 @@ mlartifacts/
 *.pth
 *.pkl
 *.joblib
+
+# Resultats et predictions regeneres par les scripts (scripts/generer_predictions_arbres.py, scripts/entrainer_deep_learning.py)
+sorties/
+
+# Fichiers systeme macOS et reglages locaux des assistants
+.DS_Store
+.claude/
