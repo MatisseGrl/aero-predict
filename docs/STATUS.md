@@ -20,7 +20,9 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
   - `tests/test_fenetres_paresseuses.py` : fenêtres identiques (`np.array_equal`) sur FD001 et FD002, train et test, 20, 30 et 50 cycles ; un LSTM entraîné 2 époques donne des prédictions identiques au bit près avec les deux méthodes. Les essais Optuna déjà faits sur FD001 restent donc comparables. Suite complète : 29 tests réussis, 6 sautés (modèles de la démo non générés sur cette machine).
   - Mémoire mesurée (un processus, FD002, fenêtres de 50 cycles, données préparées plus les fenêtres d'un pli) : 1 371 Mo avant, 468 Mo après. La part des fenêtres passe de 948 Mo à 45 Mo.
 - **Pourquoi** : le 2026-11-06, 15 processus sur FD002 saturaient les 31 Go de la machine (entrée suivante).
-- **Impact** : avec 15 processus, environ 7 Go au lieu d'environ 20 Go. Restent à faire avant de lancer FD002 en vrai : finir l'essai rapide de FD002 (ablation, ensemble, final), et choisir le nombre de processus (mesure du débit à 8 et à 15 processus).
+  - Nombre de processus : mesure du débit d'apprentissage (FD002, LSTM de référence, 3 époques, fenêtres paresseuses) : 8 processus 14 600 fenêtres/s au total, 12 processus 18 900, 15 processus 19 400 ; environ 0,63 Go par processus dans les trois cas. `scripts/nuit_04h.sh` utilise donc 12 processus par défaut (97 % du débit de 15), réglable avec `AERO_PROCESSUS` (ex. 8 pour moins de chaleur et de bruit, environ 25 % plus lent).
+  - Essai rapide terminé (`AERO_ESSAI_RAPIDE=1`, 2 époques par réseau, chiffres sans valeur) : FD001 et FD002, toutes les étapes vont au bout, sans saturer la mémoire. La reprise marche : relancé, le script saute les études Optuna complètes et les étapes dont le fichier existe.
+- **Impact** : avec 12 processus, environ 8 Go au lieu d'environ 20 Go pour 15 avant. Le vrai calcul de nuit (`bash scripts/nuit_04h.sh`) est prêt à être lancé : fin de FD001 environ 4 h, FD002 environ 11 h, donc sur deux nuits.
 
 ### 2026-11-06 — Optuna des réseaux étendu à FD002
 
