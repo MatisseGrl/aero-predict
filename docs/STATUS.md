@@ -13,6 +13,22 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 ## Dernière modification
 
 - **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-06
+- **Quoi** : optimisation des hyperparamètres du LSTM et du CNN 1D avec Optuna, **en cours** (branche `phase-04/optuna-reseaux`). Aucun modèle n'est retenu et le test n'a pas été lu.
+  - `src/optimisation_reseaux.py` : validation croisée d'une configuration de réseau pli par pli (mêmes plis et même séparation d'arrêt précoce que le 03b), pente glissante (famille F2 du 04e, vérifiée contre `np.polyfit`), deux architectures supplémentaires (CNN puis LSTM, LSTM avec attention), espaces de recherche Optuna.
+  - `scripts/optimiser_reseaux.py` : étapes `verifier`, `nettoyer`, `optuna`, `confirmer`, `ablation`, `ensemble`, `final`, avec les règles de décision écrites dans le code avant les calculs. `scripts/nuit_04h.sh` enchaîne toutes les étapes (7 à 9 h estimées, tout le processeur).
+  - Contrôle : la configuration de référence du 03b redonne le même RMSE de validation (8,9421) et les mêmes prédictions hors-pli à 5e-5 près.
+  - État des études au 2026-11-06, 9 h 36 (RMSE de validation sur les plis 42, choisi sur ces mêmes plis donc optimiste, non confirmé) : LSTM 28 essais utiles sur 100, meilleur 7,60 (référence 8,94) ; CNN 1D 64 sur 80, meilleur 8,21 (référence 10,15).
+  - Correction en cours de route : chaque processus fixe maintenant `OMP_NUM_THREADS`, `MKL_NUM_THREADS` et `OPENBLAS_NUM_THREADS` à 1. Avant, des travailleurs utilisaient jusqu'à 1,6 cœur et les 15 saturaient la machine.
+- **Pourquoi** : les réglages des réseaux étaient fixés à l'avance, jamais optimisés (manque listé dans l'entrée du 2026-11-05, règle 11 d'`AGENTS.md`), et la méthode de choix des features du 04e n'avait pas été appliquée aux réseaux ; demande de Matisse.
+- **Impact** :
+  - Rien ne change dans `sorties/predictions/` ni dans la démo tant que l'étape `final` n'a pas tourné et que ses résultats n'ont pas été relus.
+  - Le calcul occupe tout le processeur : il est lancé la nuit (`bash scripts/nuit_04h.sh`, journal `sorties/resultats/04h_nuit.log`).
+  - Notebook 04h et résultats finaux pas encore écrits.
+
+### 2026-11-05 — Démo : modèles à arbres finaux
+
+- **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-11-05
 - **Quoi** : la démo utilise les modèles à arbres finaux de la Phase 4 (branche `phase-04/modele-final-demo`).
   - `src/config_modele.py` : 3 configurations finales (`CONFIG_XGBOOST_FINAL`, `CONFIG_LIGHTGBM_FINAL`, `CONFIG_RANDOM_FOREST_FINAL`), réglages Optuna recopiés du notebook 04g.
