@@ -329,6 +329,17 @@ Dans `evolution.ipynb`, chaque chiffre est **recalculé ou lu dans `sorties/resu
 - La refonte part sur une nouvelle branche `refonte/notebooks`, depuis `main`.
 - Rien n'est poussé sur GitHub sans demande explicite de Matisse. Le passage par une PR (ADR-0005) se décide au moment de pousser.
 
+#### Règle des deux dossiers (ajoutée le 2026-11-06, après une confusion sur le 04g)
+
+| Dossier | Branche | Qui y travaille | Pour quoi |
+|---|---|---|---|
+| `aero-predict` | `phase-04/optuna-reseaux` | Matisse, et toute session d'assistant qui l'aide sur Optuna ou sur un notebook actuel | **Tout le travail en cours** : Optuna, 04h, retouches des notebooks actuels (ex. graphes du 04g) |
+| `aero-predict-refonte` | `refonte/notebooks` | La session de réorganisation uniquement | Le plan, puis la réorganisation, **seulement à partir de l'étape B** |
+
+1. **On n'ouvre jamais `aero-predict-refonte` dans VS Code ou Jupyter avant l'étape B.** Toute modification d'un notebook se fait dans `aero-predict`, et y est committée.
+2. **La réorganisation part du travail terminé, jamais l'inverse.** Première action de l'étape B : fusionner `phase-04/optuna-reseaux` dans `refonte/notebooks` (`git merge`), pour récupérer les derniers notebooks, Optuna et le 04h. Si Matisse retouche encore un notebook après, il le committe dans `aero-predict`, et la session de réorganisation refusionne avant de toucher à ce notebook.
+3. **Une session d'assistant dit toujours dans quel dossier et sur quelle branche elle agit**, avant de modifier un fichier.
+
 ### 9.4 Documentation
 
 - `docs/0X_*.md` ne sont pas réécrits par ce plan (règle 4).
@@ -345,6 +356,8 @@ Dans `evolution.ipynb`, chaque chiffre est **recalculé ou lu dans `sorties/resu
 
 ### Étape B : le socle `src/` (ne dépend pas d'Optuna)
 
+- [ ] Fusionner `phase-04/optuna-reseaux` dans `refonte/notebooks` (règle des deux dossiers, 9.3), après la nuit Optuna et le commit des derniers changements de Matisse
+- [ ] Relancer la suite pytest
 - [ ] `src/evaluation_sous_jeu.py` : `evaluer_sous_jeu(sous_jeu)` (sections 3 à 6 du protocole) et `verifier_moteur(sous_jeu, moteur)` (section 7, depuis les données brutes)
 - [ ] Fonctions de figures (matplotlib), une par graphe de la section 7.1, titrées par leur question
 - [ ] Tests pytest : `verifier_moteur` égal aux fichiers de la démo ; `evaluer_sous_jeu("FD001")` redonne les chiffres de 9.2
@@ -415,3 +428,4 @@ Une ligne par étape faite ou par écart au plan, la plus récente en bas. On n'
 | 2026-11-06 | Matisse | Écart réglé : `phase-04/modele-final-demo` fusionnée dans `refonte/notebooks` (`7d3003c`), sans conflit. `main` n'a toujours pas ces commits : ils y arriveront avec la PR de la refonte. Suite de tests pytest non relancée (Optuna occupait le processeur) |
 | 2026-11-06 | Matisse | Précision : c'est une **réorganisation, pas une refonte complète** (principe 0 ajouté en section 3) ; titre du plan changé en conséquence, nom du fichier et de la branche gardés. Tri détaillé ajouté (section 8.2). Corrections de la première version : courbes précision-rappel gardées à côté des ROC (le 04b montre que l'AUC ne départage pas les approches) ; importances de features gardées (Phase 5) ; métriques non réutilisées (MedAE, erreur max, MAPE…) calculées une fois par `metriques_regression` avec leur tableau « gardée / écartée », au lieu d'être retirées (protocole §3) ; cible de 15 à 25 cellules par notebook retirée. Benjamin garde ses propres copies ; rien n'est poussé sans demande de Matisse |
 | 2026-11-06 | Matisse | Correction des lignes 2 et 4 de ce journal : Optuna **ne tournait pas**. Les processus Python vus à ce moment étaient des noyaux Jupyter ouverts depuis VS Code (lancés à 9 h 36) ; la base `04h_optuna.db` n'a plus été écrite après 9 h 36. Le dossier séparé (worktree) reste utile : la branche Optuna et la branche de réorganisation restent chacune dans leur dossier. Décision : lancer `scripts/nuit_04h.sh` la nuit du 2026-11-06 ; étapes B à D après relecture de ses résultats |
+| 2026-11-06 | Matisse | Confusion sur le 04g : une session d'assistant a retiré, sans commit, la cellule des anciens graphes (test, 100 moteurs) dans `aero-predict-refonte`, alors que le remplacement voulu (courbes de RUL prédite cycle par cycle sur 4 moteurs) était déjà fait et committé dans `aero-predict` (`d6b6b10`). Modification mise de côté (`git stash`, récupérable), dossier remis propre. Règle des deux dossiers ajoutée (9.3), et fusion de `phase-04/optuna-reseaux` ajoutée en tête de l'étape B |
