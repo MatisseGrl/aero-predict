@@ -10,6 +10,8 @@ La lecture automatique est un "fragment" Streamlit (`st.fragment(run_every=...)`
 sans relancer toute la page (meme mecanique que l'ancienne page de rejeu).
 """
 
+import time
+
 import streamlit as st
 
 from app import commun, figures
@@ -21,9 +23,14 @@ from src.alertes import SEUIL_ALERTE_DEFAUT, classer_alerte
 # modeles coches par defaut (les autres restent proposes) : trois courbes, pour garder le graphique lisible
 MODELES_PAR_DEFAUT = ["xgboost_phase3", "lstm", "cnn1d"]
 
-# rythme de la lecture : une image toutes les 0,5 s, 6 nouveaux cycles calcules par image (12 cycles par seconde)
+# rythme de la lecture : une image toutes les 0,5 s, au plus 6 nouveaux cycles calcules par image (12 cycles par seconde)
 INTERVALLE_LECTURE_S = 0.5
 CYCLES_PAR_IMAGE = 6
+# budget de calcul par image : on s'arrete des qu'il est depasse (au moins 1 cycle par image), pour laisser le
+# temps de dessiner cartes et courbe avant l'image suivante. Sans lui, sur une machine lente (ou avec beaucoup
+# de modeles), 6 cycles prennent plus de 0,5 s : Streamlit relance l'image avant la fin et la courbe,
+# dessinee en dernier, n'apparait qu'a la fin de la lecture (constate : 6 cycles x 3 arbres ~ 1 s)
+BUDGET_CALCUL_S = 0.3
 
 # cles de session (etat de la page)
 CLE_MOTEUR = "live_moteur"  # dict du moteur courant (mesures, origine, numero, RUL finale), ou absent
@@ -194,11 +201,12 @@ def basculer_verite():
 # Calcul et affichage
 # ---------------------------------------------------------------------------------------------------
 
-def calculer_jusqu_a(inference, mesures, cycle_cible, modeles):
+def calculer_jusqu_a(inference, mesures, cycle_cible, modeles, budget_s=None):
     """
     Calcule EN DIRECT les predictions manquantes de chaque modele, cycle par cycle, jusqu'a cycle_cible.
 
     A chaque cycle c, `predire_au_cycle` ne recoit que les mesures 1..c (il tronque lui-meme les mesures).
+    Avec un budget, le calcul s'arrete des que le temps ecoule le depasse, apres au moins un cycle calcule.
 
     Parameters
     ----------
@@ -210,11 +218,15 @@ def calculer_jusqu_a(inference, mesures, cycle_cible, modeles):
         Le dernier cycle a calculer.
     modeles : list de str
         Les modeles affiches.
+    budget_s : float, optionnel
+        Temps de calcul maximal en secondes (None : pas de limite, tous les cycles jusqu'a cycle_cible).
 
     Returns
     -------
-    None
+    int
+        Le dernier cycle dont toutes les predictions sont calculees (cycle_cible si le budget suffit).
     """
+    debut = time.perf_counter()
     predictions = st.session_state[CLE_PREDICTIONS]
     for modele in modeles:
         if modele not in predictions:
@@ -230,6 +242,9 @@ def calculer_jusqu_a(inference, mesures, cycle_cible, modeles):
         for modele in manquants:
             predictions[modele].append(resultat["predictions"][modele])
         st.session_state[CLE_TEMPS] = resultat  # temps du dernier pas calcule
+        if budget_s is not None and cycle < cycle_cible and time.perf_counter() - debut > budget_s:
+            return cycle  # budget depasse : la suite sera calculee a l'image suivante
+    return cycle_cible
 
 
 def nom_du_moteur(moteur, revele):
@@ -450,22 +465,22 @@ if st.session_state.get(CLE_LECTURE, False):
 @st.fragment(run_every=intervalle)
 def zone_lecture():
     """
-    Calcule les nouveaux cycles (pendant la lecture) puis affiche les cartes des modeles et la courbe.
+    Affiche les cartes des modeles et la courbe, PUIS calcule les nouveaux cycles (pendant la lecture).
 
-    Pendant la lecture, chaque relance fait arriver CYCLES_PAR_IMAGE nouveaux cycles et les fait predire ;
-    au dernier cycle, la lecture s'arrete et la page entiere est relancee (pour arreter le minuteur).
+    Ordre voulu : Streamlit ne peut interrompre une image (relance suivante du minuteur) qu'au moment ou elle
+    dessine un element, jamais pendant un calcul. En dessinant d'abord, cartes et courbe partent toujours vers
+    le navigateur, meme si le calcul est plus long que INTERVALLE_LECTURE_S (machine lente, beaucoup de modeles) :
+    la lecture ralentit, mais la courbe reste en direct. L'affichage montre les cycles calcules a l'image
+    precedente (0,5 s de decalage au plus).
+
+    Pendant la lecture, chaque relance fait arriver au plus CYCLES_PAR_IMAGE nouveaux cycles (dans la limite de
+    BUDGET_CALCUL_S) et les fait predire ; une fois le dernier cycle affiche, la lecture s'arrete et la page
+    entiere est relancee (pour arreter le minuteur).
 
     Returns
     -------
     None
     """
-    if st.session_state.get(CLE_LECTURE, False):
-        cible = min(int(st.session_state[CLE_CYCLE]) + CYCLES_PAR_IMAGE, nb_cycles)
-        calculer_jusqu_a(inference, mesures, cible, modeles_choisis)
-        st.session_state[CLE_CYCLE] = cible
-        if cible >= nb_cycles:  # fin du moteur
-            st.session_state[CLE_LECTURE] = False
-            st.rerun()
     cycle = int(st.session_state[CLE_CYCLE])
     calculer_jusqu_a(inference, mesures, cycle, modeles_choisis)  # modele ajoute en cours de route : rattrapage
 
@@ -506,6 +521,15 @@ def zone_lecture():
     st.plotly_chart(figure, key="live_graphique", config=figures.CONFIG_PLOTLY)
     if cycle == 0:
         st.caption("Appuyer sur Lecture : les cycles arrivent un par un et chaque modèle prédit à chaque cycle.")
+
+    # lecture : calcul des cycles suivants APRES l'affichage (voir la docstring), affiches a l'image suivante
+    if st.session_state.get(CLE_LECTURE, False):
+        if cycle >= nb_cycles:  # dernier cycle affiche : fin du moteur
+            st.session_state[CLE_LECTURE] = False
+            st.rerun()
+        cible = min(cycle + CYCLES_PAR_IMAGE, nb_cycles)
+        atteint = calculer_jusqu_a(inference, mesures, cible, modeles_choisis, budget_s=BUDGET_CALCUL_S)
+        st.session_state[CLE_CYCLE] = atteint  # peut etre avant la cible si le budget est depasse
 
 
 zone_lecture()

@@ -12,6 +12,24 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 ## Dernière modification
 
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-05
+- **Quoi** : la démo utilise les modèles à arbres finaux de la Phase 4 (branche `phase-04/modele-final-demo`).
+  - `src/config_modele.py` : 3 configurations finales (`CONFIG_XGBOOST_FINAL`, `CONFIG_LIGHTGBM_FINAL`, `CONFIG_RANDOM_FOREST_FINAL`), réglages Optuna recopiés du notebook 04g.
+  - `scripts/generer_predictions_arbres.py` : la règle de choix des features de Benjamin est inchangée (réglages de base). Ensuite, si `ecart_initial_20` est retenu, le modèle final est réentraîné avec les réglages finaux (validation croisée refaite sur les mêmes plis). C'est lui qui écrit les fichiers de `sorties/predictions/`. Les résultats `05_*` (notebook 05) restent ceux des réglages de base.
+  - `src/inference.py` : la démo lit la même configuration finale (`configuration_version_retenue`).
+  - XGBoost final sur 1 cœur : avec `subsample` < 1, XGBoost ne construit pas les mêmes arbres selon le nombre de cœurs (FD001, machine à 16 cœurs : RMSE test 12,70 avec tous les cœurs, comme au 04g ; 12,73 avec 1 ; 12,78 avec 4). Sur 1 cœur, le résultat ne dépend plus de la machine.
+  - Test FD001, contrôlé par le script (RMSE / score NASA / surestimés de plus de 20 cycles) : XGBoost 12,73 / 223,5 / 2 (avant : 13,10 / 237,0 / 2) ; LightGBM 12,76 / 234,6 / 3 (avant : 13,40 / 283,6) ; Random Forest 13,14 / 243,3 / 3 (avant : 14,27 / 301,9). Les chiffres à réglages de base (19,70 et 13,10) sont toujours retrouvés.
+  - Tests anti-triche sur FD001 : 7 réussis, 2 sautés (LSTM et CNN 1D non entraînés sur cette machine au moment du test).
+  - `app/vues/prediction_en_direct.py` : pendant la lecture, la courbe n'apparaissait qu'à la fin quand le calcul d'une image dépassait l'intervalle de 0,5 s (constaté avec XGBoost, LightGBM et Random Forest : environ 1 s pour 6 cycles). Streamlit relançait l'image avant que la courbe, dessinée en dernier, soit envoyée. Désormais, chaque image dessine d'abord (cartes et courbe), puis calcule les cycles suivants, dans un budget de 0,3 s (`BUDGET_CALCUL_S`). Vérifié avec ces 3 modèles et le processeur à 100 % : courbe en direct, au même cycle que les cartes. Sur une machine lente, la lecture ralentit au lieu de perdre la courbe.
+- **Pourquoi** : la démo affichait des modèles à arbres avec les réglages de base, alors que le modèle final de la Phase 4 (04f) utilise les réglages Optuna.
+- **Impact** :
+  - FD002–FD004 régénérés avec les réglages finaux, mais pas encore relus. Ces réglages ont été cherchés sur FD001 seulement.
+  - Le notebook 05 et l'entrée suivante citent encore les modèles à arbres de la démo à réglages de base (13,10 pour XGBoost).
+  - Sur 100 moteurs test, l'écart avec le LSTM (12,29) n'est pas significatif (protocole du notebook 05, section G).
+
+### 2026-11-05 — Démo Streamlit du prototype
+
 - **Qui** : Benjamin (avec Claude Code)
 - **Date** : 2026-11-05
 - **Quoi** : démo Streamlit du prototype (branche `phase-04/demo-ben`, empilée sur `phase-04/modeles-ben`). Lancement : `streamlit run app/tableau_de_bord.py`.
