@@ -1,8 +1,9 @@
-# Plan de refonte des notebooks
+# Plan de réorganisation des notebooks
 
 - **Rédigé le** : 2026-11-06, par Matisse (avec Claude Code), à partir de la discussion du même jour.
-- **Statut** : plan validé dans la discussion, **aucune étape exécutée**. Ce fichier sert de feuille de route pendant toute la refonte : on coche les cases au fur et à mesure, on note les écarts dans le journal (section 12). On ne réécrit pas une décision déjà actée : si on change d'avis, on ajoute une ligne au journal qui le dit.
-- **À valider avec Benjamin** avant toute suppression : 3 des 13 notebooks sont les siens (01b, 03b, 05).
+- **Statut** : plan validé dans la discussion, **aucune étape exécutée**. Ce fichier sert de feuille de route pendant toute la réorganisation : on coche les cases au fur et à mesure, on note les écarts dans le journal (section 13). On ne réécrit pas une décision déjà actée : si on change d'avis, on ajoute une ligne au journal qui le dit.
+- **C'est une réorganisation, pas une refonte complète** (voir section 3, principe 0). Le mot « refonte » reste dans le nom du fichier et de la branche (`refonte/notebooks`), choisis avant cette précision.
+- 3 des 13 notebooks sont de Benjamin (01b, 03b, 05) ; il en garde ses propres copies. Rien n'est poussé sur GitHub sans demande explicite de Matisse.
 
 ---
 
@@ -30,6 +31,12 @@ Les 6 modèles (liste de `src/donnees_demo.py`, `MODELES_CONNUS`) : 5 qui appren
 
 ## 3. Principes
 
+0. **Réorganiser, pas refaire.** On ne réécrit pas le travail : les cellules gardées sont déplacées avec leur code, leurs commentaires et leurs explications, dans la même forme (markdown explicatif, code détaillé et commenté). On fait seulement trois choses :
+   - **retirer ce qui n'est jamais réutilisé** : ce qui est calculé dans un notebook et nulle part ailleurs ensuite, ni par la démo, ni par les preuves de la démo, ni par une décision qu'on doit défendre (règle 11, protocole), ni par une phase à venir (ex. Phase 5, explicabilité) ;
+   - **remplacer le code recopié** par l'appel à la fonction de `src/` qui fait déjà la même chose, en gardant l'explication une seule fois, là où la notion apparaît pour la première fois ;
+   - **déplacer** les cellules gardées dans la nouvelle arborescence (section 4).
+
+   Le seul code nouveau : ce qui étend aux 4 sous-jeux ce qui n'existe que pour FD001 (`evaluer_sous_jeu`, section G du notebook 05 généralisée) et la section « Vérifier un moteur » (à partir de la section J.3 du notebook 05). En cas de doute sur une cellule, **on la garde**.
 1. **Le calcul vit dans `src/`, une seule fois.** Les notebooks appellent des fonctions, ils ne contiennent pas de logique dupliquée. Le traitement des données se fait à la source (`src/`), paramétré par sous-jeu, pas recopié dans chaque dossier : 4 copies du même code finiraient par diverger sans que personne s'en aperçoive.
 2. **Les 4 notebooks de résultats sont générés depuis un seul modèle**, jamais modifiés à la main. Même plan, mêmes cellules, mêmes graphes ; seul le paramètre `SOUS_JEU` change.
 3. **La preuve n'est jamais circulaire.** La section « Vérifier un moteur » repart de `data/test_FD00X.txt` et ne lit jamais les fichiers de `sorties/predictions/` qu'affiche la démo. Elle compare ensuite son résultat à ces fichiers, pour montrer qu'ils sont identiques.
@@ -37,7 +44,7 @@ Les 6 modèles (liste de `src/donnees_demo.py`, `MODELES_CONNUS`) : 5 qui appren
 5. **Rien n'est supprimé avant d'être remplacé et vérifié** (règle 9 d'`AGENTS.md`) : un ancien notebook ne sort de `main` que quand les nouveaux redonnent ses chiffres.
 6. **Rien n'est perdu** : avant la suppression, un tag git (`archive-phases-1-4`) fige l'état actuel. Tout reste consultable sur GitHub à ce tag.
 7. **Densité de commentaires et style** : ceux d'`AGENTS.md` (règles 2 et 3 : docstrings, commentaires en français bloc par bloc, pas de code condensé).
-8. **Cible : 15 à 25 cellules par notebook.**
+8. **Pas de nombre de cellules visé.** La taille d'un notebook résulte du tri (section 8.2), on ne compresse pas les explications pour atteindre un chiffre. (Une première version de ce plan visait 15 à 25 cellules ; retiré, voir le journal.)
 
 ## 4. Structure cible
 
@@ -108,11 +115,11 @@ Question du jury : « Montrez-moi comment vous avez testé XGBoost ou le LSTM su
 | 2. Les 6 modèles | Réglages utilisés (lus dans `src/config_modele.py`), entraînement ou chargement (voir 6.2) | aucune |
 | 3. Validation croisée | Mêmes plis `GroupKFold` pour tous les modèles, RMSE moyen ± écart-type | aucune |
 | 4. Test officiel | RMSE, MAE, R², score NASA, contre les 5 baselines (moyenne, médiane, constante 125, aléatoire, Ridge) ; comparaison à la littérature quand elle existe | RUL prédite vs vraie (une case par modèle) ; résidus selon la RUL vraie ; barres RMSE et score NASA contre baselines |
-| 5. Classification | Alertes pour N = 15, 30 et 50 cycles | Courbes ROC, 6 modèles superposés, AUC en légende ; matrices de confusion, une par modèle, à un seul N |
+| 5. Classification | Alertes pour N = 15, 30 et 50 cycles | Une figure à deux panneaux, ROC et précision-rappel, 6 modèles superposés (AUC et précision moyenne en légende) ; matrices de confusion, une par modèle, à un seul N |
 | 6. Comparaison des modèles | Erreur par moteur, appariée, test de Wilcoxon entre paires de modèles | Erreur par moteur avec p-valeurs |
 | 7. Vérifier un moteur | `MOTEUR = 42` : prédiction recalculée cycle par cycle depuis `test_FD00X.txt`, puis comparée aux fichiers de la démo | RUL prédite cycle par cycle (la même courbe que la démo) |
 
-Note sur les ROC : au test, peu de moteurs sont proches de la panne (de l'ordre de 10 sur 100 pour N = 15), donc la courbe est en escalier et l'AUC paraît souvent très bonne. Une phrase sous le graphe le dit.
+Note sur les ROC : au test, peu de moteurs sont proches de la panne (de l'ordre de 10 sur 100 pour N = 15), donc la courbe est en escalier et l'AUC paraît souvent très bonne. Le notebook 04b l'a mesuré en validation : l'AUC vaut 0,977 à 0,996 pour les 3 approches et ne les départage pas, alors que la courbe précision-rappel (ligne du hasard = proportion de positifs) montre le coût en précision de chaque niveau de rappel. D'où les deux panneaux côte à côte, et une phrase sous la figure qui le dit.
 
 ### 5.4 `evolution.ipynb` : le parcours du projet
 
@@ -183,7 +190,8 @@ Au 2026-11-06, `sorties/predictions/` ne contient le LSTM et le CNN 1D que pour 
 | RUL prédite vs vraie | 04a | `resultats/` section 4 |
 | Résidus selon la RUL vraie | 04a | `resultats/` section 4 |
 | Barres RMSE / score NASA contre baselines | 01b, 05 | `resultats/` section 4 |
-| Courbes ROC | 04b | `resultats/` section 5 (une par sous-jeu) |
+| Courbes ROC et précision-rappel (deux panneaux) | 04b | `resultats/` section 5 (une figure par sous-jeu) |
+| Importances (gain, permutation) du jeu retenu | 04e | `02_choix_du_modele` (réutilisées en Phase 5, explicabilité) |
 | Matrices de confusion | 04b | `resultats/` section 5 (une par sous-jeu) |
 | Erreur par moteur, comparaisons appariées | 05 | `resultats/` section 6 |
 | RUL prédite cycle par cycle | 03b | `resultats/` section 7 |
@@ -192,7 +200,6 @@ Au 2026-11-06, `sorties/predictions/` ne contient le LSTM et le CNN 1D que pour 
 
 | Figure | Notebook | Raison |
 |---|---|---|
-| Courbes précision-rappel | 04b | Double emploi avec la ROC |
 | Courbes de validation `max_depth` / `n_estimators` | 03 | Remplacées par Optuna, qui explore plus |
 | Erreur comparée à la baseline et au benchmark | 03 | Remplacée par les barres du test (section 4) |
 | XGBoost Phase 3 sur les 4 sous-jeux | 01b | Ancien modèle, remplacé par `resultats/` |
@@ -201,9 +208,10 @@ Au 2026-11-06, `sorties/predictions/` ne contient le LSTM et le CNN 1D que pour 
 | Temps d'entraînement | 05 | Diagnostic sans rôle dans les résultats finaux |
 | Écart vs longueur de la trajectoire observée | 05 | Idem |
 | Test, 100 moteurs | 04f | Doublon de la section 4 |
-| Importances (gain, permutation) du jeu retenu | 04e | À rediscuter : utile pour la Phase 5 (explicabilité), pas pour ce plan |
 
 ## 8. Correspondance ancien → nouveau
+
+### 8.1 Vue d'ensemble
 
 | Ancien notebook | Auteur | Va dans |
 |---|---|---|
@@ -220,7 +228,87 @@ Au 2026-11-06, `sorties/predictions/` ne contient le LSTM et le CNN 1D que pour 
 | `04f_modele_final` | Matisse | `resultats/` |
 | `04g_comparaison_modeles` | Matisse | `resultats/` section 6 |
 | `04h` (à écrire) | Matisse | `02_choix_du_modele` ; `evolution` (étape 6) |
-| `05_comparaison_evaluation` | Benjamin | `02_choix_du_modele` (F) ; `resultats/` (G, H) ; section J (démo dans le notebook) retirée, la démo est Streamlit |
+| `05_comparaison_evaluation` | Benjamin | `02_choix_du_modele` (F) ; `resultats/` (G, H, J.3) ; `evolution` (B, D) |
+
+### 8.2 Tri détaillé, notebook par notebook
+
+Critère (principe 0) : on retire ce qui est calculé dans un notebook et **jamais réutilisé ensuite** (ni démo, ni preuve de la démo, ni décision à défendre, ni phase à venir). Ce tri a été fait à partir des titres, des fonctions définies et des fichiers écrits par chaque cellule, et des conclusions lues en entier du 04a (section 9) et du 04b (sections 10 et 11). **Avant de retirer une cellule, on la lit en entier** pour vérifier qu'aucun chiffre ou objet qu'elle crée n'est utilisé plus bas.
+
+#### Partout : le code recopié
+
+`load_fd001`, `ajouter_features_glissantes`, `score_nasa`, `calculer_metriques` (et équivalents) sont redéfinis dans 02, 03, 04a, 04b, 04c, 04d, 04e, 04f et 04g alors qu'ils existent dans `src/` (`preprocessing.py`, `features.py`, `evaluation.py`). L'explication se garde **une fois**, là où la notion apparaît pour la première fois dans la nouvelle arborescence ; ailleurs, appel à `src/`.
+
+#### Trois règles qui corrigent une lecture trop rapide du critère
+
+1. **Métriques non réutilisées (MedAE, erreur max, MAPE, MSE…)** : rien ne les réutilise après le 04a, mais le protocole (§3) exige de les calculer une fois et d'écrire pourquoi on les garde ou les écarte. `src/evaluation.py` (`metriques_regression`) les calcule déjà toutes en un appel. On remplace donc le calcul à la main du 04a (`calculer_metriques`, ~60 lignes) par **cet appel et le tableau « gardée / écartée »** du 04a section 9, puis on n'affiche partout ailleurs que les métriques retenues.
+2. **Courbes précision-rappel** : gardées (voir 5.3 et le journal), alors qu'une première version de ce plan les retirait.
+3. **Baselines** : la démo n'affiche que la référence naïve (moyenne), mais le protocole (§2) en exige 5 ; elles restent dans les notebooks de preuve.
+
+#### `01_eda_preparation` → `01_donnees`
+
+- **Garder** : capteurs constants (statistiques, liste, suppression, vérification) ; comparaison min-max / standard et sa figure (justifie le min-max) ; lissage et sa vérification visuelle.
+- **Retirer** : `load_fd001` recopié (→ `src/preprocessing`).
+
+#### `01b_sous_jeux_fd002_fd004` → `01_donnees` + `evolution` + `resultats/`
+
+- **Garder** : A (FD001 identique bit à bit : preuve) ; B (ce qui change dans FD002-FD004) ; C (régimes, K-Means, inertie et silhouette : justifie 6 groupes ; figure des six régimes) ; D.1 à D.3 (pourquoi normaliser par régime, avant de lisser ; figure en 3 panneaux) ; D.4 (gain mesuré en validation croisée → `evolution`, étape 2) ; E (capteurs retirés par sous-jeu) ; F.2 (pourquoi le RMSE test de FD002 et FD004 est élevé : part des RUL vraies au-dessus de 125 → section 1 de `resultats/FD00X`).
+- **Retirer** : F.1 et F.3 (résultats de l'ancien XGBoost Phase 3 par sous-jeu, remplacés par `resultats/`) ; F.4 (temps de calcul) ; G (fichiers disponibles pour l'application).
+
+#### `02_target_engineering` → `02_choix_du_modele`
+
+- **Garder** : tout (calcul de la RUL, vérification, plafonnement, preuve chiffrée de la stabilité en début de vie, figure brute vs plafonnée).
+- **Retirer** : `load_fd001` et les noms de colonnes recopiés.
+
+#### `03_modelisation` → `02_choix_du_modele` + `evolution`
+
+- **Garder** : explication des features glissantes et du cas du premier cycle (ce que `src/features.py` implémente, qui cite ce notebook) ; explication du score NASA et de son contrôle ; explication de GroupKFold ; diagnostic biais / variance train vs validation par pli ; test officiel Phase 3 (→ `evolution`, étape 1 : 19,70).
+- **Retirer** : courbes de validation `max_depth` et `n_estimators` (remplacées par Optuna) ; section 13 « quatre références » (remplacée par les 5 baselines) ; ablation à 7 jeux de la section 11 (remplacée par celle du 04e ; une ligne dans `evolution`).
+- Les PNG de `docs/figures/03_*` restent en place : `docs/03_modelisation.md` les cite.
+
+#### `03b_deep_learning_lstm_cnn` → `02_choix_du_modele` + `resultats/`
+
+- **Garder** : A.1 (règles fixées avant les résultats) ; notions liées à nos réseaux : fenêtre glissante (B.1), remplissage en début de vie (B.2), contrôle « jamais un autre moteur, jamais le futur » (B.3), tenseur 3D (B.4), pourquoi 30 cycles (B.5), normalisation de la cible (B.8), LSTM (B.10), convolution 1D et CNN (B.11, B.12), arrêt précoce (B.14) ; C (faut-il donner `time_cycles` aux réseaux : une décision) ; D (validation croisée et tests appariés arbres contre réseaux, courbes d'apprentissage) ; F.4 (robustesse à la graine) ; F.7 (trajectoires de moteurs test → section 7 de `resultats/`).
+- **Condenser en texte, sans code de démonstration** : neurone (B.6), perte et gradient (B.7), époque et lot (B.9), dropout (B.13).
+- **Retirer** : B.15 (démonstration de 3 époques) ; B.16 (reproductibilité CPU / MPS) ; E (perte asymétrique α = 2,26, non retenue) ; F.1 à F.3, F.5, F.6 et G (tests avec les anciens réglages, remplacés par `resultats/` régénérés) ; H (synthèse).
+
+#### `04a_metriques_regression` → `resultats/` section 4 + `02_choix_du_modele`
+
+- **Garder** : les 5 baselines ; figure prédit vs vrai ; figure des résidus selon la RUL vraie ; erreur par tranche de RUL (dans `src/evaluation.py` ; c'est elle qui montre le biais de +10,30 cycles entre 31 et 60 en validation) ; tableaux train vs validation résumés (diagnostic de sur-apprentissage, règle 11) ; tableau « gardée / écartée » (section 9) et limites (section 11).
+- **Retirer** : section 1 (reconstruction de la Phase 3, 109 lignes recopiées) ; calcul à la main des métriques (→ `metriques_regression`) ; détail pli par pli de Ridge ; section 8 (XGBoost contre Ridge « description, pas un test », remplacée par Wilcoxon).
+
+#### `04b_metriques_classification` → `resultats/` section 5 + `02_choix_du_modele`
+
+- **Garder** : étiquettes « RUL ≤ N » et proportion de positifs ; approche 1 (alerte dérivée de la régression, celle de `src/alertes.py` et de la démo) ; choix du seuil sur la validation (`choisir_seuil_alerte` dans `src/`) ; « pourquoi l'accuracy trompe » (court) ; matrices de confusion, ROC, précision-rappel ; tableau « gardée / écartée » (section 10).
+- **Garder sous forme de résumé dans `02_choix_du_modele`** : approche 2 (classifieurs dédiés, baseline aléatoire) et section 11 (test apparié). C'est ce qui justifie le choix de la régression, et le test montre que la `LogisticRegression` fait peut-être mieux à N = 30 (AP 0,961 contre 0,951, p = 0,003) : question possible du jury.
+- **À décider (Matisse)** : section 8, « combien de cycles d'avance avant la panne ». Rien ne la réutilise, mais elle est parlante pour un jury.
+- **Retirer** : chargement et features recopiés.
+
+#### `04c_diagnostic_apprentissage` → `02_choix_du_modele`
+
+- **Garder** : tout (courbe d'apprentissage, quantification de la pente, conclusion, limites : règle 11).
+- **Retirer** : chargement, features et outils de mesure recopiés (~110 lignes).
+
+#### `04d_hyperparametres` → `02_choix_du_modele` + `evolution`
+
+- **Garder** : règle de décision écrite avant les recherches ; espace de recherche ; explication et lancement d'Optuna ; figure de l'importance des hyperparamètres ; confirmation sur plis neufs et sa figure.
+- **Retirer** : la comparaison Grid / Random / Optuna (elle choisit seulement la méthode de recherche ; sa conclusion « on ne change pas les réglages » a été remplacée par le 04f ; une ligne dans `evolution`) ; figure RMSE vs score NASA par essai ; test officiel des réglages inchangés.
+
+#### `04e_feature_engineering` → `02_choix_du_modele` + `evolution`
+
+- **Garder** : features candidates et leur explication ; tests de causalité et de reproduction (`tests/test_anti_triche.py` renvoie à ce notebook) ; cadre d'évaluation et règle de décision ; hypothèses écrites avant ; tableau et figure d'ablation ; sélection ; importances gain et permutation (Phase 5) ; test officiel du jeu retenu (→ `evolution`, étape 4 : 13,10) ; conclusions.
+- **Retirer** : section 9 (variantes testées après lecture des résultats, non retenues, jamais évaluées sur le test ; une ligne pour leur résultat).
+
+#### `04f_modele_final` et `04g_comparaison_modeles` → `02_choix_du_modele` + `resultats/`
+
+- **Garder** : tout. Ce sont les sources des `CONFIG_*_FINAL` utilisées par la démo (Optuna sur 31 features, confirmation sur 10 découpages, seuil d'alerte, comparaison des 3 modèles à arbres).
+- **Déplacer** : la comparaison 46 contre 31 features → `evolution`.
+- **Retirer** : chargement et features recopiés ; figure « Test, 100 moteurs » du 04f (doublon de la section 4 de `resultats/`).
+
+#### `05_comparaison_evaluation` → `resultats/` + `02_choix_du_modele` + `evolution`
+
+- **Garder** : A (règles fixées avant les résultats) ; B et D (réglages de base, validation croisée et test → `evolution`, « avant ») ; F (écart à l'état initial sur les 6 modèles → `02` et `evolution` ; fenêtre de 50 cycles rejetée, en une ligne avec sa p-valeur) ; G (protocole complet sur FD001 → **modèle de la structure de tous les `resultats/FD00X`**) ; H (littérature → section 4 de `resultats/`) ; J.3 et J.4 (prédiction en direct d'un moteur mystère, révélation → **base de la section 7 « Vérifier un moteur »**).
+- **À confirmer (Matisse)** : E (hypothèses sur les moteurs surestimés de plus de 20 cycles, figure « écart vs RUL vraie / vs longueur de trajectoire »). Rien ne la réutilise.
+- **Retirer** : C (pénalité de la surestimation, piste non retenue) ; I (synthèse, remplacée par `resultats/`) ; J.1, J.2, J.5, J.6 (réglages, chargement et lancement de Streamlit depuis le notebook).
 
 ## 9. Contraintes et précautions
 
@@ -239,7 +327,7 @@ Dans `evolution.ipynb`, chaque chiffre est **recalculé ou lu dans `sorties/resu
 
 - Le travail Optuna non committé (`src/optimisation_reseaux.py`, `scripts/optimiser_reseaux.py`, `scripts/nuit_04h.sh`, `notebooks/04g_comparaison_modeles.ipynb`, `docs/STATUS.md`) est committé d'abord sur `phase-04/optuna-reseaux`.
 - La refonte part sur une nouvelle branche `refonte/notebooks`, depuis `main`.
-- Passage par une PR relue par Benjamin (fin de la période solo, ADR-0005).
+- Rien n'est poussé sur GitHub sans demande explicite de Matisse. Le passage par une PR (ADR-0005) se décide au moment de pousser.
 
 ### 9.4 Documentation
 
@@ -251,9 +339,9 @@ Dans `evolution.ipynb`, chaque chiffre est **recalculé ou lu dans `sorties/resu
 
 ### Étape A : préparer le terrain (maintenant)
 
-- [ ] Committer le travail Optuna en cours sur `phase-04/optuna-reseaux`
-- [ ] Créer la branche `refonte/notebooks` depuis `main`
-- [ ] Présenter ce plan à Benjamin, obtenir son accord sur le principe et sur le sort de 01b, 03b, 05
+- [x] Committer le travail Optuna en cours sur `phase-04/optuna-reseaux`
+- [x] Créer la branche `refonte/notebooks` depuis `main`
+- [x] Tri détaillé notebook par notebook (section 8.2), validé par Matisse
 
 ### Étape B : le socle `src/` (ne dépend pas d'Optuna)
 
@@ -282,9 +370,9 @@ Dans `evolution.ipynb`, chaque chiffre est **recalculé ou lu dans `sorties/resu
 
 - [ ] Tag `archive-phases-1-4` sur `main` avant suppression
 - [ ] ADR de la nouvelle organisation des notebooks
-- [ ] Supprimer les 13 anciens notebooks (accord de Benjamin)
+- [ ] Retirer les 13 anciens notebooks de `notebooks/` (leur contenu gardé est déjà déplacé, section 8.2)
 - [ ] Mettre à jour les liens (README, `STATUS.md` par une nouvelle entrée, docs de phase, `AGENTS.md` section « Structure du repo »)
-- [ ] PR vers `main`, relue par Benjamin
+- [ ] Pousser et ouvrir une PR vers `main` : seulement sur demande de Matisse
 
 ### Étape F : optionnel, après la soutenance
 
@@ -310,8 +398,10 @@ La refonte est terminée quand :
 | papermill ou nbconvert | À décider en étape C |
 | Valeur de N pour les matrices de confusion (15, 30 ou 50) | Proposition : 30 |
 | Où placer la comparaison à la littérature (section 4 de `resultats/` ou `02_choix_du_modele`) | Proposition : section 4, FD001 uniquement si les articles ne donnent pas les autres |
-| Importances de features (04e) : Phase 5 ou ce plan ? | À rediscuter |
-| Accord de Benjamin | À obtenir (étape A) |
+| Importances de features (04e) : Phase 5 ou ce plan ? | Réglé : gardées dans `02_choix_du_modele`, réutilisées en Phase 5 |
+| Accord de Benjamin | Réglé : il garde ses propres copies de 01b, 03b et 05 ; rien n'est poussé sans demande de Matisse |
+| 04b section 8, « combien de cycles d'avance avant la panne » : garder ? | À décider (Matisse) |
+| 05 section E, hypothèses sur les moteurs surestimés : garder ? | À confirmer (Matisse) |
 
 ## 13. Journal
 
@@ -323,3 +413,4 @@ Une ligne par étape faite ou par écart au plan, la plus récente en bas. On n'
 | 2026-11-06 | Matisse | Étape A : travail Optuna committé sur `phase-04/optuna-reseaux` (`d6b6b10`). Branche `refonte/notebooks` créée depuis `main` (`8dcbedc`), dans un dossier séparé (`../aero-predict-refonte`, worktree git) : Optuna tournait dans le dossier principal, et changer de branche y aurait retiré du disque les fichiers qu'il utilise |
 | 2026-11-06 | Matisse | Écart constaté : `main` n'a pas les commits `f79b0e2` et `65b0227` de `phase-04/modele-final-demo` (configurations finales des arbres, `CONFIG_*_FINAL`, et correctif de la démo), dont la refonte a besoin. À régler avant l'étape B : fusionner `phase-04/modele-final-demo` dans `main`, ou intégrer cette branche dans `refonte/notebooks` |
 | 2026-11-06 | Matisse | Écart réglé : `phase-04/modele-final-demo` fusionnée dans `refonte/notebooks` (`7d3003c`), sans conflit. `main` n'a toujours pas ces commits : ils y arriveront avec la PR de la refonte. Suite de tests pytest non relancée (Optuna occupait le processeur) |
+| 2026-11-06 | Matisse | Précision : c'est une **réorganisation, pas une refonte complète** (principe 0 ajouté en section 3) ; titre du plan changé en conséquence, nom du fichier et de la branche gardés. Tri détaillé ajouté (section 8.2). Corrections de la première version : courbes précision-rappel gardées à côté des ROC (le 04b montre que l'AUC ne départage pas les approches) ; importances de features gardées (Phase 5) ; métriques non réutilisées (MedAE, erreur max, MAPE…) calculées une fois par `metriques_regression` avec leur tableau « gardée / écartée », au lieu d'être retirées (protocole §3) ; cible de 15 à 25 cellules par notebook retirée. Benjamin garde ses propres copies ; rien n'est poussé sans demande de Matisse |
