@@ -42,7 +42,7 @@ Les 6 modèles (liste de `src/donnees_demo.py`, `MODELES_CONNUS`) : 5 qui appren
 3. **La preuve n'est jamais circulaire.** La section « Vérifier un moteur » repart de `data/test_FD00X.txt` et ne lit jamais les fichiers de `sorties/predictions/` qu'affiche la démo. Elle compare ensuite son résultat à ces fichiers, pour montrer qu'ils sont identiques.
 4. **Démo et notebooks lisent les mêmes résultats.** Les chiffres affichés dans Streamlit sont ceux que les notebooks de résultats calculent et vérifient.
 5. **Rien n'est supprimé avant d'être remplacé et vérifié** (règle 9 d'`AGENTS.md`) : un ancien notebook ne sort de `main` que quand les nouveaux redonnent ses chiffres.
-6. **Rien n'est perdu** : avant la suppression, un tag git (`archive-phases-1-4`) fige l'état actuel. Tout reste consultable sur GitHub à ce tag.
+6. **Rien n'est perdu** : avant la suppression, un tag git (`v1-avant-reorganisation`, section 9.4) fige l'état actuel. Tout reste consultable sur GitHub à ce tag.
 7. **Densité de commentaires et style** : ceux d'`AGENTS.md` (règles 2 et 3 : docstrings, commentaires en français bloc par bloc, pas de code condensé).
 8. **Pas de nombre de cellules visé.** La taille d'un notebook résulte du tri (section 8.2), on ne compresse pas les explications pour atteindre un chiffre. (Une première version de ce plan visait 15 à 25 cellules ; retiré, voir le journal.)
 
@@ -196,7 +196,7 @@ Au 2026-11-06, `sorties/predictions/` ne contient le LSTM et le CNN 1D que pour 
 | Erreur par moteur, comparaisons appariées | 05 | `resultats/` section 6 |
 | RUL prédite cycle par cycle | 03b | `resultats/` section 7 |
 
-### 7.2 Retirées (consultables au tag `archive-phases-1-4`)
+### 7.2 Retirées (consultables au tag `v1-avant-reorganisation`)
 
 | Figure | Notebook | Raison |
 |---|---|---|
@@ -340,7 +340,19 @@ Dans `evolution.ipynb`, chaque chiffre est **recalculé ou lu dans `sorties/resu
 2. **La réorganisation part du travail terminé, jamais l'inverse.** Première action de l'étape B : fusionner `phase-04/optuna-reseaux` dans `refonte/notebooks` (`git merge`), pour récupérer les derniers notebooks, Optuna et le 04h. Si Matisse retouche encore un notebook après, il le committe dans `aero-predict`, et la session de réorganisation refusionne avant de toucher à ce notebook.
 3. **Une session d'assistant dit toujours dans quel dossier et sur quelle branche elle agit**, avant de modifier un fichier.
 
-### 9.4 Documentation
+### 9.4 Version 1 gardée, pour comparer avec la version 2
+
+Demande de Matisse (2026-11-06) : garder la version actuelle du dépôt (« v1 », avant réorganisation) pour la comparer à la version réorganisée (« v2 ») et vérifier le travail.
+
+1. **Un tag fige la v1.** Au début de l'étape B, juste avant la fusion de `phase-04/optuna-reseaux`, on pose le tag `v1-avant-reorganisation` sur le dernier commit de `phase-04/optuna-reseaux` (Optuna et 04h inclus). Tag local ; poussé sur GitHub seulement sur demande de Matisse. Il remplace le tag `archive-phases-1-4` prévu plus haut : un seul tag pour la même chose.
+2. **Les deux versions restent côte à côte sur le disque.** `aero-predict` reste la v1 : la réorganisation n'y touche jamais. `aero-predict-refonte` devient la v2. On peut ouvrir les deux en même temps pour comparer un notebook ancien et son équivalent nouveau.
+3. **Un fichier de comparaison est livré avec la v2** : `docs/comparaison_v1_v2.md`, écrit à la fin de l'étape D, avant toute suppression. Il contient :
+   - **les chiffres** : pour chaque modèle et chaque sous-jeu, RMSE, MAE, score NASA, surestimés de plus de 20 cycles et alertes manquées, en v1 (lus dans les anciens notebooks ou `sorties/`) et en v2, avec l'écart. Un écart non nul est expliqué ;
+   - **les cellules** : pour chaque ancien notebook, où est passée chaque section gardée (notebook et section de la v2), et pour chaque section retirée, la raison (reprise de la section 8.2) ;
+   - **les figures** : chaque figure de la section 7.1, avec le notebook v1 d'où elle vient et son emplacement en v2.
+4. **Rien n'est retiré de la v1 avant que Matisse ait relu ce fichier** et validé la v2.
+
+### 9.5 Documentation
 
 - `docs/0X_*.md` ne sont pas réécrits par ce plan (règle 4).
 - `STATUS.md` reçoit une entrée à chaque étape significative, dans le même commit.
@@ -356,6 +368,7 @@ Dans `evolution.ipynb`, chaque chiffre est **recalculé ou lu dans `sorties/resu
 
 ### Étape B : le socle `src/` (ne dépend pas d'Optuna)
 
+- [ ] Poser le tag local `v1-avant-reorganisation` sur le dernier commit de `phase-04/optuna-reseaux` (9.4)
 - [ ] Fusionner `phase-04/optuna-reseaux` dans `refonte/notebooks` (règle des deux dossiers, 9.3), après la nuit Optuna et le commit des derniers changements de Matisse
 - [ ] Relancer la suite pytest
 - [ ] `src/evaluation_sous_jeu.py` : `evaluer_sous_jeu(sous_jeu)` (sections 3 à 6 du protocole) et `verifier_moteur(sous_jeu, moteur)` (section 7, depuis les données brutes)
@@ -378,10 +391,11 @@ Dans `evolution.ipynb`, chaque chiffre est **recalculé ou lu dans `sorties/resu
 - [ ] `notebooks/02_choix_du_modele.ipynb`
 - [ ] Regénérer FD001 à FD004 avec les réglages finaux, contrôle de non-régression (9.2)
 - [ ] `notebooks/evolution.ipynb`
+- [ ] `docs/comparaison_v1_v2.md` : chiffres, cellules et figures v1 contre v2 (9.4)
 
 ### Étape E : nettoyage
 
-- [ ] Tag `archive-phases-1-4` sur `main` avant suppression
+- [ ] Vérifier que Matisse a relu `docs/comparaison_v1_v2.md` et validé la v2 (9.4)
 - [ ] ADR de la nouvelle organisation des notebooks
 - [ ] Retirer les 13 anciens notebooks de `notebooks/` (leur contenu gardé est déjà déplacé, section 8.2)
 - [ ] Mettre à jour les liens (README, `STATUS.md` par une nouvelle entrée, docs de phase, `AGENTS.md` section « Structure du repo »)
@@ -401,7 +415,7 @@ La refonte est terminée quand :
 3. Le protocole d'évaluation est déroulé en entier sur les 4 sous-jeux (règle 11).
 4. Les graphiques sont visibles sur GitHub sans exécuter les notebooks.
 5. Les chiffres des nouveaux notebooks égalent ceux des anciens (9.2), ou l'écart est expliqué dans `STATUS.md`.
-6. Les anciens notebooks sont consultables au tag `archive-phases-1-4`, et l'ADR est acceptée.
+6. Les anciens notebooks sont consultables au tag `v1-avant-reorganisation` et dans le dossier `aero-predict`, `docs/comparaison_v1_v2.md` est relu par Matisse, et l'ADR est acceptée.
 
 ## 12. Questions ouvertes
 
@@ -429,3 +443,4 @@ Une ligne par étape faite ou par écart au plan, la plus récente en bas. On n'
 | 2026-11-06 | Matisse | Précision : c'est une **réorganisation, pas une refonte complète** (principe 0 ajouté en section 3) ; titre du plan changé en conséquence, nom du fichier et de la branche gardés. Tri détaillé ajouté (section 8.2). Corrections de la première version : courbes précision-rappel gardées à côté des ROC (le 04b montre que l'AUC ne départage pas les approches) ; importances de features gardées (Phase 5) ; métriques non réutilisées (MedAE, erreur max, MAPE…) calculées une fois par `metriques_regression` avec leur tableau « gardée / écartée », au lieu d'être retirées (protocole §3) ; cible de 15 à 25 cellules par notebook retirée. Benjamin garde ses propres copies ; rien n'est poussé sans demande de Matisse |
 | 2026-11-06 | Matisse | Correction des lignes 2 et 4 de ce journal : Optuna **ne tournait pas**. Les processus Python vus à ce moment étaient des noyaux Jupyter ouverts depuis VS Code (lancés à 9 h 36) ; la base `04h_optuna.db` n'a plus été écrite après 9 h 36. Le dossier séparé (worktree) reste utile : la branche Optuna et la branche de réorganisation restent chacune dans leur dossier. Décision : lancer `scripts/nuit_04h.sh` la nuit du 2026-11-06 ; étapes B à D après relecture de ses résultats |
 | 2026-11-06 | Matisse | Confusion sur le 04g : une session d'assistant a retiré, sans commit, la cellule des anciens graphes (test, 100 moteurs) dans `aero-predict-refonte`, alors que le remplacement voulu (courbes de RUL prédite cycle par cycle sur 4 moteurs) était déjà fait et committé dans `aero-predict` (`d6b6b10`). Modification mise de côté (`git stash`, récupérable), dossier remis propre. Règle des deux dossiers ajoutée (9.3), et fusion de `phase-04/optuna-reseaux` ajoutée en tête de l'étape B |
+| 2026-11-06 | Matisse | Demande : garder la v1 (dépôt avant réorganisation) pour la comparer à la v2. Section 9.4 ajoutée : tag local `v1-avant-reorganisation` posé au début de l'étape B (il remplace le tag `archive-phases-1-4` prévu jusque-là), dossier `aero-predict` jamais touché par la réorganisation, fichier `docs/comparaison_v1_v2.md` (chiffres, cellules, figures) livré à la fin de l'étape D, rien retiré avant sa relecture. L'ancienne section 9.4 « Documentation » devient 9.5 |
