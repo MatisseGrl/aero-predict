@@ -13,6 +13,18 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 ## Dernière modification
 
 - **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
+- **Quoi** : fenêtres des réseaux construites à la demande, lot par lot, pour l'optimisation Optuna (suite des deux entrées suivantes).
+  - `src/deep_learning.py` : `FenetresParesseuses` et `construire_fenetres_paresseuses`. Elles gardent le tableau 2D des entrées et, pour chaque fenêtre, les numéros de ses lignes ; une fenêtre est construite seulement quand un lot la demande. `entrainer_modele` et `predire_echelle` acceptent les deux formes. `construire_fenetres` est inchangée : la démo et le 03b ne changent pas.
+  - `src/optimisation_reseaux.py` les utilise, et sépare les moteurs d'un pli sans recopier de fenêtres (`selection`).
+  - `tests/test_fenetres_paresseuses.py` : fenêtres identiques (`np.array_equal`) sur FD001 et FD002, train et test, 20, 30 et 50 cycles ; un LSTM entraîné 2 époques donne des prédictions identiques au bit près avec les deux méthodes. Les essais Optuna déjà faits sur FD001 restent donc comparables. Suite complète : 29 tests réussis, 6 sautés (modèles de la démo non générés sur cette machine).
+  - Mémoire mesurée (un processus, FD002, fenêtres de 50 cycles, données préparées plus les fenêtres d'un pli) : 1 371 Mo avant, 468 Mo après. La part des fenêtres passe de 948 Mo à 45 Mo.
+- **Pourquoi** : le 2026-11-06, 15 processus sur FD002 saturaient les 31 Go de la machine (entrée suivante).
+- **Impact** : avec 15 processus, environ 7 Go au lieu d'environ 20 Go. Restent à faire avant de lancer FD002 en vrai : finir l'essai rapide de FD002 (ablation, ensemble, final), et choisir le nombre de processus (mesure du débit à 8 et à 15 processus).
+
+### 2026-11-06 — Optuna des réseaux étendu à FD002
+
+- **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-11-06
 - **Quoi** : l'optimisation Optuna des réseaux (entrée suivante) est étendue à FD002. Rien n'est encore calculé sur FD002.
   - Changement de règle, écrit avant tout calcul : jusqu'ici, les réglages des réseaux choisis sur FD001 étaient appliqués tels quels à FD002–FD004 (entrée du 2026-11-05, et règle des fichiers `03b_*`). Désormais, chaque sous-jeu a sa propre étude Optuna sur ses propres plis par moteur, avec les mêmes étapes et les mêmes règles de décision que FD001 (confirmation sur 3 découpages neufs, gain d'au moins 0,3 cycle, Wilcoxon p < 0,05). La référence de chaque sous-jeu reste la configuration du 03b retenue sur FD001. La règle est recopiée dans le code (`TEXTE_REGLE_SOUS_JEUX`) et dans l'étude Optuna.

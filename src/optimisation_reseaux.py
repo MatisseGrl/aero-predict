@@ -40,7 +40,7 @@ from src.deep_learning import (
     appliquer_min_max,
     apprendre_min_max,
     calculer_metriques,
-    construire_fenetres,
+    construire_fenetres_paresseuses,
     creer_modele,
     entrainer_modele,
     fixer_graines,
@@ -99,10 +99,11 @@ SOUS_JEU_DEFAUT = "FD001"
 VALEURS_ECART_INITIAL = [20, 25, 30]
 
 # Caches du processus : la preparation des donnees (~15 s) n'est faite qu'une fois par processus pour un
-# meme (sous-jeu, k, pente). Les fenetres, beaucoup plus lourdes (FD002, 50 cycles : ~0,5 Go), ne sont
-# gardees que pour le DERNIER jeu d'entrees demande : sinon un travailleur Optuna qui essaie 7 longueurs
-# de fenetre garderait 7 copies, et 15 processus deborderaient la memoire. Chaque processus a ses propres
-# caches (rien n'est partage entre processus).
+# meme (sous-jeu, k, pente). Les fenetres sont paresseuses (src.deep_learning.FenetresParesseuses :
+# construites lot par lot, environ 20 Mo pour FD002 avec 50 cycles, au lieu d'environ 0,5 Go pour le
+# tenseur 3D complet) ; on ne garde quand meme que le DERNIER jeu d'entrees demande. Constate le
+# 2026-11-06 avec les tenseurs complets : 15 processus sur FD002 saturaient les 31 Go de la machine.
+# Chaque processus a ses propres caches (rien n'est partage entre processus).
 _CACHE_TABLEAUX = {}
 _CACHE_FENETRES = {}
 
@@ -348,8 +349,9 @@ def preparer_fenetres(entrees, sous_jeu=SOUS_JEU_DEFAUT):
 
     tableaux = preparer_tableaux(entrees.get("ecart_initial"), entrees.get("pente"), sous_jeu=sous_jeu)
     colonnes = colonnes_des_entrees(tableaux, entrees)
-    fenetres, _, _, _ = construire_fenetres(tableaux["train"], colonnes, longueur=entrees["longueur"])
-    fenetres_test, _, _, _ = construire_fenetres(tableaux["test"], colonnes, longueur=entrees["longueur"])
+    # memes fenetres que construire_fenetres (03b), construites a la demande (voir _CACHE_FENETRES)
+    fenetres, _, _, _ = construire_fenetres_paresseuses(tableaux["train"], colonnes, longueur=entrees["longueur"])
+    fenetres_test, _, _, _ = construire_fenetres_paresseuses(tableaux["test"], colonnes, longueur=entrees["longueur"])
 
     donnees = {}
     donnees["fenetres"] = fenetres
@@ -585,11 +587,12 @@ def entrainer_un_pli(config, donnees, idx_train, idx_val, graine=GRAINE):
         max_epoques = 2
         patience = 1
     modele = construire_reseau(config, donnees["fenetres"].shape[2], graine=graine)
+    # selection : sous-ensembles paresseux, aucune fenetre recopiee (seulement les numeros de lignes)
     historique = entrainer_modele(
         modele,
-        donnees["fenetres"][idx_apprentissage],
+        donnees["fenetres"].selection(idx_apprentissage),
         donnees["y"][idx_apprentissage],
-        fenetres_validation=donnees["fenetres"][idx_arret],
+        fenetres_validation=donnees["fenetres"].selection(idx_arret),
         y_validation=donnees["y"][idx_arret],
         alpha=reglages.get("alpha", 1.0),
         taux_apprentissage=reglages["taux_apprentissage"],
@@ -599,7 +602,7 @@ def entrainer_un_pli(config, donnees, idx_train, idx_val, graine=GRAINE):
         graine=graine,
     )
     resultat = {}
-    resultat["predictions"] = predire(modele, donnees["fenetres"][idx_val])
+    resultat["predictions"] = predire(modele, donnees["fenetres"].selection(idx_val))
     resultat["meilleure_epoque"] = historique["meilleure_epoque"]
     resultat["duree_s"] = historique["duree_s"]
     return resultat
