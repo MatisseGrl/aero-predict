@@ -320,3 +320,5 @@ Une ligne par étape faite ou par écart au plan, la plus récente en bas. On n'
 | Date | Qui | Quoi |
 |---|---|---|
 | 2026-11-06 | Matisse | Plan rédigé et validé dans la discussion ; aucune étape exécutée |
+| 2026-11-06 | Matisse | Étape A : travail Optuna committé sur `phase-04/optuna-reseaux` (`d6b6b10`). Branche `refonte/notebooks` créée depuis `main` (`8dcbedc`), dans un dossier séparé (`../aero-predict-refonte`, worktree git) : Optuna tournait dans le dossier principal, et changer de branche y aurait retiré du disque les fichiers qu'il utilise |
+| 2026-11-06 | Matisse | Écart constaté : `main` n'a pas les commits `f79b0e2` et `65b0227` de `phase-04/modele-final-demo` (configurations finales des arbres, `CONFIG_*_FINAL`, et correctif de la démo), dont la refonte a besoin. À régler avant l'étape B : fusionner `phase-04/modele-final-demo` dans `main`, ou intégrer cette branche dans `refonte/notebooks` |
