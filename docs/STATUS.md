@@ -14,6 +14,22 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-11-06
+- **Quoi** : l'optimisation Optuna des réseaux (entrée suivante) est étendue à FD002. Rien n'est encore calculé sur FD002.
+  - Changement de règle, écrit avant tout calcul : jusqu'ici, les réglages des réseaux choisis sur FD001 étaient appliqués tels quels à FD002–FD004 (entrée du 2026-11-05, et règle des fichiers `03b_*`). Désormais, chaque sous-jeu a sa propre étude Optuna sur ses propres plis par moteur, avec les mêmes étapes et les mêmes règles de décision que FD001 (confirmation sur 3 découpages neufs, gain d'au moins 0,3 cycle, Wilcoxon p < 0,05). La référence de chaque sous-jeu reste la configuration du 03b retenue sur FD001. La règle est recopiée dans le code (`TEXTE_REGLE_SOUS_JEUX`) et dans l'étude Optuna.
+  - Seule différence avec FD001 : k (écart à l'état initial) reste strictement plus petit que le plus court moteur test du sous-jeu. FD002 : 21 cycles, donc k = 20 seulement (FD001 : 20, 25 ou 30).
+  - `src/optimisation_reseaux.py` et `scripts/optimiser_reseaux.py` : option `--sous-jeu` (FD001 par défaut). FD002 à FD004 sont préparés par `src/sous_jeux.py`, comme au 03b. Fichiers et études séparés : `04h_*` et étude `04h_lstm` pour FD001 (noms inchangés, l'étude en cours reprend), `04h_fd002_*` et `04h_fd002_lstm` pour FD002. Un seul jeu de fenêtres en mémoire par processus (FD002 avec 50 cycles : environ 0,5 Go par jeu).
+  - L'essai rapide (`AERO_ESSAI_RAPIDE=1`) a maintenant sa propre base Optuna dans `sorties/essai_rapide/`. Avant, il écrivait ses essais dans la vraie base.
+  - `scripts/nuit_04h.sh` : FD001 puis FD002. Une étape dont le fichier de résultats existe est sautée, et une étude Optuna complète ne relance aucun essai : la même commande reprend la nuit suivante là où elle s'était arrêtée. Quand le CNN a fini, ses 4 cœurs passent au LSTM. `scripts/arreter_04h.sh` arrête seulement les processus de l'optimisation.
+- **Pourquoi** : demande de Matisse. Appliquer les réglages de FD001 aux autres sous-jeux sans les y chercher n'est pas la méthode du projet (règle 11 d'`AGENTS.md`). FD003 et FD004 restent pour l'instant avec les réglages de FD001, et sont présentés comme tels.
+- **Impact** :
+  - Durées estimées à partir des essais déjà faits : fin de FD001 environ 4 h, FD002 environ 10 h 30. FD002 se termine donc la deuxième nuit (2026-11-07).
+  - `sorties/predictions/` et la démo ne changent pas tant que les résultats `final` n'ont pas été relus.
+  - Essai rapide du 2026-11-06 au soir (`AERO_ESSAI_RAPIDE=1 bash scripts/nuit_04h.sh`, 2 époques par réseau, chiffres sans valeur) : toutes les étapes de FD001 vont au bout (optuna, confirmer, ablation, ensemble, final). Sur FD002 : optuna, confirmer LSTM et confirmer CNN vont au bout. **L'essai a été arrêté pendant l'ablation de FD002** : la mémoire vive de la machine (31 Go, une partie déjà prise par d'autres programmes) ne suivait pas avec 15 processus sur FD002. Ablation, ensemble et final de FD002 ne sont donc **pas testés**. Avant de lancer FD002 en vrai, réduire le nombre de processus de ses étapes, ou fermer les autres programmes. Le vrai calcul de nuit n'a pas été lancé.
+
+### 2026-11-06 — Optuna sur le LSTM et le CNN 1D (FD001, en cours)
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-06
 - **Quoi** : optimisation des hyperparamètres du LSTM et du CNN 1D avec Optuna, **en cours** (branche `phase-04/optuna-reseaux`). Aucun modèle n'est retenu et le test n'a pas été lu.
   - `src/optimisation_reseaux.py` : validation croisée d'une configuration de réseau pli par pli (mêmes plis et même séparation d'arrêt précoce que le 03b), pente glissante (famille F2 du 04e, vérifiée contre `np.polyfit`), deux architectures supplémentaires (CNN puis LSTM, LSTM avec attention), espaces de recherche Optuna.
   - `scripts/optimiser_reseaux.py` : étapes `verifier`, `nettoyer`, `optuna`, `confirmer`, `ablation`, `ensemble`, `final`, avec les règles de décision écrites dans le code avant les calculs. `scripts/nuit_04h.sh` enchaîne toutes les étapes (7 à 9 h estimées, tout le processeur).

@@ -1,6 +1,7 @@
 """
 Optimisation des reseaux sequentiels (Phase 4) : architectures supplementaires, entrees candidates et
-validation croisee d'UNE configuration, pli par pli, utilisable par Optuna.
+validation croisee d'UNE configuration, pli par pli, utilisable par Optuna. Tout est parametre par
+sous-jeu (FD001 par defaut ; FD002 a FD004 prepares par src/sous_jeux.py, comme au notebook 03b).
 
 Pourquoi ce module ? Le notebook 03b a entraine le LSTM et le CNN 1D avec des reglages fixes a l'avance
 (2 x 64 unites, pas 1e-3, ...), jamais optimises. Ce module permet de chercher de meilleurs reglages avec
@@ -87,9 +88,21 @@ CONFIG_CNN_REFERENCE = {
 # scripts/optimiser_reseaux.py ecrit alors ses resultats dans un dossier a part, jamais dans sorties/resultats.
 ESSAI_RAPIDE = os.environ.get("AERO_ESSAI_RAPIDE") == "1"
 
-# Caches du processus : la preparation des donnees (~15 s) et la construction des fenetres ne sont faites
-# qu'une fois par processus pour une meme valeur de k (resp. un meme jeu d'entrees). Chaque processus
-# Optuna ou de calcul parallele a ses propres caches (rien n'est partage entre processus).
+# Sous-jeux connus. FD001 : pipeline de src/features.py (Phases 1 a 3) ; les autres : src/sous_jeux.py
+# (normalisation par regime pour FD002 et FD004), exactement comme preparer_donnees du notebook 03b.
+SOUS_JEUX = ["FD001", "FD002", "FD003", "FD004"]
+SOUS_JEU_DEFAUT = "FD001"
+
+# Valeurs candidates de k (ecart a l'etat initial). Seules celles STRICTEMENT plus petites que le plus court
+# moteur test du sous-jeu sont tirees par Optuna (voir `valeurs_ecart_initial`) : FD001 (31 cycles) garde
+# 20, 25 et 30 ; FD002 (21 cycles) seulement 20.
+VALEURS_ECART_INITIAL = [20, 25, 30]
+
+# Caches du processus : la preparation des donnees (~15 s) n'est faite qu'une fois par processus pour un
+# meme (sous-jeu, k, pente). Les fenetres, beaucoup plus lourdes (FD002, 50 cycles : ~0,5 Go), ne sont
+# gardees que pour le DERNIER jeu d'entrees demande : sinon un travailleur Optuna qui essaie 7 longueurs
+# de fenetre garderait 7 copies, et 15 processus deborderaient la memoire. Chaque processus a ses propres
+# caches (rien n'est partage entre processus).
 _CACHE_TABLEAUX = {}
 _CACHE_FENETRES = {}
 
@@ -186,14 +199,21 @@ def ajouter_pente_glissante(df, capteurs, k):
     return df_pente, nouvelles_colonnes
 
 
-def preparer_tableaux(ecart_initial, pente=None):
-    """
-    Prepare (une fois par processus) le train et le test FD001 pour une valeur de k donnee.
+def verifier_sous_jeu(sous_jeu):
+    """Leve une erreur claire si le sous-jeu n'est pas un des SOUS_JEUX."""
+    if sous_jeu not in SOUS_JEUX:
+        raise ValueError(f"Sous-jeu inconnu : {sous_jeu!r} (choix possibles : {SOUS_JEUX}).")
 
-    Reprend a l'identique `preparer_donnees` de scripts/entrainer_deep_learning.py : src/features.py
-    (normalisation, lissage, RUL plafonnee, ecart a l'etat initial), puis time_cycles / 100, puis min-max
-    de l'ecart initial appris sur le TRAIN seulement. Si `pente` est donne, ajoute aussi la pente glissante
-    de chaque capteur, mise a l'echelle de la meme facon (bornes du train).
+
+def preparer_tableaux(ecart_initial, pente=None, sous_jeu=SOUS_JEU_DEFAUT):
+    """
+    Prepare (une fois par processus) le train et le test d'un sous-jeu pour une valeur de k donnee.
+
+    Reprend a l'identique `preparer_donnees` de scripts/entrainer_deep_learning.py : src/features.py pour
+    FD001, src/sous_jeux.py pour FD002 a FD004 (normalisation, par regime si besoin, lissage, RUL plafonnee,
+    ecart a l'etat initial), puis time_cycles / 100, puis min-max de l'ecart initial appris sur le TRAIN
+    seulement. Si `pente` est donne, ajoute aussi la pente glissante de chaque capteur, mise a l'echelle de
+    la meme facon (bornes du train).
 
     Parameters
     ----------
@@ -201,6 +221,8 @@ def preparer_tableaux(ecart_initial, pente=None):
         k de l'ecart a l'etat initial (20 au notebook 03b), None pour ne pas le calculer.
     pente : int ou None, optionnel
         Fenetre de la pente glissante, None (defaut) pour ne pas la calculer.
+    sous_jeu : str, optionnel
+        "FD001" (defaut) a "FD004".
 
     Returns
     -------
@@ -209,24 +231,42 @@ def preparer_tableaux(ecart_initial, pente=None):
         "y" (RUL plafonnee du train), "groups", "X" (features des arbres, pour calculer_plis),
         "y_test_vraie", "moteurs_test".
     """
-    cle = (ecart_initial, pente)
+    verifier_sous_jeu(sous_jeu)
+    cle = (sous_jeu, ecart_initial, pente)
     if cle in _CACHE_TABLEAUX:  # deja prepare dans ce processus
         return _CACHE_TABLEAUX[cle]
 
-    from src.features import preparer_test, preparer_train  # import tardif : ne charge les donnees que si besoin
-
-    contexte_train = preparer_train(fenetre=5, plafond=PLAFOND_RUL, ecart_initial=ecart_initial)
-    contexte_test = preparer_test(contexte_train)  # memes calculs, moteur test par moteur test
-    train = ajouter_time_cycles_echelle(contexte_train["train"])
-    test = ajouter_time_cycles_echelle(contexte_test["test"])
-    capteurs = contexte_train["sensor_cols_restants"]
+    # imports tardifs : ne chargent les donnees que si besoin
+    if sous_jeu == "FD001":
+        from src.features import preparer_test, preparer_train
+        contexte_train = preparer_train(fenetre=5, plafond=PLAFOND_RUL, ecart_initial=ecart_initial)
+        contexte_test = preparer_test(contexte_train)  # memes calculs, moteur test par moteur test
+        train_brut = contexte_train["train"]
+        test_brut = contexte_test["test"]
+        capteurs = contexte_train["sensor_cols_restants"]
+        colonnes_ecart_brutes = contexte_train["colonnes_ecart_initial"]
+        X = contexte_train["X"]
+        y_test_vraie = contexte_test["y_test_vraie"]
+        moteurs_test = contexte_test["moteurs_test"]
+    else:
+        from src.sous_jeux import preparer_sous_jeu
+        contexte = preparer_sous_jeu(sous_jeu, fenetre=5, plafond=PLAFOND_RUL, ecart_initial=ecart_initial)
+        train_brut = contexte["train"]
+        test_brut = contexte["test"]
+        capteurs = contexte["capteurs"]
+        colonnes_ecart_brutes = contexte["colonnes_ecart_initial"]
+        X = contexte["X"]
+        y_test_vraie = contexte["y_test_vraie"]
+        moteurs_test = contexte["moteurs_test"]
+    train = ajouter_time_cycles_echelle(train_brut)
+    test = ajouter_time_cycles_echelle(test_brut)
 
     # ecart a l'etat initial : bornes min-max apprises sur le train, appliquees telles quelles au test
     colonnes_ecart = []
     if ecart_initial is not None:
-        bornes = apprendre_min_max(train, contexte_train["colonnes_ecart_initial"])
-        train, colonnes_ecart = appliquer_min_max(train, contexte_train["colonnes_ecart_initial"], bornes)
-        test, _ = appliquer_min_max(test, contexte_train["colonnes_ecart_initial"], bornes)
+        bornes = apprendre_min_max(train, colonnes_ecart_brutes)
+        train, colonnes_ecart = appliquer_min_max(train, colonnes_ecart_brutes, bornes)
+        test, _ = appliquer_min_max(test, colonnes_ecart_brutes, bornes)
 
     # pente glissante (famille F2 du notebook 04e) : meme traitement
     colonnes_pente = []
@@ -245,9 +285,9 @@ def preparer_tableaux(ecart_initial, pente=None):
     tableaux["colonnes_pente"] = colonnes_pente
     tableaux["y"] = train["RUL_cappee"].to_numpy(dtype=float)
     tableaux["groups"] = train["unit_number"].to_numpy()
-    tableaux["X"] = contexte_train["X"]
-    tableaux["y_test_vraie"] = np.asarray(contexte_test["y_test_vraie"], dtype=float)
-    tableaux["moteurs_test"] = np.asarray(contexte_test["moteurs_test"])
+    tableaux["X"] = X
+    tableaux["y_test_vraie"] = np.asarray(y_test_vraie, dtype=float)
+    tableaux["moteurs_test"] = np.asarray(moteurs_test)
     _CACHE_TABLEAUX[cle] = tableaux
     return tableaux
 
@@ -283,14 +323,17 @@ def colonnes_des_entrees(tableaux, entrees):
     return lister_colonnes_entree(colonnes_capteurs, True, colonnes_supplementaires=supplementaires)
 
 
-def preparer_fenetres(entrees):
+def preparer_fenetres(entrees, sous_jeu=SOUS_JEU_DEFAUT):
     """
-    Construit (une fois par processus) les fenetres du train et du test pour une description d'entrees.
+    Construit les fenetres du train et du test pour une description d'entrees (seul le dernier jeu
+    demande reste en cache, voir _CACHE_FENETRES).
 
     Parameters
     ----------
     entrees : dict
         "longueur", "ecart_initial", "capteurs", "pente" (voir `colonnes_des_entrees`).
+    sous_jeu : str, optionnel
+        "FD001" (defaut) a "FD004".
 
     Returns
     -------
@@ -298,11 +341,12 @@ def preparer_fenetres(entrees):
         "fenetres", "y", "groups", "X", "fenetres_test", "test" (DataFrame), "y_test_vraie",
         "moteurs_test", "colonnes_entree".
     """
-    cle = (entrees["longueur"], entrees.get("ecart_initial"), entrees.get("capteurs", True), entrees.get("pente"))
+    cle = (sous_jeu, entrees["longueur"], entrees.get("ecart_initial"), entrees.get("capteurs", True), entrees.get("pente"))
     if cle in _CACHE_FENETRES:
         return _CACHE_FENETRES[cle]
+    _CACHE_FENETRES.clear()  # un seul jeu de fenetres en memoire par processus
 
-    tableaux = preparer_tableaux(entrees.get("ecart_initial"), entrees.get("pente"))
+    tableaux = preparer_tableaux(entrees.get("ecart_initial"), entrees.get("pente"), sous_jeu=sous_jeu)
     colonnes = colonnes_des_entrees(tableaux, entrees)
     fenetres, _, _, _ = construire_fenetres(tableaux["train"], colonnes, longueur=entrees["longueur"])
     fenetres_test, _, _, _ = construire_fenetres(tableaux["test"], colonnes, longueur=entrees["longueur"])
@@ -476,9 +520,9 @@ def construire_reseau(config, n_entrees, graine=GRAINE):
 # 3. Validation croisee d'une configuration, modele final, test
 # ---------------------------------------------------------------------------------------------------
 
-def plis_fd001(graine_plis=GRAINE_PLIS):
+def plis_sous_jeu(graine_plis=GRAINE_PLIS, sous_jeu=SOUS_JEU_DEFAUT):
     """
-    Renvoie les plis par moteur de FD001 (calculer_plis, 5 plis) pour une graine de decoupage.
+    Renvoie les plis par moteur d'un sous-jeu (calculer_plis, 5 plis) pour une graine de decoupage.
 
     La graine 42 donne les plis des arbres et du notebook 03b ; d'autres graines (1000, 1001, ...) donnent
     des decoupages NEUFS, utilises pour confirmer un choix fait sur les plis de la graine 42.
@@ -487,13 +531,15 @@ def plis_fd001(graine_plis=GRAINE_PLIS):
     ----------
     graine_plis : int, optionnel
         Graine du melange des moteurs entre plis.
+    sous_jeu : str, optionnel
+        "FD001" (defaut) a "FD004".
 
     Returns
     -------
     list de (numpy.ndarray, numpy.ndarray)
         Les plis (idx_train, idx_val).
     """
-    tableaux = preparer_tableaux(20)  # les plis ne dependent que des lignes et des moteurs, pas des entrees
+    tableaux = preparer_tableaux(20, sous_jeu=sous_jeu)  # les plis ne dependent que des lignes et des moteurs
     return calculer_plis(tableaux["X"], tableaux["y"], tableaux["groups"], n_splits=N_PLIS, random_state=graine_plis)
 
 
@@ -559,7 +605,7 @@ def entrainer_un_pli(config, donnees, idx_train, idx_val, graine=GRAINE):
     return resultat
 
 
-def evaluer_config_cv(config, graine_plis=GRAINE_PLIS, graine=GRAINE, apres_chaque_pli=None):
+def evaluer_config_cv(config, graine_plis=GRAINE_PLIS, graine=GRAINE, apres_chaque_pli=None, sous_jeu=SOUS_JEU_DEFAUT):
     """
     Validation croisee 5 plis d'une configuration, un pli apres l'autre (dans ce processus).
 
@@ -577,6 +623,8 @@ def evaluer_config_cv(config, graine_plis=GRAINE_PLIS, graine=GRAINE, apres_chaq
         Graine des reseaux.
     apres_chaque_pli : callable ou None, optionnel
         Fonction appelee apres chaque pli.
+    sous_jeu : str, optionnel
+        "FD001" (defaut) a "FD004".
 
     Returns
     -------
@@ -584,8 +632,8 @@ def evaluer_config_cv(config, graine_plis=GRAINE_PLIS, graine=GRAINE, apres_chaq
         "rmse_cv_moyen", "rmse_par_pli", "meilleures_epoques", "oof" (predictions hors-pli, une par ligne
         du train), "duree_s".
     """
-    donnees = preparer_fenetres(config["entrees"])
-    plis = plis_fd001(graine_plis)
+    donnees = preparer_fenetres(config["entrees"], sous_jeu=sous_jeu)
+    plis = plis_sous_jeu(graine_plis, sous_jeu=sous_jeu)
     oof = np.full(len(donnees["y"]), np.nan)  # une prediction hors-pli par ligne du train
     rmse_par_pli = []
     meilleures_epoques = []
@@ -616,7 +664,7 @@ def executer_tache_pli(tache):
     Parameters
     ----------
     tache : dict
-        "config", "graine_plis", "numero_pli", "graine", "etiquette".
+        "config", "graine_plis", "numero_pli", "graine", "sous_jeu" (FD001 s'il manque).
 
     Returns
     -------
@@ -624,8 +672,9 @@ def executer_tache_pli(tache):
         La tache, plus "idx_val", "predictions", "meilleure_epoque", "duree_s".
     """
     torch.set_num_threads(1)  # 1 coeur par apprentissage (voir src/deep_learning.py)
-    donnees = preparer_fenetres(tache["config"]["entrees"])
-    idx_train, idx_val = plis_fd001(tache["graine_plis"])[tache["numero_pli"]]
+    sous_jeu = tache.get("sous_jeu", SOUS_JEU_DEFAUT)
+    donnees = preparer_fenetres(tache["config"]["entrees"], sous_jeu=sous_jeu)
+    idx_train, idx_val = plis_sous_jeu(tache["graine_plis"], sous_jeu=sous_jeu)[tache["numero_pli"]]
     resultat = entrainer_un_pli(tache["config"], donnees, idx_train, idx_val, graine=tache["graine"])
     sortie = dict(tache)
     sortie["idx_val"] = idx_val
@@ -635,9 +684,9 @@ def executer_tache_pli(tache):
     return sortie
 
 
-def entrainer_modele_final(config, nb_epoques, graine=GRAINE):
+def entrainer_modele_final(config, nb_epoques, graine=GRAINE, sous_jeu=SOUS_JEU_DEFAUT):
     """
-    Entraine le modele final sur les 100 moteurs du train, nombre d'epoques fixe (sans arret precoce).
+    Entraine le modele final sur tous les moteurs du train, nombre d'epoques fixe (sans arret precoce).
 
     Le nombre d'epoques vient de la validation croisee (mediane des meilleures epoques des plis), jamais
     du test, comme au notebook 03b.
@@ -650,6 +699,8 @@ def entrainer_modele_final(config, nb_epoques, graine=GRAINE):
         Nombre d'epoques.
     graine : int, optionnel
         Graine des poids et des lots.
+    sous_jeu : str, optionnel
+        "FD001" (defaut) a "FD004".
 
     Returns
     -------
@@ -659,7 +710,7 @@ def entrainer_modele_final(config, nb_epoques, graine=GRAINE):
     torch.set_num_threads(1)
     if ESSAI_RAPIDE:  # verification du script seulement : 1 epoque
         nb_epoques = 1
-    donnees = preparer_fenetres(config["entrees"])
+    donnees = preparer_fenetres(config["entrees"], sous_jeu=sous_jeu)
     reglages = config["reglages"]
     modele = construire_reseau(config, donnees["fenetres"].shape[2], graine=graine)
     entrainer_modele(
@@ -675,7 +726,7 @@ def entrainer_modele_final(config, nb_epoques, graine=GRAINE):
     return modele
 
 
-def predictions_test_dernier_cycle(modele, config):
+def predictions_test_dernier_cycle(modele, config, sous_jeu=SOUS_JEU_DEFAUT):
     """
     Predit la RUL de chaque moteur test a son DERNIER cycle observe (le cycle note par le benchmark).
 
@@ -685,13 +736,15 @@ def predictions_test_dernier_cycle(modele, config):
         Le reseau entraine.
     config : dict
         Sa configuration (pour retrouver les memes entrees).
+    sous_jeu : str, optionnel
+        "FD001" (defaut) a "FD004".
 
     Returns
     -------
     numpy.ndarray
         Une RUL predite par moteur test, dans l'ordre de "moteurs_test".
     """
-    donnees = preparer_fenetres(config["entrees"])
+    donnees = preparer_fenetres(config["entrees"], sous_jeu=sous_jeu)
     test = donnees["test"]
     moteurs = test["unit_number"].to_numpy()
     cycles = test["time_cycles"].to_numpy()
@@ -711,7 +764,7 @@ def evaluer_sur_test_dernier_cycle(predictions, y_test_vraie):
     predictions : array-like
         Une RUL predite par moteur test.
     y_test_vraie : array-like
-        La vraie RUL (RUL_FD001.txt), non plafonnee.
+        La vraie RUL (RUL_FD00X.txt), non plafonnee.
 
     Returns
     -------
@@ -759,17 +812,49 @@ def reglages_apprentissage_essai(essai):
     return reglages
 
 
-def entrees_essai(essai):
+def valeurs_ecart_initial(sous_jeu=SOUS_JEU_DEFAUT):
+    """
+    Valeurs de k que Optuna peut tirer pour un sous-jeu : celles de VALEURS_ECART_INITIAL strictement plus
+    petites que le nombre de cycles du plus court moteur test.
+
+    Meme regle que pour FD001 (docs/04_pistes_non_retenues.md : k ne depasse pas 30, le plus court moteur
+    test a 31 cycles). FD002 : 21 cycles, donc k = 20 seulement. Si aucune valeur ne passe (FD004, 19
+    cycles), on garde 20, la valeur deja appliquee a ce sous-jeu par le notebook 03b.
+
+    Parameters
+    ----------
+    sous_jeu : str, optionnel
+        "FD001" (defaut) a "FD004".
+
+    Returns
+    -------
+    list de int
+        Les valeurs possibles de k.
+    """
+    test = preparer_tableaux(20, sous_jeu=sous_jeu)["test"]
+    plus_court = int(test.groupby("unit_number")["time_cycles"].max().min())  # cycles du plus court moteur test
+    valeurs = []
+    for k in VALEURS_ECART_INITIAL:
+        if k < plus_court:
+            valeurs.append(k)
+    if len(valeurs) == 0:
+        valeurs.append(20)
+    return valeurs
+
+
+def entrees_essai(essai, sous_jeu=SOUS_JEU_DEFAUT):
     """
     Tire la longueur de fenetre et k de l'ecart a l'etat initial.
 
-    Longueur : 20 a 50 cycles par pas de 5 (le 03b a teste 30 et 50). k : 20, 25 ou 30 (k ne peut pas
-    depasser 30 : le plus court moteur test n'a que 31 cycles, docs/04_pistes_non_retenues.md).
+    Longueur : 20 a 50 cycles par pas de 5 (le 03b a teste 30 et 50). k : parmi `valeurs_ecart_initial`
+    (20, 25 ou 30 sur FD001 ; 20 seulement sur FD002).
 
     Parameters
     ----------
     essai : optuna.trial.Trial
         L'essai Optuna en cours.
+    sous_jeu : str, optionnel
+        "FD001" (defaut) a "FD004".
 
     Returns
     -------
@@ -778,13 +863,13 @@ def entrees_essai(essai):
     """
     entrees = {}
     entrees["longueur"] = essai.suggest_int("longueur", 20, 50, step=5)
-    entrees["ecart_initial"] = essai.suggest_categorical("ecart_initial", [20, 25, 30])
+    entrees["ecart_initial"] = essai.suggest_categorical("ecart_initial", valeurs_ecart_initial(sous_jeu))
     entrees["capteurs"] = True
     entrees["pente"] = None
     return entrees
 
 
-def config_depuis_essai(essai, type_reseau):
+def config_depuis_essai(essai, type_reseau, sous_jeu=SOUS_JEU_DEFAUT):
     """
     Tire une configuration complete pour un type de reseau (espace de recherche Optuna).
 
@@ -794,6 +879,8 @@ def config_depuis_essai(essai, type_reseau):
         L'essai Optuna en cours.
     type_reseau : str
         Un des TYPES_RESEAUX.
+    sous_jeu : str, optionnel
+        "FD001" (defaut) a "FD004" (seul l'espace de k en depend).
 
     Returns
     -------
@@ -834,7 +921,7 @@ def config_depuis_essai(essai, type_reseau):
     config["type"] = type_reseau
     config["hyperparametres"] = hyperparametres
     config["reglages"] = reglages_apprentissage_essai(essai)
-    config["entrees"] = entrees_essai(essai)
+    config["entrees"] = entrees_essai(essai, sous_jeu)
     return config
 
 
@@ -842,8 +929,10 @@ def parametres_optuna_reference(type_reseau):
     """
     Parametres Optuna equivalents a la configuration de reference du 03b (pour l'essai n° 0).
 
-    Faire evaluer la reference comme premier essai sert de controle : on doit retrouver le RMSE de
-    validation du notebook 03b (8,94 pour le LSTM, 10,15 pour le CNN 1D), sinon le protocole differe.
+    Faire evaluer la reference comme premier essai sert de controle : sur FD001, on doit retrouver le RMSE
+    de validation du notebook 03b (8,94 pour le LSTM), sinon le protocole differe. Sur les autres
+    sous-jeux, c'est le point de depart : les reglages de FD001 appliques tels quels (k = 20 est toujours
+    dans l'espace).
 
     Parameters
     ----------
