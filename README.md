@@ -19,7 +19,7 @@ Full documentation (written in French):
 | 1 | EDA and data preparation | ✅ Done: [docs/01_eda_preparation.md](docs/01_eda_preparation.md) |
 | 2 | Target engineering (Piecewise RUL) | ✅ Done: [docs/02_target_engineering.md](docs/02_target_engineering.md) |
 | 3 | Modeling (classical ML + Deep Learning) | ✅ Done (XGBoost baseline, bias/variance diagnostic, error vs. mean-predictor baseline): [docs/03_modelisation.md](docs/03_modelisation.md) |
-| 4 | Evaluation (RMSE + NASA Score) | To do |
+| 4 | Evaluation (protocol: metrics, baselines, Optuna, ablation, significance tests) | ✅ Done (validated by Matisse, 2026-11-07). Best FD001 test RMSE 11.16 (ensemble of 5 LSTM) vs 12.73 (XGBoost): see [docs/STATUS.md](docs/STATUS.md) and notebook `04h` |
 | 5 | Explainability (SHAP) + dashboard | To do |
 | 6 | MLOps platform (bonus) | To do |
 

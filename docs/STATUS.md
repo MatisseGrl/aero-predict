@@ -49,6 +49,20 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 - **Pourquoi** : demande de Matisse, la démo doit montrer les résultats finaux, plus ceux du 03b.
 - **Impact** : FD003 et FD004 n'ont toujours pas de réseaux dans la démo (pas de recherche Optuna sur ces sous-jeux).
 
+### 2026-11-07 — Phase 4 marquée terminée
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
+- **Quoi** : la Phase 4 est marquée terminée à la demande de Matisse. `README.md` (tableau des phases) et `AGENTS.md` (état actuel) mis à jour. Les sections « Phase actuelle » ci-dessus et les entrées précédentes ne sont pas modifiées.
+  - Contrôles faits avant : 31 tests réussis, 4 sautés (réseaux de FD003 et FD004) ; arbre git propre.
+  - Limites connues au moment de la validation, relevées à la relecture :
+    - la courbe d'apprentissage (protocole §5) n'apparaît dans aucun notebook (04c l'a pour XGBoost seulement, pas pour les réseaux) ;
+    - baselines naïves, Ridge, métriques de classification et erreur par tranche de RUL sont dans le notebook 05 pour les 6 modèles ; leur couverture des réseaux du 04h n'a pas été vérifiée ;
+    - FD003 et FD004 n'ont pas de recherche Optuna des réseaux ni de réseaux dans la démo ;
+    - `docs/04_evaluation.md` (étape 4 de la Definition of Done) n'est pas encore rédigé.
+- **Pourquoi** : décision de Matisse ; le travail Optuna, la démo et les résultats sont documentés.
+- **Impact** : le README n'affiche plus la Phase 4 « To do ». Les limites ci-dessus restent ouvertes tant qu'elles ne sont pas traitées.
+
 ### 2026-11-07 — Poids des réseaux du 04h
 
 - **Qui** : Matisse (avec Claude Code)
