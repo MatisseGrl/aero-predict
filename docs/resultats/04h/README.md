@@ -2,7 +2,7 @@
 
 Copie **versionnée** des résultats du calcul de nuit du 2026-11-07 (`bash scripts/nuit_04h.sh`, de 0 h 36 à 12 h 34, aucune erreur). Les originaux sont dans `sorties/resultats/`, qui n'est pas versionné. Le notebook `notebooks/04h_optuna_reseaux.ipynb` relit **ces** fichiers : il ne relance ni Optuna, ni aucun entraînement.
 
-Refaire ces calculs prend environ 11 heures sur tout le processeur. Les réglages retenus sont aussi recopiés dans le code : `CONFIGS_RESEAUX_RETENUES` et `ENSEMBLES_RETENUS` dans `src/optimisation_reseaux.py`. Les poids des 10 LSTM retenus sont dans `models/04h/` (`scripts/sauvegarder_poids_04h.py`).
+Refaire ces calculs prend environ 11 heures sur tout le processeur. Les réglages retenus sont aussi recopiés dans le code : `CONFIGS_RESEAUX_RETENUES` et `ENSEMBLES_RETENUS` dans `src/optimisation_reseaux.py`. Les poids des 10 LSTM retenus, et des 10 CNN 1D (non retenus, gardés pour comparer), sont dans `models/04h/` (`scripts/sauvegarder_poids_04h.py`).
 
 | Fichier | Contenu |
 |---|---|

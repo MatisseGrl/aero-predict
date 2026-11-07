@@ -19,6 +19,7 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
   - `models/04h/<SOUS_JEU>__lstm_g<graine>.pt` : poids, hyperparamètres, colonnes d'entrée, longueur de fenêtre, k et bornes min-max de l'écart initial (nouvelle clé `min_max_ecart_initial` de `preparer_tableaux`). 924 Ko en tout, ajoutés à git malgré la règle `*.pt` du `.gitignore`, à la demande de Matisse.
   - Contrôle fait par le script : les prédictions au dernier cycle sont identiques à celles du calcul de nuit (écart < 1e-4 imposé). L'ensemble redonne 11,16 / 10,09 au test FD001 et 22,38 / 10,62 au test FD002. Un modèle rechargé avec `charger_modele` redonne les mêmes prédictions (écart 1e-14).
   - Les anciens poids de la démo (`models/FD001__lstm.pt`, `models/FD001__cnn1d.pt`, 03b) ne sont pas touchés.
+  - Ajout du même jour : les poids des CNN 1D (5 graines, FD001 et FD002) sont sauvegardés à côté, à la demande de Matisse, bien qu'ils ne soient pas retenus : `models/04h/<SOUS_JEU>__cnn1d_g<graine>.pt`. FD001 : CNN réglé par Optuna ; FD002 : CNN du 03b (meilleur essai Optuna non confirmé). `scripts/sauvegarder_poids_04h.py --reseaux cnn1d`. Prédictions identiques au calcul de nuit. Moyenne des 5 CNN au test, chiffre relevé après coup et qui ne change aucun choix : FD001 11,21 / 9,84 ; FD002 23,62 / 11,20.
 - **Pourquoi** : demande de Matisse, avoir les poids finaux sans réentraîner.
 - **Impact** : la démo et `sorties/predictions/` utilisent toujours les anciens réseaux du 03b ; les brancher sur `models/04h/` reste à faire.
 
