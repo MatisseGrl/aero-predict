@@ -140,6 +140,8 @@ Question du jury : « Comment êtes-vous arrivés là ? » Pas utilisé comme pr
 
 Source des chiffres : `STATUS.md`, entrées du 2026-11-04 et du 2026-11-05.
 
+**Section finale « Pistes et diagnostics »** (ajoutée le 2026-11-07, aucun graphe supprimé) : ce qu'on a essayé ou mesuré sans le retenir, avec sa figure : pénalisation de la surestimation (05 C), temps d'entraînement (05), hypothèses sur les moteurs surestimés de plus de 20 cycles (05 E, écart vs RUL vraie et vs longueur de trajectoire).
+
 ## 6. Points techniques
 
 ### 6.1 Génération des 4 notebooks de résultats
@@ -195,19 +197,18 @@ Au 2026-11-06, `sorties/predictions/` ne contient le LSTM et le CNN 1D que pour 
 | Matrices de confusion | 04b | `resultats/` section 5 (une par sous-jeu) |
 | Erreur par moteur, comparaisons appariées | 05 | `resultats/` section 6 |
 | RUL prédite cycle par cycle | 03b | `resultats/` section 7 |
+| Courbes de validation `max_depth` / `n_estimators` | 03 | `evolution`, étape 5 (« avant » : réglage à la main, remplacé par Optuna) |
+| Erreur comparée à la baseline et au benchmark | 03 | `evolution`, étape 1 |
+| XGBoost Phase 3 sur les 4 sous-jeux | 01b | `evolution`, étape 2 |
+| RMSE vs score NASA par essai | 04d | `evolution`, étape 5 |
+| Test, 100 moteurs | 04f | `evolution`, étape 5 (« après ») |
+| Pénalisation de la surestimation | 05 | `evolution`, section « Pistes et diagnostics » |
+| Temps d'entraînement | 05 | `evolution`, section « Pistes et diagnostics » |
+| Écart vs RUL vraie / vs longueur de la trajectoire observée (05 E) | 05 | `evolution`, section « Pistes et diagnostics » |
 
-### 7.2 Retirées (consultables au tag `v1-avant-reorganisation`)
+### 7.2 Retirées
 
-| Figure | Notebook | Raison |
-|---|---|---|
-| Courbes de validation `max_depth` / `n_estimators` | 03 | Remplacées par Optuna, qui explore plus |
-| Erreur comparée à la baseline et au benchmark | 03 | Remplacée par les barres du test (section 4) |
-| XGBoost Phase 3 sur les 4 sous-jeux | 01b | Ancien modèle, remplacé par `resultats/` |
-| RMSE vs score NASA par essai | 04d | Vérification intermédiaire, pas une décision |
-| Pénalisation de la surestimation | 05 | Piste non retenue, déjà dans `docs/04_pistes_non_retenues.md` |
-| Temps d'entraînement | 05 | Diagnostic sans rôle dans les résultats finaux |
-| Écart vs longueur de la trajectoire observée | 05 | Idem |
-| Test, 100 moteurs | 04f | Doublon de la section 4 |
+Aucune. Décision de Matisse du 2026-11-07 : **aucun graphe n'est supprimé**. Les 8 figures qu'une version précédente de ce plan retirait (03, 01b, 04d, 04f, 05) sont déplacées dans `evolution`, avec la cellule qui les produit (voir le journal). Les PNG de `docs/figures/` restent en place (6.4).
 
 ## 8. Correspondance ancien → nouveau
 
@@ -252,7 +253,8 @@ Critère (principe 0) : on retire ce qui est calculé dans un notebook et **jama
 #### `01b_sous_jeux_fd002_fd004` → `01_donnees` + `evolution` + `resultats/`
 
 - **Garder** : A (FD001 identique bit à bit : preuve) ; B (ce qui change dans FD002-FD004) ; C (régimes, K-Means, inertie et silhouette : justifie 6 groupes ; figure des six régimes) ; D.1 à D.3 (pourquoi normaliser par régime, avant de lisser ; figure en 3 panneaux) ; D.4 (gain mesuré en validation croisée → `evolution`, étape 2) ; E (capteurs retirés par sous-jeu) ; F.2 (pourquoi le RMSE test de FD002 et FD004 est élevé : part des RUL vraies au-dessus de 125 → section 1 de `resultats/FD00X`).
-- **Retirer** : F.1 et F.3 (résultats de l'ancien XGBoost Phase 3 par sous-jeu, remplacés par `resultats/`) ; F.4 (temps de calcul) ; G (fichiers disponibles pour l'application).
+- **Déplacer** : F.1 et F.3 (résultats de l'ancien XGBoost Phase 3 par sous-jeu, et leur figure) → `evolution`, étape 2.
+- **Retirer** : F.4 (temps de calcul) ; G (fichiers disponibles pour l'application).
 
 #### `02_target_engineering` → `02_choix_du_modele`
 
@@ -262,7 +264,8 @@ Critère (principe 0) : on retire ce qui est calculé dans un notebook et **jama
 #### `03_modelisation` → `02_choix_du_modele` + `evolution`
 
 - **Garder** : explication des features glissantes et du cas du premier cycle (ce que `src/features.py` implémente, qui cite ce notebook) ; explication du score NASA et de son contrôle ; explication de GroupKFold ; diagnostic biais / variance train vs validation par pli ; test officiel Phase 3 (→ `evolution`, étape 1 : 19,70).
-- **Retirer** : courbes de validation `max_depth` et `n_estimators` (remplacées par Optuna) ; section 13 « quatre références » (remplacée par les 5 baselines) ; ablation à 7 jeux de la section 11 (remplacée par celle du 04e ; une ligne dans `evolution`).
+- **Déplacer** : courbes de validation `max_depth` et `n_estimators` → `evolution`, étape 5 (« avant » Optuna) ; figure « erreur comparée à la baseline et au benchmark » → `evolution`, étape 1.
+- **Retirer** : section 13 « quatre références », sauf sa figure (déplacée ci-dessus), remplacée par les 5 baselines ; ablation à 7 jeux de la section 11 (remplacée par celle du 04e ; une ligne dans `evolution`).
 - Les PNG de `docs/figures/03_*` restent en place : `docs/03_modelisation.md` les cite.
 
 #### `03b_deep_learning_lstm_cnn` → `02_choix_du_modele` + `resultats/`
@@ -291,7 +294,8 @@ Critère (principe 0) : on retire ce qui est calculé dans un notebook et **jama
 #### `04d_hyperparametres` → `02_choix_du_modele` + `evolution`
 
 - **Garder** : règle de décision écrite avant les recherches ; espace de recherche ; explication et lancement d'Optuna ; figure de l'importance des hyperparamètres ; confirmation sur plis neufs et sa figure.
-- **Retirer** : la comparaison Grid / Random / Optuna (elle choisit seulement la méthode de recherche ; sa conclusion « on ne change pas les réglages » a été remplacée par le 04f ; une ligne dans `evolution`) ; figure RMSE vs score NASA par essai ; test officiel des réglages inchangés.
+- **Retirer** : la comparaison Grid / Random / Optuna (elle choisit seulement la méthode de recherche ; sa conclusion « on ne change pas les réglages » a été remplacée par le 04f ; une ligne dans `evolution`) ; test officiel des réglages inchangés.
+- **Déplacer** : figure RMSE vs score NASA par essai → `evolution`, étape 5.
 
 #### `04e_feature_engineering` → `02_choix_du_modele` + `evolution`
 
@@ -301,14 +305,14 @@ Critère (principe 0) : on retire ce qui est calculé dans un notebook et **jama
 #### `04f_modele_final` et `04g_comparaison_modeles` → `02_choix_du_modele` + `resultats/`
 
 - **Garder** : tout. Ce sont les sources des `CONFIG_*_FINAL` utilisées par la démo (Optuna sur 31 features, confirmation sur 10 découpages, seuil d'alerte, comparaison des 3 modèles à arbres).
-- **Déplacer** : la comparaison 46 contre 31 features → `evolution`.
-- **Retirer** : chargement et features recopiés ; figure « Test, 100 moteurs » du 04f (doublon de la section 4 de `resultats/`).
+- **Déplacer** : la comparaison 46 contre 31 features → `evolution` ; figure « Test, 100 moteurs » du 04f → `evolution`, étape 5 (« après »).
+- **Retirer** : chargement et features recopiés.
 
 #### `05_comparaison_evaluation` → `resultats/` + `02_choix_du_modele` + `evolution`
 
 - **Garder** : A (règles fixées avant les résultats) ; B et D (réglages de base, validation croisée et test → `evolution`, « avant ») ; F (écart à l'état initial sur les 6 modèles → `02` et `evolution` ; fenêtre de 50 cycles rejetée, en une ligne avec sa p-valeur) ; G (protocole complet sur FD001 → **modèle de la structure de tous les `resultats/FD00X`**) ; H (littérature → section 4 de `resultats/`) ; J.3 et J.4 (prédiction en direct d'un moteur mystère, révélation → **base de la section 7 « Vérifier un moteur »**).
-- **À confirmer (Matisse)** : E (hypothèses sur les moteurs surestimés de plus de 20 cycles, figure « écart vs RUL vraie / vs longueur de trajectoire »). Rien ne la réutilise.
-- **Retirer** : C (pénalité de la surestimation, piste non retenue) ; I (synthèse, remplacée par `resultats/`) ; J.1, J.2, J.5, J.6 (réglages, chargement et lancement de Streamlit depuis le notebook).
+- **Déplacer vers `evolution`, section « Pistes et diagnostics »** : C (pénalité de la surestimation, piste non retenue, et sa figure) ; E (hypothèses sur les moteurs surestimés de plus de 20 cycles, figure « écart vs RUL vraie / vs longueur de trajectoire ») ; la figure du temps d'entraînement. Décision de Matisse du 2026-11-07 : aucun graphe supprimé.
+- **Retirer** : I (synthèse, remplacée par `resultats/`) ; J.1, J.2, J.5, J.6 (réglages, chargement et lancement de Streamlit depuis le notebook).
 
 ## 9. Contraintes et précautions
 
@@ -428,7 +432,7 @@ La refonte est terminée quand :
 | Importances de features (04e) : Phase 5 ou ce plan ? | Réglé : gardées dans `02_choix_du_modele`, réutilisées en Phase 5 |
 | Accord de Benjamin | Réglé : il garde ses propres copies de 01b, 03b et 05 ; rien n'est poussé sans demande de Matisse |
 | 04b section 8, « combien de cycles d'avance avant la panne » : garder ? | À décider (Matisse) |
-| 05 section E, hypothèses sur les moteurs surestimés : garder ? | À confirmer (Matisse) |
+| 05 section E, hypothèses sur les moteurs surestimés : garder ? | Réglé (2026-11-07) : gardée, dans `evolution`, section « Pistes et diagnostics » |
 
 ## 13. Journal
 
@@ -448,3 +452,4 @@ Une ligne par étape faite ou par écart au plan, la plus récente en bas. On n'
 | 2026-11-07 | Matisse | Précision du périmètre en discussion : réorganisation seulement (déplacer, retirer l'inutilisé, appeler `src/`), sans nouveau calcul. Le protocole complet sur FD002–FD004, la génération automatique des 4 notebooks et la section « Vérifier un moteur » sont du travail nouveau, à séparer du périmètre ; décision de Matisse attendue |
 | 2026-11-07 | Matisse | Périmètre confirmé, tel qu'écrit dans ce plan : seulement les notebooks (`app/` inchangée, section 4), protocole complet dans les 4 `resultats/FD00X` (section 5.3), seul code nouveau `evaluer_sous_jeu` et « Vérifier un moteur » (principe 0). FD001 et FD002 ont des réseaux optimisés (04h) ; FD003 et FD004 gardent les réglages fixés à l'avance du 03b, accepté, et dit dans leurs notebooks |
 | 2026-11-07 | Matisse | Règle : **uniquement les nouveaux modèles**, aucun modèle ancien (03b, réglages de base) dans la v2. Réseaux : ceux du 04h seulement, donc FD001 et FD002 ; FD003 et FD004 sans réseau, dit dans leurs notebooks. Arbres : réglages finaux (`CONFIG_*_FINAL`) seulement ; leur validation croisée, absente avec ces réglages, est recalculée (code existant, mêmes plis), dans un dossier à part qui ne touche pas la démo |
+| 2026-11-07 | Matisse | Règle : **aucun graphe supprimé**. Les 8 figures de l'ancienne section 7.2 (03 : courbes `max_depth` / `n_estimators`, erreur vs baseline et benchmark ; 01b : XGBoost Phase 3 sur 4 sous-jeux ; 04d : RMSE vs score NASA ; 04f : test 100 moteurs ; 05 : pénalisation, temps d'entraînement, écart vs longueur de trajectoire) sont déplacées dans `evolution` avec leur cellule (étapes 1, 2 et 5, et nouvelle section « Pistes et diagnostics »). Question 05 E réglée de la même façon. Sections 5.4, 7 et 8.2 mises à jour |
