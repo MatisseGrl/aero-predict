@@ -14,6 +14,22 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-11-07
+- **Quoi** : les résultats Optuna des réseaux (entrée suivante) sont figés et documentés, pour ne plus avoir à relancer la recherche (environ 11 h de calcul).
+  - `notebooks/04h_optuna_reseaux.ipynb` : protocole, historique des 4 recherches, importance des réglages, confirmation, ablation, ensembles, test officiel, évolution avant / après (anciens résultats du 03b gardés à côté), littérature, limites. Il ne relance aucun calcul : il relit `docs/resultats/04h/` en moins d'une minute.
+  - `docs/resultats/04h/` : copie versionnée des résultats de la nuit (base Optuna, JSON, CSV, journal) et des anciens résultats du 03b utilisés pour la comparaison, avec un README.
+  - `src/optimisation_reseaux.py` : `CONFIGS_RESEAUX_RETENUES` (réglages retenus par sous-jeu et par réseau, recopiés sans arrondi, chaque réglage expliqué en commentaire, avec le nombre d'époques du modèle final) et `ENSEMBLES_RETENUS`. Le notebook vérifie qu'ils sont identiques à ceux du calcul de nuit. `CONFIG_LSTM_REFERENCE` et `CONFIG_CNN_REFERENCE` (03b) sont inchangées.
+  - Points relevés en écrivant le notebook :
+    - le gain au test FD001 (12,29 → 11,16, soit 1,13 cycle) est plus petit que le gain en validation (9,34 → 7,38, soit 1,96) ;
+    - la recherche du CNN 1D de FD001 n'était peut-être pas finie (dernier record à l'essai 77 sur 89) ;
+    - FD002 : 57 moteurs test sur 259 ont une RUL vraie au-dessus de 125 (FD001 : 11 sur 100), ce qui explique son RMSE brut ;
+    - le fichier `03b_deep_learning.csv` donne 13,09 au test FD001 pour le CNN 1D du 03b, l'entrée du 2026-11-05 ci-dessous donne 12,74. Le fichier a été réécrit par un entraînement plus récent du 03b ; aucun des deux chiffres n'est retouché.
+- **Pourquoi** : demande de Matisse ; garder les résultats et l'évolution sans relancer Optuna, et avoir les réglages expliqués dans le code.
+- **Impact** : les poids des réseaux ne sont pas sauvegardés ; `sorties/predictions/` et la démo n'utilisent pas encore ces réglages. Les sorties du notebook sont effacées au commit par `nbstripout`, comme pour les autres notebooks (l'exécuter pour voir les figures).
+
+### 2026-11-07 — Résultats du calcul de nuit (Optuna, FD001 et FD002)
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
 - **Quoi** : résultats du calcul de nuit (`bash scripts/nuit_04h.sh`, du 2026-11-07 0 h 36 à 12 h 34, aucune erreur) : Optuna, confirmation, ablation, ensemble et test officiel des réseaux, sur FD001 et FD002. Fichiers `sorties/resultats/04h_*` (FD001) et `04h_fd002_*` (FD002), non versionnés. Notebook 04h pas encore écrit.
   - Études Optuna : FD001 LSTM 111 essais utiles, CNN 1D 82 ; FD002 LSTM 111, CNN 1D 82.
   - **FD001, confirmation sur 3 découpages neufs** (RMSE de validation, référence du 03b → candidat) :
