@@ -14,6 +14,28 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-11-07
+- **Quoi** : résultats du calcul de nuit (`bash scripts/nuit_04h.sh`, du 2026-11-07 0 h 36 à 12 h 34, aucune erreur) : Optuna, confirmation, ablation, ensemble et test officiel des réseaux, sur FD001 et FD002. Fichiers `sorties/resultats/04h_*` (FD001) et `04h_fd002_*` (FD002), non versionnés. Notebook 04h pas encore écrit.
+  - Études Optuna : FD001 LSTM 111 essais utiles, CNN 1D 82 ; FD002 LSTM 111, CNN 1D 82.
+  - **FD001, confirmation sur 3 découpages neufs** (RMSE de validation, référence du 03b → candidat) :
+    - LSTM (essai 50 : 2 × 32 unités, dropout 0,13, pas 2,4e-3, lots de 128, fenêtre de 20 cycles, k = 30) : 9,33 → 7,85 en moyenne, gain 1,49, meilleur sur 3 découpages sur 3, p = 9,4e-7. **Retenu.**
+    - CNN 1D (essai 77 : 3 blocs de 32 filtres, noyau 9, dropout 0,05, pas 1,1e-3, lots de 128, fenêtre de 20, k = 30) : 9,60 → 8,30, gain 1,31, 3 sur 3, p = 1,0e-5. **Retenu.**
+  - FD001, ablation des entrées sur le LSTM retenu : pente sur 30 cycles (gain −0,39), pente sur 50 (−0,37), sans les capteurs (−1,63). Aucune retenue.
+  - FD001, ensembles (moyenne simple) contre le LSTM retenu seul : 5 graines du LSTM 7,38 en moyenne (gain 0,47, p = 3,0e-6, retenu) ; 5 LSTM + 5 CNN 7,35 (gain 0,50, p = 3,3e-6, retenu). Entre les deux, l'écart de validation (0,02 cycle) est sous le seuil de 0,3 : on garde le plus simple, les 5 graines du LSTM. Ce choix est fait sur la validation, pas sur le test.
+  - **FD001, test officiel** (RMSE contre la RUL brute / contre la RUL plafonnée à 125, score NASA), lu une fois : ensemble de 5 LSTM **11,16 / 10,09 / 227,2** ; LSTM seul (graine 42) 11,46 / 10,37 / 212,9 (5 graines : 11,73 ± 0,24) ; CNN 1D seul 11,68 / 10,33 / 189,3 (5 graines : 12,89 ± 1,58) ; ensemble 5 LSTM + 5 CNN 10,97 / 9,72 / 190,9 (non retenu, voir ci-dessus). Avant : LSTM du 03b 12,29 / 11,37 / 228,7 ; XGBoost final 12,73.
+  - **FD002, confirmation** : LSTM (essai 74 : 3 × 32 unités, dropout 0,15, pas 2,2e-3, lots de 128, fenêtre de 20, k = 20) : 10,28 → 9,90, gain 0,38, 3 sur 3, p = 1,6e-3. **Retenu.** CNN 1D (essai 47) : gain 0,38 mais p = 0,25 et le dernier découpage ne gagne que 0,19. **Non retenu** : le CNN de FD002 garde les réglages du 03b.
+  - FD002, ablation : pente sur 30 (+0,03), sur 50 (+0,14), sans capteurs (−1,33). Aucune retenue (gain < 0,3).
+  - FD002, ensembles : 5 graines du LSTM 9,50 (gain 0,39, p = 2,6e-13, retenu) ; 5 LSTM + 5 CNN 9,72 (gain 0,18, non retenu).
+  - **FD002, test officiel** : ensemble de 5 LSTM **22,38 / 10,62 / 3 432,5** ; LSTM seul 23,86 / 10,88 (5 graines : 22,65 ± 0,64) ; CNN 1D (réglages du 03b) 23,89 / 11,16. Le RMSE brut de FD002 reste élevé parce qu'une grande part des moteurs test a une RUL vraie au-dessus de 125, que le modèle ne peut pas atteindre (notebook 01b, section F.2) ; le RMSE plafonné est comparable à celui de FD001.
+- **Pourquoi** : demande de Matisse, réglages des réseaux cherchés sur chaque sous-jeu (entrées suivantes).
+- **Impact** :
+  - Sur FD001, l'ensemble de 5 LSTM passe sous le XGBoost final (12,73) et sous les chiffres de la littérature relevés au notebook 05 (DCNN 12,61, DAST 11,43, STAGNN 11,50) ; la comparaison à la littérature reste indicative (protocoles des articles pas tous identiques).
+  - `sorties/predictions/` et la démo ne sont pas encore mises à jour avec ces réglages.
+  - FD003 et FD004 gardent les réglages de FD001 du 03b, sans recherche propre.
+
+### 2026-11-07 — Fenêtres paresseuses et nombre de processus
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
 - **Quoi** : fenêtres des réseaux construites à la demande, lot par lot, pour l'optimisation Optuna (suite des deux entrées suivantes).
   - `src/deep_learning.py` : `FenetresParesseuses` et `construire_fenetres_paresseuses`. Elles gardent le tableau 2D des entrées et, pour chaque fenêtre, les numéros de ses lignes ; une fenêtre est construite seulement quand un lot la demande. `entrainer_modele` et `predire_echelle` acceptent les deux formes. `construire_fenetres` est inchangée : la démo et le 03b ne changent pas.
   - `src/optimisation_reseaux.py` les utilise, et sépare les moteurs d'un pli sans recopier de fenêtres (`selection`).
