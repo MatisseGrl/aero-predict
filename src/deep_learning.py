@@ -9,7 +9,9 @@ apprend lui-meme quels motifs dans cette petite serie temporelle annoncent la pa
 Ce module contient, dans l'ordre :
 
 1. la preparation des entrees : `construire_fenetres` (une fenetre par ligne du tableau, dans le meme ordre
-   que les lignes, jamais de donnees d'un autre moteur ni du futur) et la mise a l'echelle de time_cycles ;
+   que les lignes, jamais de donnees d'un autre moteur ni du futur), sa version economique en memoire
+   `construire_fenetres_paresseuses` (memes fenetres, construites lot par lot) et la mise a l'echelle de
+   time_cycles ;
 2. les deux architectures, volontairement simples et standard : `ModeleLSTM` et `ModeleCNN1D` ;
 3. l'apprentissage : `entrainer_modele` (Adam, lots, perte quadratique eventuellement asymetrique,
    arret precoce sur des moteurs de validation, graines fixees) et `predire` ; `executer_entrainement` et
@@ -419,6 +421,144 @@ def construire_fenetres(df, colonnes_entree, longueur=LONGUEUR_FENETRE_DEFAUT, c
     return fenetres, cible, numeros.copy(), cycles.copy()
 
 
+class FenetresParesseuses:
+    """
+    Les memes fenetres que `construire_fenetres`, mais construites a la demande, lot par lot.
+
+    Pourquoi ? Le tenseur 3D de `construire_fenetres` recopie chaque ligne `longueur` fois : pour FD002
+    avec 50 cycles, 53 759 x 50 x 31 valeurs float32, soit environ 330 Mo par processus, plus une copie
+    par pli de validation croisee. Avec 15 apprentissages en parallele, la memoire de la machine ne suit
+    plus (constate le 2026-11-06). Ici, on ne garde que :
+
+    - `valeurs` : le tableau 2D des entrees, une ligne par cycle (environ 7 Mo pour FD002) ;
+    - `lignes` : pour chaque fenetre, les numeros des `longueur` lignes de `valeurs` qui la composent
+      (entiers sur 32 bits, environ 10 Mo pour FD002 avec 50 cycles).
+
+    La fenetre i vaut alors `valeurs[lignes[i]]` : EXACTEMENT les memes nombres, dans le meme ordre, que
+    `construire_fenetres(...)[0][i]` (meme regle : jamais un autre moteur, jamais le futur, premier cycle
+    repete en debut de vie). Les apprentissages donnent donc les memes poids au bit pres ; un test le
+    verifie (tests/test_fenetres_paresseuses.py).
+
+    Utilisation, comme un tableau numpy (n, longueur, n_entrees) :
+
+    - `fenetres[indices]` ou `fenetres[debut:fin]` : CONSTRUIT ces fenetres et renvoie un numpy.ndarray
+      (c'est ce que font `entrainer_modele` et `predire_echelle`, un lot a la fois) ;
+    - `fenetres.selection(indices)` : un sous-ensemble, LUI AUSSI paresseux (rien n'est construit), pour
+      separer les moteurs d'un pli sans copier de fenetres ;
+    - `len(fenetres)`, `fenetres.shape`.
+    """
+
+    def __init__(self, valeurs, lignes):
+        """
+        Parameters
+        ----------
+        valeurs : numpy.ndarray float32
+            Forme (nb_lignes, n_entrees) : les entrees de chaque cycle.
+        lignes : numpy.ndarray int32
+            Forme (nb_fenetres, longueur) : les lignes de `valeurs` qui forment chaque fenetre.
+        """
+        self.valeurs = valeurs
+        self.lignes = lignes
+
+    @property
+    def shape(self):
+        """Forme du tenseur 3D equivalent : (nb_fenetres, longueur, n_entrees)."""
+        return (self.lignes.shape[0], self.lignes.shape[1], self.valeurs.shape[1])
+
+    def __len__(self):
+        """Nombre de fenetres."""
+        return self.lignes.shape[0]
+
+    def __getitem__(self, cle):
+        """
+        Construit les fenetres demandees (indices, masque, tranche ou tenseur torch d'indices).
+
+        Returns
+        -------
+        numpy.ndarray float32
+            Forme (nb_demandees, longueur, n_entrees), ou (longueur, n_entrees) pour un seul entier.
+        """
+        if isinstance(cle, torch.Tensor):
+            cle = cle.numpy()
+        return self.valeurs[self.lignes[cle]]  # une seule operation numpy : (n, longueur) -> (n, longueur, n_entrees)
+
+    def selection(self, cle):
+        """
+        Sous-ensemble paresseux des fenetres (indices, masque ou tranche) : aucune fenetre n'est construite.
+
+        Returns
+        -------
+        FenetresParesseuses
+            Le sous-ensemble ; il partage le tableau `valeurs` (pas de copie).
+        """
+        if isinstance(cle, torch.Tensor):
+            cle = cle.numpy()
+        return FenetresParesseuses(self.valeurs, self.lignes[cle])
+
+
+def construire_fenetres_paresseuses(df, colonnes_entree, longueur=LONGUEUR_FENETRE_DEFAUT, colonne_cible=None):
+    """
+    Meme travail et memes verifications que `construire_fenetres`, mais renvoie des FenetresParesseuses.
+
+    Le calcul des lignes de chaque fenetre est celui de `construire_fenetres` (moteur par moteur, ordre des
+    cycles, rang negatif remplace par 0) ; seule la derniere etape change : on garde les NUMEROS des lignes
+    au lieu de recopier leurs valeurs.
+
+    Parameters
+    ----------
+    df, colonnes_entree, longueur, colonne_cible :
+        Comme `construire_fenetres`.
+
+    Returns
+    -------
+    tuple
+        (fenetres, cible, unit_number, time_cycles), comme `construire_fenetres`, avec `fenetres` de type
+        FenetresParesseuses.
+    """
+    if longueur < 1:
+        raise ValueError(f"La longueur de fenetre doit etre >= 1 (recu : {longueur}).")
+
+    # verification : toutes les colonnes demandees existent
+    colonnes_necessaires = ["unit_number", "time_cycles"]
+    for colonne in colonnes_entree:
+        colonnes_necessaires.append(colonne)
+    for colonne in colonnes_necessaires:
+        if colonne not in df.columns:
+            raise ValueError(f"Colonne manquante pour construire les fenetres : {colonne!r}.")
+
+    valeurs = df[colonnes_entree].to_numpy(dtype=np.float32)  # (nb_lignes, nb_entrees), ordre des lignes de df
+    if np.isnan(valeurs).any():
+        raise ValueError("Les colonnes d'entree contiennent des NaN : impossible de construire les fenetres.")
+
+    numeros = df["unit_number"].to_numpy()
+    cycles = df["time_cycles"].to_numpy()
+    lignes = np.zeros((len(df), longueur), dtype=np.int32)  # lignes[i, j] : ligne de df a la position j de la fenetre i
+    decalages = np.arange(longueur) - (longueur - 1)  # -(longueur-1), ..., -1, 0
+
+    for moteur_id in pd.unique(numeros):  # un moteur a la fois : jamais de melange entre moteurs
+        positions = np.flatnonzero(numeros == moteur_id)
+        ordre_chronologique = np.argsort(cycles[positions], kind="stable")
+        positions_triees = positions[ordre_chronologique]
+
+        # garde-fou : un seul enregistrement par cycle et par moteur
+        cycles_tries = cycles[positions_triees]
+        if len(cycles_tries) > 1 and not np.all(np.diff(cycles_tries) > 0):
+            raise ValueError(f"Le moteur {moteur_id} a plusieurs lignes pour un meme cycle.")
+
+        rangs = np.arange(len(positions_triees))
+        indices = np.maximum(rangs[:, np.newaxis] + decalages[np.newaxis, :], 0)  # meme regle que construire_fenetres
+        # rang dans la trajectoire -> numero de ligne dans df ; chaque fenetre rangee a la place de SA ligne
+        lignes[positions_triees] = positions_triees[indices]
+
+    cible = None
+    if colonne_cible is not None:
+        if colonne_cible not in df.columns:
+            raise ValueError(f"Colonne cible manquante : {colonne_cible!r}.")
+        cible = df[colonne_cible].to_numpy(dtype=np.float32)
+
+    return FenetresParesseuses(valeurs, lignes), cible, numeros.copy(), cycles.copy()
+
+
 # ---------------------------------------------------------------------------------------------------
 # Les deux architectures
 # ---------------------------------------------------------------------------------------------------
@@ -755,7 +895,7 @@ def predire_echelle(modele, fenetres, taille_lot=2048):
     ----------
     modele : torch.nn.Module
         Le reseau.
-    fenetres : numpy.ndarray ou torch.Tensor
+    fenetres : numpy.ndarray, torch.Tensor ou FenetresParesseuses
         Les fenetres, forme (n, longueur, n_entrees).
     taille_lot : int, optionnel
         Nombre de fenetres traitees a la fois (sans effet sur le resultat, seulement sur la memoire).
@@ -766,13 +906,15 @@ def predire_echelle(modele, fenetres, taille_lot=2048):
         Forme (n,) : les sorties du reseau (float64).
     """
     appareil = appareil_du_modele(modele)
-    entrees = torch.as_tensor(fenetres, dtype=torch.float32)  # pas de copie si c'est deja du float32
+    entrees = fenetres
+    if not isinstance(fenetres, FenetresParesseuses):  # paresseuses : chaque lot est construit a la demande
+        entrees = torch.as_tensor(fenetres, dtype=torch.float32)  # pas de copie si c'est deja du float32
     modele.eval()  # mode prediction : dropout eteint, BatchNorm utilise ses statistiques apprises
 
     morceaux = []  # sorties de chaque lot, recollees a la fin
     with torch.no_grad():  # pas de calcul de gradient : plus rapide, moins de memoire
         for debut in range(0, len(entrees), taille_lot):  # un lot de fenetres a la fois
-            lot = entrees[debut:debut + taille_lot].to(appareil)
+            lot = torch.as_tensor(entrees[debut:debut + taille_lot], dtype=torch.float32).to(appareil)
             sortie = modele(lot)
             morceaux.append(sortie.detach().cpu().numpy())
 
@@ -792,7 +934,7 @@ def predire(modele, fenetres, taille_lot=2048, echelle_cible=ECHELLE_CIBLE):
     ----------
     modele : torch.nn.Module
         Le reseau entraine.
-    fenetres : numpy.ndarray ou torch.Tensor
+    fenetres : numpy.ndarray, torch.Tensor ou FenetresParesseuses
         Les fenetres, forme (n, longueur, n_entrees).
     taille_lot : int, optionnel
         Nombre de fenetres traitees a la fois.
@@ -868,11 +1010,11 @@ def entrainer_modele(
     ----------
     modele : torch.nn.Module
         Le reseau neuf (voir `creer_modele`), modifie sur place.
-    fenetres_entrainement : numpy.ndarray
+    fenetres_entrainement : numpy.ndarray ou FenetresParesseuses
         Fenetres d'apprentissage, forme (n, longueur, n_entrees).
     y_entrainement : array-like
         RUL cible de chaque fenetre, EN CYCLES (plafonnee a 125).
-    fenetres_validation : numpy.ndarray ou None, optionnel
+    fenetres_validation : numpy.ndarray, FenetresParesseuses ou None, optionnel
         Fenetres des moteurs de validation (arret precoce) ; None pour un nombre d'epoques fixe.
     y_validation : array-like ou None, optionnel
         RUL cible des fenetres de validation, en cycles.
@@ -928,12 +1070,17 @@ def entrainer_modele(
     optimiseur = torch.optim.Adam(modele.parameters(), lr=taux_apprentissage)
 
     # conversion en tenseurs PyTorch, cible divisee par 125 (entre 0 et 1)
-    x_entrainement = torch.as_tensor(fenetres_entrainement, dtype=torch.float32)
+    # (FenetresParesseuses : gardees telles quelles, chaque lot est construit a la demande ; memes nombres)
+    x_entrainement = fenetres_entrainement
+    if not isinstance(fenetres_entrainement, FenetresParesseuses):
+        x_entrainement = torch.as_tensor(fenetres_entrainement, dtype=torch.float32)
     cible_entrainement = torch.as_tensor(np.asarray(y_entrainement, dtype=np.float32) / echelle_cible)
     nb_fenetres = len(x_entrainement)
 
     if avec_validation:
-        x_validation = torch.as_tensor(fenetres_validation, dtype=torch.float32)
+        x_validation = fenetres_validation
+        if not isinstance(fenetres_validation, FenetresParesseuses):
+            x_validation = torch.as_tensor(fenetres_validation, dtype=torch.float32)
         y_validation_cycles = np.asarray(y_validation, dtype=float)
         cible_validation = torch.as_tensor((y_validation_cycles / echelle_cible).astype(np.float32))
         nb_epoques_max = max_epoques
@@ -959,7 +1106,7 @@ def entrainer_modele(
 
         for debut_lot in range(0, nb_fenetres, taille_lot):  # un lot a la fois
             indices_lot = ordre[debut_lot:debut_lot + taille_lot]
-            x_lot = x_entrainement[indices_lot].to(appareil_torch)
+            x_lot = torch.as_tensor(x_entrainement[indices_lot], dtype=torch.float32).to(appareil_torch)
             y_lot = cible_entrainement[indices_lot].to(appareil_torch)
 
             optimiseur.zero_grad()  # on efface les gradients du lot precedent

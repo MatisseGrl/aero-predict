@@ -198,7 +198,8 @@ def modeles_inference(sous_jeu):
     for modele in inf.MODELES_ARBRES:
         signatures.append(dd.signature_fichier(inf.chemin_artefact_arbres(sous_jeu, modele, dossier)))
     for modele in inf.MODELES_RESEAUX:
-        signatures.append(dd.signature_fichier(inf.chemin_poids_reseau(sous_jeu, modele, dossier)))
+        for chemin in inf.chemins_poids_reseau(sous_jeu, modele, dossier):  # un fichier par graine
+            signatures.append(dd.signature_fichier(chemin))
     return _modeles_inference_en_cache(sous_jeu, dossier, tuple(signatures))
 
 
