@@ -307,6 +307,7 @@ def preparer_tableaux(ecart_initial, pente=None, sous_jeu=SOUS_JEU_DEFAUT):
     -------
     dict
         "train", "test" (DataFrames), "capteurs", "colonnes_ecart" et "colonnes_pente" (mises a l'echelle),
+        "min_max_ecart_initial" (bornes min-max de l'ecart initial apprises sur le train, ou None),
         "y" (RUL plafonnee du train), "groups", "X" (features des arbres, pour calculer_plis),
         "y_test_vraie", "moteurs_test".
     """
@@ -342,6 +343,7 @@ def preparer_tableaux(ecart_initial, pente=None, sous_jeu=SOUS_JEU_DEFAUT):
 
     # ecart a l'etat initial : bornes min-max apprises sur le train, appliquees telles quelles au test
     colonnes_ecart = []
+    bornes = None
     if ecart_initial is not None:
         bornes = apprendre_min_max(train, colonnes_ecart_brutes)
         train, colonnes_ecart = appliquer_min_max(train, colonnes_ecart_brutes, bornes)
@@ -362,6 +364,7 @@ def preparer_tableaux(ecart_initial, pente=None, sous_jeu=SOUS_JEU_DEFAUT):
     tableaux["capteurs"] = capteurs
     tableaux["colonnes_ecart"] = colonnes_ecart
     tableaux["colonnes_pente"] = colonnes_pente
+    tableaux["min_max_ecart_initial"] = bornes  # bornes du train, a garder avec les poids (prediction)
     tableaux["y"] = train["RUL_cappee"].to_numpy(dtype=float)
     tableaux["groups"] = train["unit_number"].to_numpy()
     tableaux["X"] = X

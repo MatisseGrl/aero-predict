@@ -14,6 +14,18 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-11-07
+- **Quoi** : poids des modèles retenus au notebook 04h sauvegardés, sans relancer Optuna.
+  - `scripts/sauvegarder_poids_04h.py` entraîne les 10 LSTM retenus (ensembles de 5 graines, FD001 et FD002) avec les réglages figés (`CONFIGS_RESEAUX_RETENUES`), en environ 5 min sur 10 cœurs.
+  - `models/04h/<SOUS_JEU>__lstm_g<graine>.pt` : poids, hyperparamètres, colonnes d'entrée, longueur de fenêtre, k et bornes min-max de l'écart initial (nouvelle clé `min_max_ecart_initial` de `preparer_tableaux`). 924 Ko en tout, ajoutés à git malgré la règle `*.pt` du `.gitignore`, à la demande de Matisse.
+  - Contrôle fait par le script : les prédictions au dernier cycle sont identiques à celles du calcul de nuit (écart < 1e-4 imposé). L'ensemble redonne 11,16 / 10,09 au test FD001 et 22,38 / 10,62 au test FD002. Un modèle rechargé avec `charger_modele` redonne les mêmes prédictions (écart 1e-14).
+  - Les anciens poids de la démo (`models/FD001__lstm.pt`, `models/FD001__cnn1d.pt`, 03b) ne sont pas touchés.
+- **Pourquoi** : demande de Matisse, avoir les poids finaux sans réentraîner.
+- **Impact** : la démo et `sorties/predictions/` utilisent toujours les anciens réseaux du 03b ; les brancher sur `models/04h/` reste à faire.
+
+### 2026-11-07 — Résultats Optuna figés et notebook 04h
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
 - **Quoi** : les résultats Optuna des réseaux (entrée suivante) sont figés et documentés, pour ne plus avoir à relancer la recherche (environ 11 h de calcul).
   - `notebooks/04h_optuna_reseaux.ipynb` : protocole, historique des 4 recherches, importance des réglages, confirmation, ablation, ensembles, test officiel, évolution avant / après (anciens résultats du 03b gardés à côté), littérature, limites. Il ne relance aucun calcul : il relit `docs/resultats/04h/` en moins d'une minute.
   - `docs/resultats/04h/` : copie versionnée des résultats de la nuit (base Optuna, JSON, CSV, journal) et des anciens résultats du 03b utilisés pour la comparaison, avec un README.
