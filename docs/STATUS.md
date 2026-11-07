@@ -13,6 +13,116 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 ## Dernière modification
 
 - **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
+- **Quoi** : la démo utilise les réseaux du notebook 04h à la place de ceux du 03b, sur FD001 et FD002.
+  - LSTM affiché : moyenne des 5 LSTM retenus (`ENSEMBLES_RETENUS`, graines 42 à 46). CNN 1D affiché : configuration retenue, graine 42 (FD001 : réglages Optuna ; FD002 : réglages du 03b, Optuna non confirmé).
+  - `src/inference.py` (démo en direct) : charge `models/04h/<SOUS_JEU>__<réseau>_g<graine>.pt` (`chemins_poids_reseau`, `graines_reseau`) ; un réseau peut être un ensemble, sa prédiction est la moyenne simple des graines. `app/commun.py` : le cache de la démo suit les 5 fichiers.
+  - `scripts/publier_reseaux_04h.py` écrit `sorties/predictions/<SOUS_JEU>__lstm` et `__cnn1d` à partir des poids sauvegardés (aucun entraînement) ; il vérifie que le RMSE au dernier cycle est celui du calcul de nuit. Test FD001 : LSTM 11,16, CNN 1D 11,68 ; FD002 : LSTM 22,38, CNN 1D 23,89. FD002 a maintenant des réseaux dans la démo (avant : arbres et référence seulement).
+  - Anciens fichiers du 03b gardés, non supprimés : `models/archive_03b/` et `sorties/predictions_archive_03b/` (non versionnés, comme avant).
+  - Tests : 31 réussis, 4 sautés (réseaux de FD003 et FD004, qui n'en ont pas). Le test anti-triche (a) compare maintenant la prédiction en direct aux fichiers précalculés pour les réseaux de FD001 et de FD002. Démo vérifiée dans le navigateur : la page « Comparer les modèles » affiche LSTM 11,16 et CNN 1D 11,68 sur FD001.
+- **Pourquoi** : demande de Matisse, la démo doit montrer les résultats finaux, plus ceux du 03b.
+- **Impact** : FD003 et FD004 n'ont toujours pas de réseaux dans la démo (pas de recherche Optuna sur ces sous-jeux).
+
+### 2026-11-07 — Poids des réseaux du 04h
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
+- **Quoi** : poids des modèles retenus au notebook 04h sauvegardés, sans relancer Optuna.
+  - `scripts/sauvegarder_poids_04h.py` entraîne les 10 LSTM retenus (ensembles de 5 graines, FD001 et FD002) avec les réglages figés (`CONFIGS_RESEAUX_RETENUES`), en environ 5 min sur 10 cœurs.
+  - `models/04h/<SOUS_JEU>__lstm_g<graine>.pt` : poids, hyperparamètres, colonnes d'entrée, longueur de fenêtre, k et bornes min-max de l'écart initial (nouvelle clé `min_max_ecart_initial` de `preparer_tableaux`). 924 Ko en tout, ajoutés à git malgré la règle `*.pt` du `.gitignore`, à la demande de Matisse.
+  - Contrôle fait par le script : les prédictions au dernier cycle sont identiques à celles du calcul de nuit (écart < 1e-4 imposé). L'ensemble redonne 11,16 / 10,09 au test FD001 et 22,38 / 10,62 au test FD002. Un modèle rechargé avec `charger_modele` redonne les mêmes prédictions (écart 1e-14).
+  - Les anciens poids de la démo (`models/FD001__lstm.pt`, `models/FD001__cnn1d.pt`, 03b) ne sont pas touchés.
+  - Ajout du même jour : les poids des CNN 1D (5 graines, FD001 et FD002) sont sauvegardés à côté, à la demande de Matisse, bien qu'ils ne soient pas retenus : `models/04h/<SOUS_JEU>__cnn1d_g<graine>.pt`. FD001 : CNN réglé par Optuna ; FD002 : CNN du 03b (meilleur essai Optuna non confirmé). `scripts/sauvegarder_poids_04h.py --reseaux cnn1d`. Prédictions identiques au calcul de nuit. Moyenne des 5 CNN au test, chiffre relevé après coup et qui ne change aucun choix : FD001 11,21 / 9,84 ; FD002 23,62 / 11,20.
+- **Pourquoi** : demande de Matisse, avoir les poids finaux sans réentraîner.
+- **Impact** : la démo et `sorties/predictions/` utilisent toujours les anciens réseaux du 03b ; les brancher sur `models/04h/` reste à faire.
+
+### 2026-11-07 — Résultats Optuna figés et notebook 04h
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
+- **Quoi** : les résultats Optuna des réseaux (entrée suivante) sont figés et documentés, pour ne plus avoir à relancer la recherche (environ 11 h de calcul).
+  - `notebooks/04h_optuna_reseaux.ipynb` : protocole, historique des 4 recherches, importance des réglages, confirmation, ablation, ensembles, test officiel, évolution avant / après (anciens résultats du 03b gardés à côté), littérature, limites. Il ne relance aucun calcul : il relit `docs/resultats/04h/` en moins d'une minute.
+  - `docs/resultats/04h/` : copie versionnée des résultats de la nuit (base Optuna, JSON, CSV, journal) et des anciens résultats du 03b utilisés pour la comparaison, avec un README.
+  - `src/optimisation_reseaux.py` : `CONFIGS_RESEAUX_RETENUES` (réglages retenus par sous-jeu et par réseau, recopiés sans arrondi, chaque réglage expliqué en commentaire, avec le nombre d'époques du modèle final) et `ENSEMBLES_RETENUS`. Le notebook vérifie qu'ils sont identiques à ceux du calcul de nuit. `CONFIG_LSTM_REFERENCE` et `CONFIG_CNN_REFERENCE` (03b) sont inchangées.
+  - Points relevés en écrivant le notebook :
+    - le gain au test FD001 (12,29 → 11,16, soit 1,13 cycle) est plus petit que le gain en validation (9,34 → 7,38, soit 1,96) ;
+    - la recherche du CNN 1D de FD001 n'était peut-être pas finie (dernier record à l'essai 77 sur 89) ;
+    - FD002 : 57 moteurs test sur 259 ont une RUL vraie au-dessus de 125 (FD001 : 11 sur 100), ce qui explique son RMSE brut ;
+    - le fichier `03b_deep_learning.csv` donne 13,09 au test FD001 pour le CNN 1D du 03b, l'entrée du 2026-11-05 ci-dessous donne 12,74. Le fichier a été réécrit par un entraînement plus récent du 03b ; aucun des deux chiffres n'est retouché.
+- **Pourquoi** : demande de Matisse ; garder les résultats et l'évolution sans relancer Optuna, et avoir les réglages expliqués dans le code.
+- **Impact** : les poids des réseaux ne sont pas sauvegardés ; `sorties/predictions/` et la démo n'utilisent pas encore ces réglages. Les sorties du notebook sont effacées au commit par `nbstripout`, comme pour les autres notebooks (l'exécuter pour voir les figures).
+
+### 2026-11-07 — Résultats du calcul de nuit (Optuna, FD001 et FD002)
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
+- **Quoi** : résultats du calcul de nuit (`bash scripts/nuit_04h.sh`, du 2026-11-07 0 h 36 à 12 h 34, aucune erreur) : Optuna, confirmation, ablation, ensemble et test officiel des réseaux, sur FD001 et FD002. Fichiers `sorties/resultats/04h_*` (FD001) et `04h_fd002_*` (FD002), non versionnés. Notebook 04h pas encore écrit.
+  - Études Optuna : FD001 LSTM 111 essais utiles, CNN 1D 82 ; FD002 LSTM 111, CNN 1D 82.
+  - **FD001, confirmation sur 3 découpages neufs** (RMSE de validation, référence du 03b → candidat) :
+    - LSTM (essai 50 : 2 × 32 unités, dropout 0,13, pas 2,4e-3, lots de 128, fenêtre de 20 cycles, k = 30) : 9,33 → 7,85 en moyenne, gain 1,49, meilleur sur 3 découpages sur 3, p = 9,4e-7. **Retenu.**
+    - CNN 1D (essai 77 : 3 blocs de 32 filtres, noyau 9, dropout 0,05, pas 1,1e-3, lots de 128, fenêtre de 20, k = 30) : 9,60 → 8,30, gain 1,31, 3 sur 3, p = 1,0e-5. **Retenu.**
+  - FD001, ablation des entrées sur le LSTM retenu : pente sur 30 cycles (gain −0,39), pente sur 50 (−0,37), sans les capteurs (−1,63). Aucune retenue.
+  - FD001, ensembles (moyenne simple) contre le LSTM retenu seul : 5 graines du LSTM 7,38 en moyenne (gain 0,47, p = 3,0e-6, retenu) ; 5 LSTM + 5 CNN 7,35 (gain 0,50, p = 3,3e-6, retenu). Entre les deux, l'écart de validation (0,02 cycle) est sous le seuil de 0,3 : on garde le plus simple, les 5 graines du LSTM. Ce choix est fait sur la validation, pas sur le test.
+  - **FD001, test officiel** (RMSE contre la RUL brute / contre la RUL plafonnée à 125, score NASA), lu une fois : ensemble de 5 LSTM **11,16 / 10,09 / 227,2** ; LSTM seul (graine 42) 11,46 / 10,37 / 212,9 (5 graines : 11,73 ± 0,24) ; CNN 1D seul 11,68 / 10,33 / 189,3 (5 graines : 12,89 ± 1,58) ; ensemble 5 LSTM + 5 CNN 10,97 / 9,72 / 190,9 (non retenu, voir ci-dessus). Avant : LSTM du 03b 12,29 / 11,37 / 228,7 ; XGBoost final 12,73.
+  - **FD002, confirmation** : LSTM (essai 74 : 3 × 32 unités, dropout 0,15, pas 2,2e-3, lots de 128, fenêtre de 20, k = 20) : 10,28 → 9,90, gain 0,38, 3 sur 3, p = 1,6e-3. **Retenu.** CNN 1D (essai 47) : gain 0,38 mais p = 0,25 et le dernier découpage ne gagne que 0,19. **Non retenu** : le CNN de FD002 garde les réglages du 03b.
+  - FD002, ablation : pente sur 30 (+0,03), sur 50 (+0,14), sans capteurs (−1,33). Aucune retenue (gain < 0,3).
+  - FD002, ensembles : 5 graines du LSTM 9,50 (gain 0,39, p = 2,6e-13, retenu) ; 5 LSTM + 5 CNN 9,72 (gain 0,18, non retenu).
+  - **FD002, test officiel** : ensemble de 5 LSTM **22,38 / 10,62 / 3 432,5** ; LSTM seul 23,86 / 10,88 (5 graines : 22,65 ± 0,64) ; CNN 1D (réglages du 03b) 23,89 / 11,16. Le RMSE brut de FD002 reste élevé parce qu'une grande part des moteurs test a une RUL vraie au-dessus de 125, que le modèle ne peut pas atteindre (notebook 01b, section F.2) ; le RMSE plafonné est comparable à celui de FD001.
+- **Pourquoi** : demande de Matisse, réglages des réseaux cherchés sur chaque sous-jeu (entrées suivantes).
+- **Impact** :
+  - Sur FD001, l'ensemble de 5 LSTM passe sous le XGBoost final (12,73) et sous les chiffres de la littérature relevés au notebook 05 (DCNN 12,61, DAST 11,43, STAGNN 11,50) ; la comparaison à la littérature reste indicative (protocoles des articles pas tous identiques).
+  - `sorties/predictions/` et la démo ne sont pas encore mises à jour avec ces réglages.
+  - FD003 et FD004 gardent les réglages de FD001 du 03b, sans recherche propre.
+
+### 2026-11-07 — Fenêtres paresseuses et nombre de processus
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
+- **Quoi** : fenêtres des réseaux construites à la demande, lot par lot, pour l'optimisation Optuna (suite des deux entrées suivantes).
+  - `src/deep_learning.py` : `FenetresParesseuses` et `construire_fenetres_paresseuses`. Elles gardent le tableau 2D des entrées et, pour chaque fenêtre, les numéros de ses lignes ; une fenêtre est construite seulement quand un lot la demande. `entrainer_modele` et `predire_echelle` acceptent les deux formes. `construire_fenetres` est inchangée : la démo et le 03b ne changent pas.
+  - `src/optimisation_reseaux.py` les utilise, et sépare les moteurs d'un pli sans recopier de fenêtres (`selection`).
+  - `tests/test_fenetres_paresseuses.py` : fenêtres identiques (`np.array_equal`) sur FD001 et FD002, train et test, 20, 30 et 50 cycles ; un LSTM entraîné 2 époques donne des prédictions identiques au bit près avec les deux méthodes. Les essais Optuna déjà faits sur FD001 restent donc comparables. Suite complète : 29 tests réussis, 6 sautés (modèles de la démo non générés sur cette machine).
+  - Mémoire mesurée (un processus, FD002, fenêtres de 50 cycles, données préparées plus les fenêtres d'un pli) : 1 371 Mo avant, 468 Mo après. La part des fenêtres passe de 948 Mo à 45 Mo.
+- **Pourquoi** : le 2026-11-06, 15 processus sur FD002 saturaient les 31 Go de la machine (entrée suivante).
+  - Nombre de processus : mesure du débit d'apprentissage (FD002, LSTM de référence, 3 époques, fenêtres paresseuses) : 8 processus 14 600 fenêtres/s au total, 12 processus 18 900, 15 processus 19 400 ; environ 0,63 Go par processus dans les trois cas. `scripts/nuit_04h.sh` utilise donc 12 processus par défaut (97 % du débit de 15), réglable avec `AERO_PROCESSUS` (ex. 8 pour moins de chaleur et de bruit, environ 25 % plus lent).
+  - Essai rapide terminé (`AERO_ESSAI_RAPIDE=1`, 2 époques par réseau, chiffres sans valeur) : FD001 et FD002, toutes les étapes vont au bout, sans saturer la mémoire. La reprise marche : relancé, le script saute les études Optuna complètes et les étapes dont le fichier existe.
+- **Impact** : avec 12 processus, environ 8 Go au lieu d'environ 20 Go pour 15 avant. Le vrai calcul de nuit (`bash scripts/nuit_04h.sh`) est prêt à être lancé : fin de FD001 environ 4 h, FD002 environ 11 h, donc sur deux nuits.
+
+### 2026-11-06 — Optuna des réseaux étendu à FD002
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-06
+- **Quoi** : l'optimisation Optuna des réseaux (entrée suivante) est étendue à FD002. Rien n'est encore calculé sur FD002.
+  - Changement de règle, écrit avant tout calcul : jusqu'ici, les réglages des réseaux choisis sur FD001 étaient appliqués tels quels à FD002–FD004 (entrée du 2026-11-05, et règle des fichiers `03b_*`). Désormais, chaque sous-jeu a sa propre étude Optuna sur ses propres plis par moteur, avec les mêmes étapes et les mêmes règles de décision que FD001 (confirmation sur 3 découpages neufs, gain d'au moins 0,3 cycle, Wilcoxon p < 0,05). La référence de chaque sous-jeu reste la configuration du 03b retenue sur FD001. La règle est recopiée dans le code (`TEXTE_REGLE_SOUS_JEUX`) et dans l'étude Optuna.
+  - Seule différence avec FD001 : k (écart à l'état initial) reste strictement plus petit que le plus court moteur test du sous-jeu. FD002 : 21 cycles, donc k = 20 seulement (FD001 : 20, 25 ou 30).
+  - `src/optimisation_reseaux.py` et `scripts/optimiser_reseaux.py` : option `--sous-jeu` (FD001 par défaut). FD002 à FD004 sont préparés par `src/sous_jeux.py`, comme au 03b. Fichiers et études séparés : `04h_*` et étude `04h_lstm` pour FD001 (noms inchangés, l'étude en cours reprend), `04h_fd002_*` et `04h_fd002_lstm` pour FD002. Un seul jeu de fenêtres en mémoire par processus (FD002 avec 50 cycles : environ 0,5 Go par jeu).
+  - L'essai rapide (`AERO_ESSAI_RAPIDE=1`) a maintenant sa propre base Optuna dans `sorties/essai_rapide/`. Avant, il écrivait ses essais dans la vraie base.
+  - `scripts/nuit_04h.sh` : FD001 puis FD002. Une étape dont le fichier de résultats existe est sautée, et une étude Optuna complète ne relance aucun essai : la même commande reprend la nuit suivante là où elle s'était arrêtée. Quand le CNN a fini, ses 4 cœurs passent au LSTM. `scripts/arreter_04h.sh` arrête seulement les processus de l'optimisation.
+- **Pourquoi** : demande de Matisse. Appliquer les réglages de FD001 aux autres sous-jeux sans les y chercher n'est pas la méthode du projet (règle 11 d'`AGENTS.md`). FD003 et FD004 restent pour l'instant avec les réglages de FD001, et sont présentés comme tels.
+- **Impact** :
+  - Durées estimées à partir des essais déjà faits : fin de FD001 environ 4 h, FD002 environ 10 h 30. FD002 se termine donc la deuxième nuit (2026-11-07).
+  - `sorties/predictions/` et la démo ne changent pas tant que les résultats `final` n'ont pas été relus.
+  - Essai rapide du 2026-11-06 au soir (`AERO_ESSAI_RAPIDE=1 bash scripts/nuit_04h.sh`, 2 époques par réseau, chiffres sans valeur) : toutes les étapes de FD001 vont au bout (optuna, confirmer, ablation, ensemble, final). Sur FD002 : optuna, confirmer LSTM et confirmer CNN vont au bout. **L'essai a été arrêté pendant l'ablation de FD002** : la mémoire vive de la machine (31 Go, une partie déjà prise par d'autres programmes) ne suivait pas avec 15 processus sur FD002. Ablation, ensemble et final de FD002 ne sont donc **pas testés**. Avant de lancer FD002 en vrai, réduire le nombre de processus de ses étapes, ou fermer les autres programmes. Le vrai calcul de nuit n'a pas été lancé.
+
+### 2026-11-06 — Optuna sur le LSTM et le CNN 1D (FD001, en cours)
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-06
+- **Quoi** : optimisation des hyperparamètres du LSTM et du CNN 1D avec Optuna, **en cours** (branche `phase-04/optuna-reseaux`). Aucun modèle n'est retenu et le test n'a pas été lu.
+  - `src/optimisation_reseaux.py` : validation croisée d'une configuration de réseau pli par pli (mêmes plis et même séparation d'arrêt précoce que le 03b), pente glissante (famille F2 du 04e, vérifiée contre `np.polyfit`), deux architectures supplémentaires (CNN puis LSTM, LSTM avec attention), espaces de recherche Optuna.
+  - `scripts/optimiser_reseaux.py` : étapes `verifier`, `nettoyer`, `optuna`, `confirmer`, `ablation`, `ensemble`, `final`, avec les règles de décision écrites dans le code avant les calculs. `scripts/nuit_04h.sh` enchaîne toutes les étapes (7 à 9 h estimées, tout le processeur).
+  - Contrôle : la configuration de référence du 03b redonne le même RMSE de validation (8,9421) et les mêmes prédictions hors-pli à 5e-5 près.
+  - État des études au 2026-11-06, 9 h 36 (RMSE de validation sur les plis 42, choisi sur ces mêmes plis donc optimiste, non confirmé) : LSTM 28 essais utiles sur 100, meilleur 7,60 (référence 8,94) ; CNN 1D 64 sur 80, meilleur 8,21 (référence 10,15).
+  - Correction en cours de route : chaque processus fixe maintenant `OMP_NUM_THREADS`, `MKL_NUM_THREADS` et `OPENBLAS_NUM_THREADS` à 1. Avant, des travailleurs utilisaient jusqu'à 1,6 cœur et les 15 saturaient la machine.
+- **Pourquoi** : les réglages des réseaux étaient fixés à l'avance, jamais optimisés (manque listé dans l'entrée du 2026-11-05, règle 11 d'`AGENTS.md`), et la méthode de choix des features du 04e n'avait pas été appliquée aux réseaux ; demande de Matisse.
+- **Impact** :
+  - Rien ne change dans `sorties/predictions/` ni dans la démo tant que l'étape `final` n'a pas tourné et que ses résultats n'ont pas été relus.
+  - Le calcul occupe tout le processeur : il est lancé la nuit (`bash scripts/nuit_04h.sh`, journal `sorties/resultats/04h_nuit.log`).
+  - Notebook 04h et résultats finaux pas encore écrits.
+
+### 2026-11-05 — Démo : modèles à arbres finaux
+
+- **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-11-05
 - **Quoi** : la démo utilise les modèles à arbres finaux de la Phase 4 (branche `phase-04/modele-final-demo`).
   - `src/config_modele.py` : 3 configurations finales (`CONFIG_XGBOOST_FINAL`, `CONFIG_LIGHTGBM_FINAL`, `CONFIG_RANDOM_FOREST_FINAL`), réglages Optuna recopiés du notebook 04g.

@@ -1,0 +1,301 @@
+{
+ "regle": "Le candidat (meilleur essai Optuna, ou meilleure variante d'une etape) remplace la reference si, sur 3 decoupages par moteur NEUFS (graines 1000, 1001, 1002, jamais utilises pour choisir), (a) le gain moyen de RMSE de validation (reference - candidat, moyenne des 3 decoupages) est >= 0,3 cycle, (b) le candidat est meilleur sur les 3 decoupages, et (c) le test de Wilcoxon apparie sur les RMSE par moteur du train (hors-pli, moyennes sur les 3 decoupages) donne p < 0,05 en faveur du candidat. Score NASA et surestimations de plus de 20 cycles rapportes a cote. Le jeu de test n'intervient pas.",
+ "sous_jeu": "FD001",
+ "reseau": "cnn1d",
+ "essai_optuna": 77,
+ "candidat": {
+  "type": "cnn1d",
+  "hyperparametres": {
+   "canaux": [
+    32,
+    32,
+    32
+   ],
+   "noyaux": [
+    9,
+    9,
+    9
+   ],
+   "dropout": 0.053267563809498854
+  },
+  "reglages": {
+   "taux_apprentissage": 0.0010833754307987239,
+   "taille_lot": 128,
+   "max_epoques": 80,
+   "patience": 10,
+   "alpha": 1.0
+  },
+  "entrees": {
+   "longueur": 20,
+   "ecart_initial": 30,
+   "capteurs": true,
+   "pente": null
+  }
+ },
+ "reference": {
+  "type": "cnn1d",
+  "hyperparametres": {
+   "canaux": [
+    32,
+    64,
+    64
+   ],
+   "noyaux": [
+    5,
+    5,
+    3
+   ],
+   "dropout": 0.2
+  },
+  "reglages": {
+   "taux_apprentissage": 0.001,
+   "taille_lot": 256,
+   "max_epoques": 80,
+   "patience": 10,
+   "alpha": 1.0
+  },
+  "entrees": {
+   "longueur": 30,
+   "ecart_initial": 20,
+   "capteurs": true,
+   "pente": null
+  }
+ },
+ "cv_candidat": {
+  "42": {
+   "rmse_cv_moyen": 8.075284236056858,
+   "rmse_par_pli": [
+    7.383174514181736,
+    8.805224913071028,
+    8.738170818059771,
+    7.779671162488283,
+    7.670179772483472
+   ],
+   "meilleures_epoques": [
+    7,
+    15,
+    5,
+    9,
+    4
+   ],
+   "metriques_oof": {
+    "rmse": 8.094616326287415,
+    "mae": 5.531857767741163,
+    "score_nasa": 23914.105593445027,
+    "nb_surestimes": 473,
+    "alertes_manquees": 108,
+    "fausses_alertes": 168,
+    "biais": -0.8483320958839242,
+    "nb_lignes": 20631
+   }
+  },
+  "1000": {
+   "rmse_cv_moyen": 8.130571551688089,
+   "rmse_par_pli": [
+    7.694627810986589,
+    6.884462158834965,
+    10.553969471041487,
+    8.63387883281333,
+    6.885919484764071
+   ],
+   "meilleures_epoques": [
+    5,
+    3,
+    24,
+    18,
+    3
+   ],
+   "metriques_oof": {
+    "rmse": 8.192114976582307,
+    "mae": 5.3738829614478565,
+    "score_nasa": 24626.509724191423,
+    "nb_surestimes": 546,
+    "alertes_manquees": 168,
+    "fausses_alertes": 111,
+    "biais": -0.278215073807001,
+    "nb_lignes": 20631
+   }
+  },
+  "1001": {
+   "rmse_cv_moyen": 8.407694750309652,
+   "rmse_par_pli": [
+    7.97205988450031,
+    8.168866346184243,
+    8.153337027065751,
+    8.7843172344579,
+    8.959893259340058
+   ],
+   "meilleures_epoques": [
+    2,
+    3,
+    7,
+    12,
+    12
+   ],
+   "metriques_oof": {
+    "rmse": 8.429388261667116,
+    "mae": 5.637998520909823,
+    "score_nasa": 24686.023123597763,
+    "nb_surestimes": 551,
+    "alertes_manquees": 115,
+    "fausses_alertes": 209,
+    "biais": -0.6615209530654707,
+    "nb_lignes": 20631
+   }
+  },
+  "1002": {
+   "rmse_cv_moyen": 8.347257908404652,
+   "rmse_par_pli": [
+    9.277751891880252,
+    7.694635744084666,
+    8.155801693928424,
+    8.243025788350375,
+    8.365074423779541
+   ],
+   "meilleures_epoques": [
+    8,
+    14,
+    6,
+    5,
+    15
+   ],
+   "metriques_oof": {
+    "rmse": 8.36352611377112,
+    "mae": 5.706446893757556,
+    "score_nasa": 23066.06510343572,
+    "nb_surestimes": 421,
+    "alertes_manquees": 244,
+    "fausses_alertes": 116,
+    "biais": -1.4587623564223808,
+    "nb_lignes": 20631
+   }
+  }
+ },
+ "cv_reference": {
+  "42": {
+   "rmse_cv_moyen": 10.148422073830494,
+   "rmse_par_pli": [
+    10.261304593549008,
+    11.461776380777723,
+    10.72555360811282,
+    9.460298962602096,
+    8.833176824110824
+   ],
+   "meilleures_epoques": [
+    11,
+    23,
+    17,
+    14,
+    7
+   ],
+   "metriques_oof": {
+    "rmse": 10.18706203630437,
+    "mae": 6.877341399398953,
+    "score_nasa": 42107.60631414314,
+    "nb_surestimes": 887,
+    "alertes_manquees": 243,
+    "fausses_alertes": 126,
+    "biais": 0.22083685329944758,
+    "nb_lignes": 20631
+   }
+  },
+  "1000": {
+   "rmse_cv_moyen": 9.947449120900984,
+   "rmse_par_pli": [
+    8.518167762875317,
+    9.065877852766063,
+    11.916207322653808,
+    11.222071544156286,
+    9.014921122053455
+   ],
+   "meilleures_epoques": [
+    8,
+    14,
+    27,
+    5,
+    14
+   ],
+   "metriques_oof": {
+    "rmse": 9.98600913959426,
+    "mae": 6.760616764654559,
+    "score_nasa": 37511.98230605119,
+    "nb_surestimes": 831,
+    "alertes_manquees": 199,
+    "fausses_alertes": 152,
+    "biais": 0.2989646544117802,
+    "nb_lignes": 20631
+   }
+  },
+  "1001": {
+   "rmse_cv_moyen": 9.367660906333345,
+   "rmse_par_pli": [
+    8.938755845676734,
+    8.266285374146559,
+    8.296597934283088,
+    9.863314970857608,
+    11.473350406702743
+   ],
+   "meilleures_epoques": [
+    13,
+    9,
+    5,
+    5,
+    10
+   ],
+   "metriques_oof": {
+    "rmse": 9.475228307508578,
+    "mae": 6.650574589320335,
+    "score_nasa": 33748.43696379241,
+    "nb_surestimes": 613,
+    "alertes_manquees": 260,
+    "fausses_alertes": 133,
+    "biais": -0.6750902356195743,
+    "nb_lignes": 20631
+   }
+  },
+  "1002": {
+   "rmse_cv_moyen": 9.485510613310176,
+   "rmse_par_pli": [
+    11.273639927050342,
+    7.2853993088762,
+    9.510058322738454,
+    9.754015154434319,
+    9.604440353451563
+   ],
+   "meilleures_epoques": [
+    18,
+    7,
+    23,
+    14,
+    5
+   ],
+   "metriques_oof": {
+    "rmse": 9.564779550983745,
+    "mae": 6.344151671471074,
+    "score_nasa": 35785.63961931715,
+    "nb_surestimes": 833,
+    "alertes_manquees": 191,
+    "fausses_alertes": 162,
+    "biais": 0.3096253633966635,
+    "nb_lignes": 20631
+   }
+  }
+ },
+ "comparaison": {
+  "gains_par_decoupage": [
+   1.8168775692128953,
+   0.9599661560236932,
+   1.1382527049055238
+  ],
+  "gain_moyen": 1.3050321433807042,
+  "nb_decoupages_gagnes": 3,
+  "difference_moyenne_rmse_par_moteur": -1.0590593391468515,
+  "p_wilcoxon": 1.0271825119150714e-05,
+  "p_t": 1.2590773530339569e-05,
+  "critere_a": true,
+  "critere_b": true,
+  "critere_c": true,
+  "retenu": true
+ },
+ "date": "2026-11-07"
+}

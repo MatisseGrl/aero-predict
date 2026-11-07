@@ -1,0 +1,190 @@
+{
+ "sous_jeu": "FD002",
+ "metriques_test": {
+  "cnn1d_g42": {
+   "rmse": 23.894206844234837,
+   "mae": 15.391369539482023,
+   "score_nasa": 4436.515332647074,
+   "nb_surestimes": 12,
+   "alertes_manquees": 0,
+   "fausses_alertes": 3,
+   "biais": -8.706462933606392,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 11.162484104201905
+  },
+  "cnn1d_g43": {
+   "rmse": 26.088285647736857,
+   "mae": 16.947274292240273,
+   "score_nasa": 6450.6842392326525,
+   "nb_surestimes": 6,
+   "alertes_manquees": 0,
+   "fausses_alertes": 6,
+   "biais": -11.76902719837358,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 13.262223278747422
+  },
+  "cnn1d_g44": {
+   "rmse": 23.44698694567362,
+   "mae": 15.690933954010225,
+   "score_nasa": 3883.5417295120296,
+   "nb_surestimes": 23,
+   "alertes_manquees": 0,
+   "fausses_alertes": 0,
+   "biais": -4.7927628290087965,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 12.008142419697986
+  },
+  "cnn1d_g45": {
+   "rmse": 23.00103172712709,
+   "mae": 15.41130758525667,
+   "score_nasa": 3585.100005383182,
+   "nb_surestimes": 19,
+   "alertes_manquees": 1,
+   "fausses_alertes": 1,
+   "biais": -4.433260404436514,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 12.016087075924696
+  },
+  "cnn1d_g46": {
+   "rmse": 23.889784367789265,
+   "mae": 15.753875689257411,
+   "score_nasa": 4262.006473747502,
+   "nb_surestimes": 11,
+   "alertes_manquees": 0,
+   "fausses_alertes": 6,
+   "biais": -9.71751081447286,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 12.177374206237722
+  },
+  "lstm_g42": {
+   "rmse": 23.860247251267985,
+   "mae": 15.331769667882256,
+   "score_nasa": 4660.651798479235,
+   "nb_surestimes": 11,
+   "alertes_manquees": 2,
+   "fausses_alertes": 0,
+   "biais": -7.377092964745857,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 10.881945606739633
+  },
+  "lstm_g43": {
+   "rmse": 22.364209425302487,
+   "mae": 14.282487243989259,
+   "score_nasa": 3436.1042949180696,
+   "nb_surestimes": 15,
+   "alertes_manquees": 0,
+   "fausses_alertes": 2,
+   "biais": -6.579468685687739,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 11.04578894463422
+  },
+  "lstm_g44": {
+   "rmse": 22.538423844802562,
+   "mae": 14.58279178397996,
+   "score_nasa": 3327.6816286866274,
+   "nb_surestimes": 16,
+   "alertes_manquees": 0,
+   "fausses_alertes": 3,
+   "biais": -6.840794046067823,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 10.856710053771549
+  },
+  "lstm_g45": {
+   "rmse": 21.966595650021677,
+   "mae": 14.42382949659723,
+   "score_nasa": 3209.5302223438434,
+   "nb_surestimes": 20,
+   "alertes_manquees": 0,
+   "fausses_alertes": 4,
+   "biais": -5.567642501422337,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 11.41118257177244
+  },
+  "lstm_g46": {
+   "rmse": 22.52925715749511,
+   "mae": 14.809214762278966,
+   "score_nasa": 3312.9948550376903,
+   "nb_surestimes": 24,
+   "alertes_manquees": 0,
+   "fausses_alertes": 2,
+   "biais": -4.68295216146123,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 11.790555784176181
+  },
+  "lstm_5_graines": {
+   "rmse": 22.376787514055078,
+   "mae": 14.129220624457915,
+   "score_nasa": 3432.5426367491573,
+   "nb_surestimes": 17,
+   "alertes_manquees": 0,
+   "fausses_alertes": 2,
+   "biais": -6.209590071876997,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 10.616790224757825
+  },
+  "lstm_cnn_10": {
+   "rmse": 22.881114237213538,
+   "mae": 14.503281541296342,
+   "score_nasa": 3720.68943526742,
+   "nb_surestimes": 15,
+   "alertes_manquees": 0,
+   "fausses_alertes": 1,
+   "biais": -7.046697453928313,
+   "nb_lignes": 259,
+   "rmse_contre_rul_plafonnee": 10.638268813505906
+  }
+ },
+ "configurations": {
+  "lstm": {
+   "type": "lstm",
+   "hyperparametres": {
+    "taille_cachee": 32,
+    "nb_couches": 3,
+    "dropout": 0.1514893855830374
+   },
+   "reglages": {
+    "taux_apprentissage": 0.0022345410208540356,
+    "taille_lot": 128,
+    "max_epoques": 80,
+    "patience": 10,
+    "alpha": 1.0
+   },
+   "entrees": {
+    "longueur": 20,
+    "ecart_initial": 20,
+    "capteurs": true,
+    "pente": null
+   }
+  },
+  "cnn1d": {
+   "type": "cnn1d",
+   "hyperparametres": {
+    "canaux": [
+     32,
+     64,
+     64
+    ],
+    "noyaux": [
+     5,
+     5,
+     3
+    ],
+    "dropout": 0.2
+   },
+   "reglages": {
+    "taux_apprentissage": 0.001,
+    "taille_lot": 256,
+    "max_epoques": 80,
+    "patience": 10,
+    "alpha": 1.0
+   },
+   "entrees": {
+    "longueur": 30,
+    "ecart_initial": 20,
+    "capteurs": true,
+    "pente": null
+   }
+  }
+ },
+ "date": "2026-11-07"
+}

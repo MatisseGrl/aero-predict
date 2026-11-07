@@ -12,7 +12,9 @@ Interface publique (utilisee par l'application et par le notebook 05) :
 - `charger_modeles(sous_jeu)` : prepare le sous-jeu (parametres appris sur train_FD00X : regimes, capteurs
   retires, min / max des capteurs), recharge les modeles a une ligne par cycle (reference naive, Random Forest,
   XGBoost, LightGBM : models/<SOUS_JEU>__<modele>.joblib, entraines et sauvegardes s'ils manquent,
-  exactement comme les modeles finaux de scripts/generer_predictions_arbres.py) et les deux reseaux (models/<SOUS_JEU>__<lstm|cnn1d>.pt, jamais reentraines ici : un fichier absent rend
+  exactement comme les modeles finaux de scripts/generer_predictions_arbres.py) et les deux reseaux du
+  notebook 04h (models/04h/<SOUS_JEU>__<lstm|cnn1d>_g<graine>.pt, reglages Optuna confirmes ; le LSTM est la
+  moyenne de 5 reseaux, graines 42 a 46, le modele retenu ; jamais reentraines ici : un fichier absent rend
   seulement le modele indisponible, avec un message clair) ;
 - `mesures_moteur_test(sous_jeu, moteur)` et `tirer_moteur_test(sous_jeu, graine)` : les mesures brutes d'un
   moteur du jeu de test, et sa RUL vraie au dernier cycle (RUL_FD00X.txt) ;
@@ -63,10 +65,10 @@ from src.deep_learning import (  # noqa: E402
     ajouter_time_cycles_echelle,
     appliquer_min_max,
     charger_modele,
-    chemin_modele,
     construire_fenetres,
     predire,
 )
+from src.optimisation_reseaux import ENSEMBLES_RETENUS  # noqa: E402  (reseaux retenus au notebook 04h)
 
 import torch  # noqa: E402  (apres les modules du projet, voir ci-dessus)
 
@@ -77,7 +79,14 @@ import torch  # noqa: E402  (apres les modules du projet, voir ci-dessus)
 # les six modeles de la demo, dans l'ordre d'affichage (memes cles et meme ordre que src/contrat_predictions.py)
 # modeles a une ligne de features par cycle (scripts/generer_predictions_arbres.py) : reentraines ici s'ils manquent
 MODELES_ARBRES = ["reference_naive", "random_forest", "xgboost_phase3", "lightgbm"]
-MODELES_RESEAUX = ["lstm", "cnn1d"]  # jamais reentraines ici (poids produits par scripts/entrainer_deep_learning.py)
+MODELES_RESEAUX = ["lstm", "cnn1d"]  # jamais reentraines ici (poids produits par scripts/sauvegarder_poids_04h.py)
+
+# Reseaux de la demo : ceux du notebook 04h (reglages Optuna confirmes), dans models/04h/. Le LSTM affiche est la
+# moyenne simple des 5 graines retenues (ENSEMBLES_RETENUS, src/optimisation_reseaux.py) ; le CNN 1D est la
+# configuration retenue avec la graine 42 (celle que la regle de confirmation a comparee). Les anciens reseaux du
+# notebook 03b ne sont plus utilises (archives dans models/archive_03b/ et sorties/predictions_archive_03b/).
+SOUS_DOSSIER_RESEAUX = "04h"
+GRAINES_CNN_DEMO = [42]
 MODELES_INFERENCE = []
 for _cle in MODELES_ARBRES:
     MODELES_INFERENCE.append(_cle)
@@ -239,9 +248,31 @@ def chemin_artefact_arbres(sous_jeu, modele, dossier=None):
     return os.path.join(dossier_modeles(dossier), f"{sous_jeu}__{modele}.joblib")
 
 
-def chemin_poids_reseau(sous_jeu, modele, dossier=None):
+def graines_reseau(sous_jeu, modele):
     """
-    Chemin des poids d'un reseau : <dossier des modeles>/<SOUS_JEU>__<lstm|cnn1d>.pt (src/deep_learning.py).
+    Graines des reseaux moyennes par la demo : les 5 du LSTM retenu (ENSEMBLES_RETENUS), la graine 42 du CNN.
+
+    Parameters
+    ----------
+    sous_jeu : str
+        "FD001" a "FD004".
+    modele : str
+        "lstm" ou "cnn1d".
+
+    Returns
+    -------
+    list de int
+        Les graines.
+    """
+    if modele == "lstm" and sous_jeu in ENSEMBLES_RETENUS:
+        return list(ENSEMBLES_RETENUS[sous_jeu]["graines"])
+    return list(GRAINES_CNN_DEMO)
+
+
+def chemins_poids_reseau(sous_jeu, modele, dossier=None):
+    """
+    Chemins des poids d'un reseau de la demo : <dossier des modeles>/04h/<SOUS_JEU>__<modele>_g<graine>.pt,
+    un fichier par graine (src.deep_learning.sauvegarder_modele, scripts/sauvegarder_poids_04h.py).
 
     Parameters
     ----------
@@ -254,10 +285,30 @@ def chemin_poids_reseau(sous_jeu, modele, dossier=None):
 
     Returns
     -------
-    str
-        Le chemin du fichier .pt.
+    list de str
+        Les chemins des fichiers .pt.
     """
-    return chemin_modele(sous_jeu, modele, dossier=dossier_modeles(dossier))
+    chemins = []
+    for graine in graines_reseau(sous_jeu, modele):
+        chemins.append(os.path.join(dossier_modeles(dossier), SOUS_DOSSIER_RESEAUX, f"{sous_jeu}__{modele}_g{graine}.pt"))
+    return chemins
+
+
+def chemin_poids_reseau(sous_jeu, modele, dossier=None):
+    """
+    Chemin du premier fichier de poids d'un reseau de la demo (voir `chemins_poids_reseau`).
+
+    Parameters
+    ----------
+    sous_jeu, modele, dossier :
+        Comme `chemins_poids_reseau`.
+
+    Returns
+    -------
+    str
+        Le chemin du fichier .pt de la premiere graine.
+    """
+    return chemins_poids_reseau(sous_jeu, modele, dossier)[0]
 
 
 def chemin_lisible(chemin):
@@ -771,6 +822,9 @@ def obtenir_reseau(contexte, modele, dossier=None):
     """
     Recharge les poids d'un reseau (jamais reentraine ici) et verifie qu'il attend la preparation actuelle.
 
+    Le reseau de la demo peut etre un ensemble : plusieurs fichiers de poids (un par graine, meme configuration),
+    dont la prediction est la moyenne simple (`predire_un_modele`). Tous doivent attendre les memes entrees.
+
     Parameters
     ----------
     contexte : dict
@@ -783,7 +837,8 @@ def obtenir_reseau(contexte, modele, dossier=None):
     Returns
     -------
     dict
-        "modele" (torch.nn.Module en mode prediction), "colonnes_entree", "longueur_fenetre", "chemin",
+        "modeles" (les torch.nn.Module en mode prediction, un par graine), "modele" (le premier),
+        "chemins", "colonnes_entree", "longueur_fenetre", "chemin" (le premier fichier),
         "informations" (informations du fichier .pt), "date_fichier", et pour l'ecart a l'etat initial
         (scripts/entrainer_deep_learning.py, configuration "A") : "ecart_initial" (k ou None),
         "min_max_ecart_initial" (bornes apprises sur le train, ou None), "capteurs".
@@ -794,15 +849,26 @@ def obtenir_reseau(contexte, modele, dossier=None):
         Fichier absent, ou entrees du reseau differentes des capteurs de la preparation actuelle.
     """
     sous_jeu = contexte["sous_jeu"]
-    chemin = chemin_poids_reseau(sous_jeu, modele, dossier)
-    if not os.path.exists(chemin):
-        raise ValueError(
-            f"{chemin_lisible(chemin)} absent : lancer python scripts/entrainer_deep_learning.py --sous-jeux {sous_jeu}."
-        )
-    reseau, contenu = charger_modele(chemin)  # src/deep_learning.py : poids + hyperparametres, mode prediction
-    informations = contenu.get("informations", {})
+    chemins = chemins_poids_reseau(sous_jeu, modele, dossier)
+    for chemin in chemins:
+        if not os.path.exists(chemin):
+            raise ValueError(f"{chemin_lisible(chemin)} absent : lancer python scripts/sauvegarder_poids_04h.py.")
+    reseaux = []
+    informations_premier = None
+    for chemin in chemins:  # un fichier par graine, meme configuration
+        reseau, contenu = charger_modele(chemin)  # src/deep_learning.py : poids + hyperparametres, mode prediction
+        informations_reseau = contenu.get("informations", {})
+        if informations_premier is None:
+            informations_premier = informations_reseau
+        for cle in ["colonnes_entree", "longueur", "ecart_initial", "min_max_ecart_initial", "sous_jeu"]:
+            if informations_reseau.get(cle) != informations_premier.get(cle):
+                raise ValueError(f"{chemin_lisible(chemin)} : {cle} different des autres graines du meme reseau.")
+        reseaux.append(reseau)
+    chemin = chemins[0]
+    informations = informations_premier
     colonnes_entree = list(informations.get("colonnes_entree", []))
-    longueur = int(informations.get("longueur_fenetre", 0))
+    # longueur de fenetre : cle "longueur" (scripts/sauvegarder_poids_04h.py) ou "longueur_fenetre" (ancien 03b)
+    longueur = int(informations.get("longueur", informations.get("longueur_fenetre", 0)))
     ecart_initial = informations.get("ecart_initial")  # None : le reseau n'utilise pas l'ecart a l'etat initial
     min_max_ecart = informations.get("min_max_ecart_initial")  # bornes min-max apprises sur le train
 
@@ -831,7 +897,9 @@ def obtenir_reseau(contexte, modele, dossier=None):
         raise ValueError(f"{chemin_lisible(chemin)} : bornes min-max de l'écart à l'état initial absentes.")
 
     entree = {}
-    entree["modele"] = reseau
+    entree["modeles"] = reseaux
+    entree["modele"] = reseaux[0]
+    entree["chemins"] = chemins
     entree["colonnes_entree"] = colonnes_entree
     entree["longueur_fenetre"] = longueur
     entree["chemin"] = chemin
@@ -928,9 +996,16 @@ def charger_modeles(sous_jeu, modeles=None, dossier=None, entrainer_si_absent=Tr
                 entree = {}
                 entree["famille"] = "sequentiel"
                 entree["objet"] = reseau["modele"]
+                entree["objets"] = reseau["modeles"]  # prediction = moyenne simple de ces reseaux
                 entree["chemin"] = reseau["chemin"]
+                entree["chemins"] = reseau["chemins"]
                 entree["date"] = reseau["date_fichier"]
                 entree["description"] = f"{nom_modele(modele)}, fenêtre de {reseau['longueur_fenetre']} cycles"
+                if len(reseau["modeles"]) > 1:
+                    graines = graines_reseau(sous_jeu, modele)
+                    entree["description"] = (f"{nom_modele(modele)}, moyenne de {len(reseau['modeles'])} réseaux "
+                                             f"(graines {graines[0]} à {graines[-1]}), fenêtre de "
+                                             f"{reseau['longueur_fenetre']} cycles")
                 entree["colonnes_entree"] = reseau["colonnes_entree"]
                 entree["longueur_fenetre"] = reseau["longueur_fenetre"]
                 entree["ecart_initial"] = reseau["ecart_initial"]
@@ -1310,8 +1385,11 @@ def predire_un_modele(entree, preparees):
     fenetres, _, _, _ = construire_fenetres(avec_age, entree["colonnes_entree"], longueur=entree["longueur_fenetre"])
     fenetre_t = fenetres[-1:]  # la fenetre du cycle t (forme 1 x longueur x entrees)
     lot = np.repeat(fenetre_t, TAILLE_LOT_RESEAU, axis=0)  # copies de la MEME fenetre (voir TAILLE_LOT_RESEAU)
-    predictions = predire(entree["objet"], lot)  # src/deep_learning.py : x 125 puis clip a 0
-    return float(predictions[0])
+    reseaux = entree.get("objets", [entree["objet"]])
+    somme = 0.0
+    for reseau in reseaux:  # ensemble : moyenne simple des predictions des reseaux (poids egaux)
+        somme = somme + float(predire(reseau, lot)[0])  # src/deep_learning.py : x 125 puis clip a 0
+    return somme / len(reseaux)
 
 
 def predire_au_cycle(inference, mesures, cycle, modeles=None):

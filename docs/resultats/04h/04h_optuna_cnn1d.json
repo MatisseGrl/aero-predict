@@ -1,0 +1,66 @@
+{
+ "regle": "Recherche : Optuna, echantillonneur TPE (multivarie, graine 42, 12 essais aleatoires d'abord, 'constant liar' pour les travailleurs paralleles), objectif = RMSE moyen de validation sur les 5 plis par moteur du sous-jeu traite (graine 42, les plis des arbres et du 03b), cible plafonnee a 125, toutes les lignes de validation. Elagage : MedianPruner (8 essais complets avant d'elaguer, a partir du 2e pli), compare le RMSE moyen des plis deja faits a la mediane des essais precedents au meme pli. Essai n° 0 = configuration de reference du 03b quand elle est dans l'espace (controle sur FD001 : on doit retrouver 8,94 pour le LSTM). Le meilleur essai n'est PAS retenu directement : choisi sur les memes plis que ceux qui le notent, son RMSE est optimiste ; il passe d'abord l'etape 'confirmer'. Le jeu de test n'intervient pas.",
+ "sous_jeu": "FD001",
+ "nb_essais": 90,
+ "nb_complets": 65,
+ "nb_elagues": 17,
+ "meilleur_numero": 77,
+ "meilleur_rmse_cv": 8.075284236056858,
+ "meilleurs_parametres": {
+  "nb_blocs": 3,
+  "nb_filtres": 32,
+  "noyau": 9,
+  "dropout": 0.053267563809498854,
+  "taux_apprentissage": 0.0010833754307987239,
+  "taille_lot": 128,
+  "longueur": 20,
+  "ecart_initial": 30
+ },
+ "meilleur_detail": {
+  "duree_s": 229.02259780000895,
+  "meilleures_epoques": [
+   7,
+   15,
+   5,
+   9,
+   4
+  ],
+  "rmse_par_pli": [
+   7.383174514181736,
+   8.805224913071028,
+   8.738170818059771,
+   7.779671162488283,
+   7.670179772483472
+  ]
+ },
+ "configuration": {
+  "type": "cnn1d",
+  "hyperparametres": {
+   "canaux": [
+    32,
+    32,
+    32
+   ],
+   "noyaux": [
+    9,
+    9,
+    9
+   ],
+   "dropout": 0.053267563809498854
+  },
+  "reglages": {
+   "taux_apprentissage": 0.0010833754307987239,
+   "taille_lot": 128,
+   "max_epoques": 80,
+   "patience": 10,
+   "alpha": 1.0
+  },
+  "entrees": {
+   "longueur": 20,
+   "ecart_initial": 30,
+   "capteurs": true,
+   "pente": null
+  }
+ },
+ "date": "2026-11-07"
+}
