@@ -368,9 +368,9 @@ Demande de Matisse (2026-11-06) : garder la version actuelle du dépôt (« v1 �
 
 ### Étape B : le socle `src/` (ne dépend pas d'Optuna)
 
-- [ ] Poser le tag local `v1-avant-reorganisation` sur le dernier commit de `phase-04/optuna-reseaux` (9.4)
-- [ ] Fusionner `phase-04/optuna-reseaux` dans `refonte/notebooks` (règle des deux dossiers, 9.3), après la nuit Optuna et le commit des derniers changements de Matisse
-- [ ] Relancer la suite pytest
+- [x] Poser le tag local `v1-avant-reorganisation` sur le dernier commit de `phase-04/optuna-reseaux` (9.4)
+- [x] Fusionner `phase-04/optuna-reseaux` dans `refonte/notebooks` (règle des deux dossiers, 9.3), après la nuit Optuna et le commit des derniers changements de Matisse
+- [x] Relancer la suite pytest
 - [ ] `src/evaluation_sous_jeu.py` : `evaluer_sous_jeu(sous_jeu)` (sections 3 à 6 du protocole) et `verifier_moteur(sous_jeu, moteur)` (section 7, depuis les données brutes)
 - [ ] Fonctions de figures (matplotlib), une par graphe de la section 7.1, titrées par leur question
 - [ ] Tests pytest : `verifier_moteur` égal aux fichiers de la démo ; `evaluer_sous_jeu("FD001")` redonne les chiffres de 9.2
@@ -444,3 +444,5 @@ Une ligne par étape faite ou par écart au plan, la plus récente en bas. On n'
 | 2026-11-06 | Matisse | Correction des lignes 2 et 4 de ce journal : Optuna **ne tournait pas**. Les processus Python vus à ce moment étaient des noyaux Jupyter ouverts depuis VS Code (lancés à 9 h 36) ; la base `04h_optuna.db` n'a plus été écrite après 9 h 36. Le dossier séparé (worktree) reste utile : la branche Optuna et la branche de réorganisation restent chacune dans leur dossier. Décision : lancer `scripts/nuit_04h.sh` la nuit du 2026-11-06 ; étapes B à D après relecture de ses résultats |
 | 2026-11-06 | Matisse | Confusion sur le 04g : une session d'assistant a retiré, sans commit, la cellule des anciens graphes (test, 100 moteurs) dans `aero-predict-refonte`, alors que le remplacement voulu (courbes de RUL prédite cycle par cycle sur 4 moteurs) était déjà fait et committé dans `aero-predict` (`d6b6b10`). Modification mise de côté (`git stash`, récupérable), dossier remis propre. Règle des deux dossiers ajoutée (9.3), et fusion de `phase-04/optuna-reseaux` ajoutée en tête de l'étape B |
 | 2026-11-06 | Matisse | Demande : garder la v1 (dépôt avant réorganisation) pour la comparer à la v2. Section 9.4 ajoutée : tag local `v1-avant-reorganisation` posé au début de l'étape B (il remplace le tag `archive-phases-1-4` prévu jusque-là), dossier `aero-predict` jamais touché par la réorganisation, fichier `docs/comparaison_v1_v2.md` (chiffres, cellules, figures) livré à la fin de l'étape D, rien retiré avant sa relecture. L'ancienne section 9.4 « Documentation » devient 9.5 |
+| 2026-11-07 | Matisse | Étape B commencée. Avant : la démo a été branchée sur les réseaux du 04h dans `aero-predict` (`2905e54`, autre session). Tag local `v1-avant-reorganisation` posé sur `2905e54`. `phase-04/optuna-reseaux` fusionnée dans `refonte/notebooks` (`8344248`), sans conflit ; la v2 ne diffère de la v1 que par ce plan. Pytest dans `aero-predict-refonte` : 11 réussis, 24 sautés (la v1 en compte 31 réussis). Les tests sautés lisent `sorties/` et les modèles non versionnés de `models/`, absents de ce dossier : à fournir avant de s'appuyer sur eux |
+| 2026-11-07 | Matisse | Précision du périmètre en discussion : réorganisation seulement (déplacer, retirer l'inutilisé, appeler `src/`), sans nouveau calcul. Le protocole complet sur FD002–FD004, la génération automatique des 4 notebooks et la section « Vérifier un moteur » sont du travail nouveau, à séparer du périmètre ; décision de Matisse attendue |
