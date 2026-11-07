@@ -105,6 +105,70 @@ CONFIG_LIGHTGBM_BASE = {
     "nom": "LightGBM (base)",
 }
 
+# Reglages FINAUX des modeles a arbres, pour les 31 features (ecart a l'etat initial) : recherche Optuna
+# de Matisse sur FD001 (XGBoost : 60 essais, notebook 04f ; LightGBM et Random Forest : 40 essais, notebook
+# 04g ; TPE graine 42, memes plis par moteur). Valeurs recopiees a l'identique du notebook 04g.
+# Les reglages "base" ci-dessus servent seulement a CHOISIR les features (regle du script des arbres) ;
+# ceux-ci servent au modele final, celui de la demo. Ordre identique aux notebooks 04e puis 04f :
+# d'abord les features (reglages fixes), ensuite les hyperparametres (sur les features retenues).
+CONFIG_XGBOOST_FINAL = {
+    "famille": "xgboost", "perte": "native", "parametres_perte": {},
+    "hyperparametres": {
+        "max_depth": 4,                # arbres moins profonds que la Phase 3 (5)
+        "learning_rate": 0.0633,       # pas d'apprentissage
+        "n_estimators": 422,           # nombre d'arbres
+        "subsample": 0.5789,           # part des lignes tiree pour chaque arbre
+        "colsample_bytree": 0.8676,    # part des features tiree pour chaque arbre
+        "min_child_weight": 1.3287,    # poids minimal d'une feuille
+        "reg_lambda": 29.1205,         # regularisation L2 des feuilles (forte)
+        "random_state": 42,
+    },
+    "nom": "XGBoost (reglages finaux 04f)",
+    "regle_de_choix": "Optuna 60 essais + confirmation sur 10 decoupages neufs (notebook 04f)",
+    "metriques_cv": {},
+    # FD001 sur 1 coeur, comme le modele final du script des arbres (12,70 / 220,0 au 04g, sur 16 coeurs)
+    "metriques_test": {"rmse": 12.73, "score_nasa": 223.5, "nb_surestimes": 2},
+    "source": "notebooks/04f_modele_final.ipynb",
+    "date": "2026-11-05",
+}
+CONFIG_LIGHTGBM_FINAL = {
+    "famille": "lightgbm", "perte": "native", "parametres_perte": {},
+    "hyperparametres": {
+        "n_estimators": 549,           # nombre d'arbres
+        "learning_rate": 0.02744,      # pas d'apprentissage
+        "num_leaves": 8,               # feuilles par arbre (31 par defaut)
+        "min_child_samples": 72,       # lignes minimales par feuille
+        "subsample": 0.6534,           # part des lignes tiree...
+        "subsample_freq": 1,           # ... a chaque arbre (sinon subsample est ignore par LightGBM)
+        "colsample_bytree": 0.9839,    # part des features tiree pour chaque arbre
+        "reg_lambda": 2.5794,          # regularisation L2
+        "n_jobs": 4,                   # 4 coeurs (verifie : memes predictions qu'au notebook 04g)
+    },
+    "nom": "LightGBM (reglages finaux 04g)",
+    "regle_de_choix": "Optuna 40 essais (notebook 04g)",
+    "metriques_cv": {},
+    "metriques_test": {"rmse": 12.76, "score_nasa": 234.6, "nb_surestimes": 3},  # FD001, notebook 04g
+    "source": "notebooks/04g_comparaison_modeles.ipynb",
+    "date": "2026-11-05",
+}
+CONFIG_RANDOM_FOREST_FINAL = {
+    "famille": "random_forest", "perte": "native", "parametres_perte": {},
+    "hyperparametres": {
+        "n_estimators": 391,           # nombre d'arbres
+        "max_depth": 18,               # profondeur maximale (non bornee par defaut)
+        "min_samples_leaf": 3,         # lignes minimales par feuille
+        "max_features": 0.5432,        # part des features testee a chaque coupure
+        "random_state": 42,
+        "n_jobs": -1,                  # tous les coeurs (ne change pas le resultat)
+    },
+    "nom": "Random Forest (reglages finaux 04g)",
+    "regle_de_choix": "Optuna 40 essais (notebook 04g)",
+    "metriques_cv": {},
+    "metriques_test": {"rmse": 13.14, "score_nasa": 243.3, "nb_surestimes": 3},  # FD001, notebook 04g
+    "source": "notebooks/04g_comparaison_modeles.ipynb",
+    "date": "2026-11-05",
+}
+
 
 def est_un_nombre(valeur):
     """
