@@ -14,6 +14,19 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 - **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-11-07
+- **Quoi** : la démo utilise les réseaux du notebook 04h à la place de ceux du 03b, sur FD001 et FD002.
+  - LSTM affiché : moyenne des 5 LSTM retenus (`ENSEMBLES_RETENUS`, graines 42 à 46). CNN 1D affiché : configuration retenue, graine 42 (FD001 : réglages Optuna ; FD002 : réglages du 03b, Optuna non confirmé).
+  - `src/inference.py` (démo en direct) : charge `models/04h/<SOUS_JEU>__<réseau>_g<graine>.pt` (`chemins_poids_reseau`, `graines_reseau`) ; un réseau peut être un ensemble, sa prédiction est la moyenne simple des graines. `app/commun.py` : le cache de la démo suit les 5 fichiers.
+  - `scripts/publier_reseaux_04h.py` écrit `sorties/predictions/<SOUS_JEU>__lstm` et `__cnn1d` à partir des poids sauvegardés (aucun entraînement) ; il vérifie que le RMSE au dernier cycle est celui du calcul de nuit. Test FD001 : LSTM 11,16, CNN 1D 11,68 ; FD002 : LSTM 22,38, CNN 1D 23,89. FD002 a maintenant des réseaux dans la démo (avant : arbres et référence seulement).
+  - Anciens fichiers du 03b gardés, non supprimés : `models/archive_03b/` et `sorties/predictions_archive_03b/` (non versionnés, comme avant).
+  - Tests : 31 réussis, 4 sautés (réseaux de FD003 et FD004, qui n'en ont pas). Le test anti-triche (a) compare maintenant la prédiction en direct aux fichiers précalculés pour les réseaux de FD001 et de FD002. Démo vérifiée dans le navigateur : la page « Comparer les modèles » affiche LSTM 11,16 et CNN 1D 11,68 sur FD001.
+- **Pourquoi** : demande de Matisse, la démo doit montrer les résultats finaux, plus ceux du 03b.
+- **Impact** : FD003 et FD004 n'ont toujours pas de réseaux dans la démo (pas de recherche Optuna sur ces sous-jeux).
+
+### 2026-11-07 — Poids des réseaux du 04h
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
 - **Quoi** : poids des modèles retenus au notebook 04h sauvegardés, sans relancer Optuna.
   - `scripts/sauvegarder_poids_04h.py` entraîne les 10 LSTM retenus (ensembles de 5 graines, FD001 et FD002) avec les réglages figés (`CONFIGS_RESEAUX_RETENUES`), en environ 5 min sur 10 cœurs.
   - `models/04h/<SOUS_JEU>__lstm_g<graine>.pt` : poids, hyperparamètres, colonnes d'entrée, longueur de fenêtre, k et bornes min-max de l'écart initial (nouvelle clé `min_max_ecart_initial` de `preparer_tableaux`). 924 Ko en tout, ajoutés à git malgré la règle `*.pt` du `.gitignore`, à la demande de Matisse.
