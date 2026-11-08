@@ -8,7 +8,7 @@ Avant cette phase, aucun chiffre de performance n'était reproductible dans le r
 exploratoire produisant RMSE/score NASA a été supprimé ([ADR-0006](decisions/0006-suppression-baseline-exploratoire.md)).
 Cette phase entraîne un premier modèle réel, en réutilisant les pipelines validés des Phases 1 et 2
 (regroupés dans [`src/preprocessing.py`](../src/preprocessing.py)), et l'évalue sur le jeu de test officiel.
-Notebook complet : [`notebooks/03_modelisation.ipynb`](../notebooks/03_modelisation.ipynb).
+Notebook d'origine : [`notebooks/03_modelisation.ipynb`](https://github.com/MatisseGrl/aero-predict/blob/v1-avant-reorganisation/notebooks/03_modelisation.ipynb) (archivé au tag `v1-avant-reorganisation`) ; son contenu est repris dans [`notebooks/02_choix_du_modele.ipynb`](../notebooks/02_choix_du_modele.ipynb) (sections 3 et 11) et [`notebooks/evolution.ipynb`](../notebooks/evolution.ipynb) (étapes 1 et 5).
 
 ## Méthode et résultats
 

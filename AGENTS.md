@@ -116,9 +116,13 @@ aero-predict/
 │   │   ├── template.md
 │   │   └── NNNN-titre-court.md
 │   └── 0X_phase.md            # un fichier par phase, créé une fois la phase validée
-├── notebooks/
-│   ├── exploration/           # travaux exploratoires archivés (pas le process officiel)
-│   └── 0X_....ipynb           # notebooks de phase, créés au fur et à mesure
+├── notebooks/                 # organisation fixée par l'ADR-0008 (anciens notebooks 01 à 05 : tag git v1-avant-reorganisation)
+│   ├── 01_donnees.ipynb       # préparation des 4 sous-jeux
+│   ├── 02_choix_du_modele.ipynb  # tout ce qui est décidé, sur FD001 (cible, features, réglages, diagnostics)
+│   ├── resultats/
+│   │   ├── _modele.ipynb      # seul notebook de résultats écrit à la main
+│   │   └── FD00X.ipynb        # générés par scripts/generer_notebooks_resultats.py, jamais modifiés à la main
+│   └── evolution.ipynb        # le parcours du projet, avant / après
 ├── src/                       # code réutilisable, créé au fur et à mesure des besoins (Phase 1+)
 ├── data/                      # dataset NASA C-MAPSS (déjà versionné)
 └── requirements.txt

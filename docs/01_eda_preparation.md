@@ -4,7 +4,7 @@
 
 ## Contexte
 
-Avant toute modélisation, les données brutes de `train_FD001.txt` (100 moteurs, 20 631 lignes, 26 colonnes) doivent être nettoyées et mises en forme, selon trois étapes définies dans le cahier des charges (section Phase 1) : suppression des capteurs non informatifs, normalisation par capteur, lissage du signal. Notebook complet : [`notebooks/01_eda_preparation.ipynb`](../notebooks/01_eda_preparation.ipynb).
+Avant toute modélisation, les données brutes de `train_FD001.txt` (100 moteurs, 20 631 lignes, 26 colonnes) doivent être nettoyées et mises en forme, selon trois étapes définies dans le cahier des charges (section Phase 1) : suppression des capteurs non informatifs, normalisation par capteur, lissage du signal. Notebook d'origine : [`notebooks/01_eda_preparation.ipynb`](https://github.com/MatisseGrl/aero-predict/blob/v1-avant-reorganisation/notebooks/01_eda_preparation.ipynb) (archivé au tag `v1-avant-reorganisation`) ; son contenu est repris dans [`notebooks/01_donnees.ipynb`](../notebooks/01_donnees.ipynb).
 
 ## Méthode et résultats
 

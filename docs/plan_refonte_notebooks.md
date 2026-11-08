@@ -399,10 +399,10 @@ Demande de Matisse (2026-11-06) : garder la version actuelle du dépôt (« v1 �
 
 ### Étape E : nettoyage
 
-- [ ] Vérifier que Matisse a relu `docs/comparaison_v1_v2.md` et validé la v2 (9.4)
-- [ ] ADR de la nouvelle organisation des notebooks
-- [ ] Retirer les 13 anciens notebooks de `notebooks/` (leur contenu gardé est déjà déplacé, section 8.2)
-- [ ] Mettre à jour les liens (README, `STATUS.md` par une nouvelle entrée, docs de phase, `AGENTS.md` section « Structure du repo »)
+- [x] Vérifier que Matisse a relu `docs/comparaison_v1_v2.md` et validé la v2 (9.4) : accord de Matisse le 2026-11-08 (voir le journal)
+- [x] ADR de la nouvelle organisation des notebooks ([ADR-0008](decisions/0008-organisation-des-notebooks.md))
+- [x] Retirer les 13 anciens notebooks (14 avec le 04h) de `notebooks/` (leur contenu gardé est déjà déplacé, section 8.2)
+- [x] Mettre à jour les liens (README, `STATUS.md` par une nouvelle entrée, docs de phase, `AGENTS.md` section « Structure du repo »)
 - [ ] Pousser et ouvrir une PR vers `main` : seulement sur demande de Matisse
 
 ### Étape F : optionnel, après la soutenance
@@ -463,3 +463,4 @@ Une ligne par étape faite ou par écart au plan, la plus récente en bas. On n'
 | 2026-11-08 | Benjamin (avec Claude Code) | Calcul de nuit Optuna FD003/FD004 terminé sans erreur (2026-11-07 17 h 57 → 2026-11-08 10 h 09, 16 h 12, Mac de Benjamin, 12 processus). Écart : à 07 h 16, 9 travailleurs CNN 1D ajoutés à la main sur FD004 (l'étude LSTM était finie, 9 cœurs inactifs) ; aucun essai fini après le début de « confirmer » (meilleur essai CNN n° 81, fini à 08 h 11, venu du travailleur 10). FD003 : LSTM (essai 82, gain 0,448, p = 0,042) et CNN 1D (essai 79, gain 1,257, p = 3,5e-7) confirmés. FD004 : ni le LSTM (gain 0,142, p = 0,53) ni le CNN 1D (gain 0,266, p = 0,65) confirmés, réglages du 03b gardés. Ensemble retenu sur les deux : 5 LSTM (l'ensemble 5 LSTM + 5 CNN gagne 0,273 sur FD003 et 0,050 sur FD004, sous le seuil de 0,3, même règle que FD001/FD002) |
 | 2026-11-08 | Benjamin (avec Claude Code) | Réseaux FD003/FD004 publiés : `CONFIGS_RESEAUX_RETENUES` et `ENSEMBLES_RETENUS` étendus, poids `models/04h/FD003__*` et `FD004__*` (20 fichiers), résultats copiés dans `docs/resultats/04h/` (base Optuna remplacée après contrôle : les 4 études de Matisse identiques), prédictions de la démo et inférence en direct (écart ≤ 1,5e-5). Test (RUL brute / plafonnée) : FD003 ensemble 5 LSTM 13,30 / 12,05, moins bon que XGBoost 11,78 / 9,96 ; FD004 ensemble 5 LSTM 23,75 / 10,63, meilleur que XGBoost 24,67 / 12,35. Notebooks de résultats, `evolution` et `docs/comparaison_v1_v2.md` mis à jour. Pytest : 48 réussis, 0 sauté. Démo vérifiée dans le navigateur (FD001, FD003 en direct, FD004) |
 | 2026-11-08 | Benjamin (avec Claude Code) | Étape E, dernière ligne : PR vers `main` ouverte à la demande de Benjamin, qui indique l'accord de Matisse. Les autres cases de l'étape E (relecture de `comparaison_v1_v2.md` par Matisse, ADR, retrait des anciens notebooks, liens) restent à faire |
+| 2026-11-08 | Matisse (avec Claude Code) | Étape E : accord de Matisse pour remplacer l'ancienne organisation par la nouvelle (et non ajouter la v2 à côté), donné en discussion après un contrôle de l'arborescence de la v2 contre la section 4 et des figures contre les sections 5 et 7.1 (chaque `plt.show()` a son image, 0 erreur). Les 14 anciens notebooks (13 + 04h) sont retirés ; ils restent au tag `v1-avant-reorganisation` (`efe9434`, sur GitHub). ADR-0008 écrite ; liens mis à jour (docs de phase 01 à 03, `protocole_evaluation.md`, `docs/resultats/04h/README.md`, README, `AGENTS.md`). Restent ouverts, non tranchés par cet accord : XGBoost FD001 12,78 / 12,73 ; réseaux FD003/FD004 ; repli k = 20 sur FD004 ; 3 figures v1 sans équivalent exact ; 04b §8. Commits locaux, pas encore poussés |

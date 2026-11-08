@@ -2,6 +2,8 @@
 
 > **Statut : en attente de relecture par Matisse.** Ce fichier est le livrable du plan de réorganisation, section 9.4, point 3 (fin de l'étape D). L'étape E (nettoyage) **n'est pas commencée** : aucun des 14 anciens notebooks n'est retiré, et rien ne doit l'être avant que Matisse ait relu ce fichier et validé la v2 (plan 9.4, point 4).
 >
+> **Mise à jour du 2026-11-08** : Matisse a donné son accord pour le retrait des anciens notebooks (étape E faite, [ADR-0008](decisions/0008-organisation-des-notebooks.md)). Le statut ci-dessus est celui du 2026-11-07, laissé tel quel. Les points listés plus bas comme « à faire valider » restent ouverts sauf mention contraire dans `docs/STATUS.md`.
+>
 > Rédigé le 2026-11-07 par une session Claude Code (réorganisation), dans `aero-predict-refonte`, branche `refonte/notebooks`. Au moment de l'écriture, la v2 n'est **pas committée** : les numéros de cellule cités ci-dessous sont ceux des fichiers de ce dossier le 2026-11-07, et ils changeront si un notebook est modifié.
 
 > **Mise à jour du 2026-11-08** : FD003 et FD004 ont maintenant des réseaux en v2 (calcul de nuit du 2026-11-07 au 08). Ce qui change est décrit en section 6, ajoutée ce jour. Dans les sections 0 à 5, le texte du 2026-11-07 est gardé ; chaque endroit qui ne tient plus est suivi d'une note « *Mise à jour du 2026-11-08* », et les lignes de tableau modifiées le disent dans la cellule.

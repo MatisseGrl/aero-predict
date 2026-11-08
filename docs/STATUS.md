@@ -12,6 +12,19 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 
 ## Dernière modification
 
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-08
+- **Quoi** : étape E du plan de réorganisation ([`docs/plan_refonte_notebooks.md`](plan_refonte_notebooks.md)) : les 14 anciens notebooks (01_eda_preparation, 01b, 02_target_engineering, 03_modelisation, 03b, 04a à 04h, 05) sont retirés de `notebooks/`, qui ne contient plus que `01_donnees`, `02_choix_du_modele`, `resultats/` (`_modele` et `FD001` à `FD004`) et `evolution`. Décision : [ADR-0008](decisions/0008-organisation-des-notebooks.md).
+  - Les anciens notebooks restent consultables au tag `v1-avant-reorganisation` (commit `efe9434`, présent sur GitHub).
+  - Contrôles faits avant le retrait : aucun fichier de `src/`, `tests/`, `scripts/` ni `app/` ne lit un ancien notebook ; dans les 7 notebooks de la v2 exécutés, chaque `plt.show()` a son image enregistrée (4 + 17 + 19 + 4 × 9 = 76 images), 0 erreur, 0 cellule non exécutée.
+  - Liens mis à jour vers le tag : `docs/01_eda_preparation.md`, `02_target_engineering.md`, `03_modelisation.md`, `protocole_evaluation.md`, `docs/resultats/04h/README.md` ; `README.md` (Phase 4) et `AGENTS.md` (section « Structure du repo ») pointent vers les nouveaux notebooks.
+  - Commit `6fd5660` (« Phase 4 marquée terminée », resté local sur `phase-04/optuna-reseaux`) repris sur cette branche.
+  - Les liens relatifs vers les anciens notebooks dans les entrées précédentes de ce fichier ne sont pas modifiés (pas de réécriture) : ils se lisent au tag.
+- **Pourquoi** : accord de Matisse le 2026-11-08 pour remplacer l'ancienne organisation par la nouvelle, plutôt que de garder les deux côte à côte.
+- **Impact** : restent ouverts, sans décision à ce jour : XGBoost FD001 à 12,78 au lieu de 12,73 au test sur la machine de génération ; réseaux Optuna sur FD003/FD004, contraires à la règle du plan du 2026-11-07 ; repli k = 20 sur FD004 ; 3 figures v1 sans équivalent exact (listées dans `docs/comparaison_v1_v2.md`) ; 04b §8 gardé « en attente » dans `02` section 13.3.
+
+### 2026-11-08 — Réseaux Optuna sur FD003 et FD004
+
 - **Qui** : Benjamin (avec Claude Code)
 - **Date** : 2026-11-08
 - **Quoi** : recherche Optuna des réseaux (processus du notebook 04h) faite sur FD003 et FD004, et réseaux publiés dans la démo. Les 4 sous-jeux ont maintenant un LSTM et un CNN 1D.
