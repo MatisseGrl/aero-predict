@@ -1,0 +1,904 @@
+{
+ "regle": "Ensemble = moyenne SIMPLE (poids egaux, rien n'est ajuste) des predictions de plusieurs reseaux : 5 graines de la meilleure configuration LSTM (5 initialisations differentes), et la meme chose en ajoutant 5 graines du meilleur CNN si le CNN est disponible. Evalue sur les memes decoupages neufs que l'etape 'confirmer', avec la meme regle (gain >= 0,3, 3 decoupages sur 3, Wilcoxon p < 0,05) contre la meilleure configuration seule (graine 42). Le jeu de test n'intervient pas.",
+ "sous_jeu": "FD004",
+ "ensembles": {
+  "lstm_5_graines": {
+   "membres": [
+    "lstm_g42",
+    "lstm_g43",
+    "lstm_g44",
+    "lstm_g45",
+    "lstm_g46"
+   ],
+   "rmse_cv_par_decoupage": [
+    10.706904215751003,
+    10.624798176698036,
+    10.899189760630968
+   ],
+   "comparaison": {
+    "gains_par_decoupage": [
+     0.10954935642113739,
+     0.30813801451862943,
+     0.6753921537003702
+    ],
+    "gain_moyen": 0.36435984154671236,
+    "nb_decoupages_gagnes": 3,
+    "difference_moyenne_rmse_par_moteur": -0.4379152572849515,
+    "p_wilcoxon": 7.253630690652788e-07,
+    "p_t": 3.015657228510534e-06,
+    "critere_a": true,
+    "critere_b": true,
+    "critere_c": true,
+    "retenu": true
+   }
+  },
+  "lstm_cnn_10": {
+   "membres": [
+    "lstm_g42",
+    "lstm_g43",
+    "lstm_g44",
+    "lstm_g45",
+    "lstm_g46",
+    "cnn1d_g42",
+    "cnn1d_g43",
+    "cnn1d_g44",
+    "cnn1d_g45",
+    "cnn1d_g46"
+   ],
+   "rmse_cv_par_decoupage": [
+    10.669502800532971,
+    10.693981734533779,
+    10.716975529643296
+   ],
+   "comparaison": {
+    "gains_par_decoupage": [
+     0.14695077163916892,
+     0.23895445668288673,
+     0.857606384688042
+    ],
+    "gain_moyen": 0.4145038710033659,
+    "nb_decoupages_gagnes": 3,
+    "difference_moyenne_rmse_par_moteur": -0.537312123131073,
+    "p_wilcoxon": 2.0536770147683253e-07,
+    "p_t": 7.231141551754167e-06,
+    "critere_a": true,
+    "critere_b": true,
+    "critere_c": true,
+    "retenu": true
+   }
+  }
+ },
+ "membres": {
+  "lstm_g42": {
+   "1000": {
+    "rmse_cv_moyen": 10.81645357217214,
+    "rmse_par_pli": [
+     9.81085377948854,
+     14.414323365850942,
+     10.079392218786428,
+     10.18440960095999,
+     9.593288895774805
+    ],
+    "meilleures_epoques": [
+     30,
+     25,
+     6,
+     10,
+     11
+    ],
+    "metriques_oof": {
+     "rmse": 11.034089475164851,
+     "mae": 6.26671704259995,
+     "score_nasa": 505807.18680775806,
+     "nb_surestimes": 2527,
+     "alertes_manquees": 850,
+     "fausses_alertes": 600,
+     "biais": 0.25402730222470354,
+     "nb_lignes": 61249
+    }
+   },
+   "1001": {
+    "rmse_cv_moyen": 10.932936191216665,
+    "rmse_par_pli": [
+     13.111378306380585,
+     8.27923979863166,
+     10.70481514221838,
+     9.44887312616068,
+     13.120374582692026
+    ],
+    "meilleures_epoques": [
+     10,
+     38,
+     11,
+     31,
+     7
+    ],
+    "metriques_oof": {
+     "rmse": 11.100999961926366,
+     "mae": 6.385958852608021,
+     "score_nasa": 444370.4730333769,
+     "nb_surestimes": 2721,
+     "alertes_manquees": 992,
+     "fausses_alertes": 464,
+     "biais": 0.3392564142510757,
+     "nb_lignes": 61249
+    }
+   },
+   "1002": {
+    "rmse_cv_moyen": 11.574581914331338,
+    "rmse_par_pli": [
+     12.261431990712719,
+     14.696502202441224,
+     9.060196627284169,
+     9.770989302975403,
+     12.083789448243179
+    ],
+    "meilleures_epoques": [
+     18,
+     19,
+     22,
+     9,
+     20
+    ],
+    "metriques_oof": {
+     "rmse": 11.706973724500882,
+     "mae": 6.357799692257238,
+     "score_nasa": 1808311.1007616136,
+     "nb_surestimes": 3150,
+     "alertes_manquees": 934,
+     "fausses_alertes": 528,
+     "biais": 0.9921776986425,
+     "nb_lignes": 61249
+    }
+   }
+  },
+  "lstm_g43": {
+   "1000": {
+    "rmse_cv_moyen": 11.427578065463067,
+    "rmse_par_pli": [
+     9.897931513983114,
+     15.183124110248002,
+     10.735478051511537,
+     10.720003288283419,
+     10.601353363289267
+    ],
+    "meilleures_epoques": [
+     26,
+     7,
+     5,
+     8,
+     19
+    ],
+    "metriques_oof": {
+     "rmse": 11.65073594399753,
+     "mae": 7.060219396389755,
+     "score_nasa": 566904.4219626947,
+     "nb_surestimes": 2468,
+     "alertes_manquees": 881,
+     "fausses_alertes": 629,
+     "biais": -0.9521514599016929,
+     "nb_lignes": 61249
+    }
+   },
+   "1001": {
+    "rmse_cv_moyen": 11.43804295653368,
+    "rmse_par_pli": [
+     13.107538110579283,
+     8.486236980284298,
+     12.23387760199118,
+     10.783522598355678,
+     12.579039491457957
+    ],
+    "meilleures_epoques": [
+     29,
+     15,
+     30,
+     11,
+     16
+    ],
+    "metriques_oof": {
+     "rmse": 11.567114179403966,
+     "mae": 6.588158020714745,
+     "score_nasa": 454658.56251975155,
+     "nb_surestimes": 2512,
+     "alertes_manquees": 765,
+     "fausses_alertes": 684,
+     "biais": -0.24913066576961773,
+     "nb_lignes": 61249
+    }
+   },
+   "1002": {
+    "rmse_cv_moyen": 11.635389144994733,
+    "rmse_par_pli": [
+     12.106667609243214,
+     13.37452480718458,
+     10.647183334476667,
+     10.083007862925205,
+     11.965562111143992
+    ],
+    "meilleures_epoques": [
+     29,
+     8,
+     4,
+     23,
+     16
+    ],
+    "metriques_oof": {
+     "rmse": 11.671819940018482,
+     "mae": 6.839265991699768,
+     "score_nasa": 476569.4555679368,
+     "nb_surestimes": 2617,
+     "alertes_manquees": 996,
+     "fausses_alertes": 556,
+     "biais": -0.05249085661446751,
+     "nb_lignes": 61249
+    }
+   }
+  },
+  "lstm_g44": {
+   "1000": {
+    "rmse_cv_moyen": 11.428362570674084,
+    "rmse_par_pli": [
+     11.000393330121472,
+     14.298195672044468,
+     10.142693984677432,
+     11.087474041529278,
+     10.613055824997767
+    ],
+    "meilleures_epoques": [
+     27,
+     18,
+     11,
+     14,
+     15
+    ],
+    "metriques_oof": {
+     "rmse": 11.577483175669252,
+     "mae": 6.60825351670135,
+     "score_nasa": 1823818.6794423906,
+     "nb_surestimes": 2313,
+     "alertes_manquees": 941,
+     "fausses_alertes": 483,
+     "biais": -0.08620212772811492,
+     "nb_lignes": 61249
+    }
+   },
+   "1001": {
+    "rmse_cv_moyen": 11.323081256929164,
+    "rmse_par_pli": [
+     13.263440937351039,
+     8.898651336051536,
+     12.018329274993253,
+     9.75303975529033,
+     12.681944980959663
+    ],
+    "meilleures_epoques": [
+     10,
+     19,
+     25,
+     7,
+     13
+    ],
+    "metriques_oof": {
+     "rmse": 11.454958874078994,
+     "mae": 6.683112584284955,
+     "score_nasa": 835972.5949831153,
+     "nb_surestimes": 2804,
+     "alertes_manquees": 1044,
+     "fausses_alertes": 474,
+     "biais": 0.30651987378935386,
+     "nb_lignes": 61249
+    }
+   },
+   "1002": {
+    "rmse_cv_moyen": 11.82672998962438,
+    "rmse_par_pli": [
+     12.521229736082496,
+     14.445061520191727,
+     10.099561493802382,
+     10.030829206059312,
+     12.036967991985978
+    ],
+    "meilleures_epoques": [
+     29,
+     38,
+     19,
+     19,
+     17
+    ],
+    "metriques_oof": {
+     "rmse": 11.909788833016007,
+     "mae": 6.650745710228138,
+     "score_nasa": 852156.4494694625,
+     "nb_surestimes": 2644,
+     "alertes_manquees": 998,
+     "fausses_alertes": 459,
+     "biais": 0.5382926472341663,
+     "nb_lignes": 61249
+    }
+   }
+  },
+  "lstm_g45": {
+   "1000": {
+    "rmse_cv_moyen": 11.553507629660611,
+    "rmse_par_pli": [
+     11.058891403248085,
+     14.590019452729633,
+     10.060560571466786,
+     11.097331066962353,
+     10.960735653896197
+    ],
+    "meilleures_epoques": [
+     9,
+     22,
+     10,
+     2,
+     25
+    ],
+    "metriques_oof": {
+     "rmse": 11.71608495053131,
+     "mae": 6.819945710056781,
+     "score_nasa": 485325.4989248694,
+     "nb_surestimes": 2239,
+     "alertes_manquees": 763,
+     "fausses_alertes": 660,
+     "biais": -0.9888677651241699,
+     "nb_lignes": 61249
+    }
+   },
+   "1001": {
+    "rmse_cv_moyen": 11.16309404251573,
+    "rmse_par_pli": [
+     12.985734904952444,
+     8.516337463735072,
+     11.425125039862811,
+     9.811829493155146,
+     13.076443310873179
+    ],
+    "meilleures_epoques": [
+     38,
+     32,
+     26,
+     26,
+     18
+    ],
+    "metriques_oof": {
+     "rmse": 11.30552995371902,
+     "mae": 6.197532449272767,
+     "score_nasa": 556614.9426881534,
+     "nb_surestimes": 2829,
+     "alertes_manquees": 790,
+     "fausses_alertes": 532,
+     "biais": 0.21166830085837487,
+     "nb_lignes": 61249
+    }
+   },
+   "1002": {
+    "rmse_cv_moyen": 11.286550507223492,
+    "rmse_par_pli": [
+     13.335944613293572,
+     12.526095075907868,
+     9.81745934180602,
+     9.148563688719573,
+     11.60468981639043
+    ],
+    "meilleures_epoques": [
+     18,
+     14,
+     28,
+     35,
+     22
+    ],
+    "metriques_oof": {
+     "rmse": 11.380331492321968,
+     "mae": 6.3561298768616386,
+     "score_nasa": 520889.26174675743,
+     "nb_surestimes": 2205,
+     "alertes_manquees": 680,
+     "fausses_alertes": 603,
+     "biais": -0.7551812709398918,
+     "nb_lignes": 61249
+    }
+   }
+  },
+  "lstm_g46": {
+   "1000": {
+    "rmse_cv_moyen": 11.174941345344838,
+    "rmse_par_pli": [
+     10.726392233533009,
+     14.58270135793158,
+     9.469502541512545,
+     10.365641945385219,
+     10.730468648361832
+    ],
+    "meilleures_epoques": [
+     5,
+     17,
+     24,
+     23,
+     41
+    ],
+    "metriques_oof": {
+     "rmse": 11.378456863763242,
+     "mae": 6.481116404671236,
+     "score_nasa": 482454.36197988025,
+     "nb_surestimes": 2689,
+     "alertes_manquees": 1066,
+     "fausses_alertes": 424,
+     "biais": 0.39782103917562583,
+     "nb_lignes": 61249
+    }
+   },
+   "1001": {
+    "rmse_cv_moyen": 11.369980829034184,
+    "rmse_par_pli": [
+     13.04120340556373,
+     8.993655906239503,
+     11.475798232925609,
+     9.993325145605368,
+     13.345921454836706
+    ],
+    "meilleures_epoques": [
+     37,
+     15,
+     23,
+     14,
+     12
+    ],
+    "metriques_oof": {
+     "rmse": 11.493841859842929,
+     "mae": 6.550910801113631,
+     "score_nasa": 508623.0159857605,
+     "nb_surestimes": 2723,
+     "alertes_manquees": 747,
+     "fausses_alertes": 652,
+     "biais": -0.4576471150962691,
+     "nb_lignes": 61249
+    }
+   },
+   "1002": {
+    "rmse_cv_moyen": 11.169397826403365,
+    "rmse_par_pli": [
+     12.479268035359114,
+     12.734604468853492,
+     8.727648716500994,
+     9.47949513231993,
+     12.425972778983304
+    ],
+    "meilleures_epoques": [
+     6,
+     20,
+     11,
+     28,
+     23
+    ],
+    "metriques_oof": {
+     "rmse": 11.271691904196414,
+     "mae": 6.513539083615589,
+     "score_nasa": 534354.1969320449,
+     "nb_surestimes": 2337,
+     "alertes_manquees": 901,
+     "fausses_alertes": 595,
+     "biais": -0.17366904825383675,
+     "nb_lignes": 61249
+    }
+   }
+  },
+  "cnn1d_g42": {
+   "1000": {
+    "rmse_cv_moyen": 11.36635216619935,
+    "rmse_par_pli": [
+     10.282187243422678,
+     14.51073202611566,
+     9.838057818428178,
+     11.567042793652233,
+     10.633740949378
+    ],
+    "meilleures_epoques": [
+     5,
+     2,
+     4,
+     2,
+     1
+    ],
+    "metriques_oof": {
+     "rmse": 11.543545623272852,
+     "mae": 7.325099867716385,
+     "score_nasa": 370676.2647417289,
+     "nb_surestimes": 3010,
+     "alertes_manquees": 1064,
+     "fausses_alertes": 701,
+     "biais": 0.408403128416259,
+     "nb_lignes": 61249
+    }
+   },
+   "1001": {
+    "rmse_cv_moyen": 12.526322001065855,
+    "rmse_par_pli": [
+     13.001858447663869,
+     10.30263617447744,
+     12.605550040291858,
+     11.262287717519257,
+     15.459277625376853
+    ],
+    "meilleures_epoques": [
+     3,
+     3,
+     2,
+     2,
+     7
+    ],
+    "metriques_oof": {
+     "rmse": 12.64308021987018,
+     "mae": 7.848251135194623,
+     "score_nasa": 1449048.5827210285,
+     "nb_surestimes": 3404,
+     "alertes_manquees": 1468,
+     "fausses_alertes": 629,
+     "biais": 0.3173936205753423,
+     "nb_lignes": 61249
+    }
+   },
+   "1002": {
+    "rmse_cv_moyen": 11.985023096474581,
+    "rmse_par_pli": [
+     13.25195646202802,
+     12.394564357135257,
+     12.136498631287264,
+     10.294259223525538,
+     11.847836808396837
+    ],
+    "meilleures_epoques": [
+     14,
+     14,
+     15,
+     2,
+     8
+    ],
+    "metriques_oof": {
+     "rmse": 12.020962543153944,
+     "mae": 7.33462848605515,
+     "score_nasa": 432909.51151342766,
+     "nb_surestimes": 2753,
+     "alertes_manquees": 994,
+     "fausses_alertes": 703,
+     "biais": -0.391149966115825,
+     "nb_lignes": 61249
+    }
+   }
+  },
+  "cnn1d_g43": {
+   "1000": {
+    "rmse_cv_moyen": 12.638786448799673,
+    "rmse_par_pli": [
+     11.001045933046868,
+     14.93815645199136,
+     11.755719630962282,
+     11.764628714022955,
+     13.734381513974897
+    ],
+    "meilleures_epoques": [
+     3,
+     2,
+     7,
+     4,
+     18
+    ],
+    "metriques_oof": {
+     "rmse": 12.752528023339003,
+     "mae": 8.089119842434016,
+     "score_nasa": 475288.76178768347,
+     "nb_surestimes": 2653,
+     "alertes_manquees": 863,
+     "fausses_alertes": 855,
+     "biais": -1.6993941858095367,
+     "nb_lignes": 61249
+    }
+   },
+   "1001": {
+    "rmse_cv_moyen": 12.227172745391822,
+    "rmse_par_pli": [
+     13.52549440401758,
+     11.374881992409978,
+     12.262503025630652,
+     10.949236881377516,
+     13.023747423523385
+    ],
+    "meilleures_epoques": [
+     3,
+     6,
+     8,
+     1,
+     14
+    ],
+    "metriques_oof": {
+     "rmse": 12.26458784627789,
+     "mae": 7.577118847834886,
+     "score_nasa": 424329.01723194506,
+     "nb_surestimes": 3383,
+     "alertes_manquees": 1002,
+     "fausses_alertes": 787,
+     "biais": 0.5132356414696667,
+     "nb_lignes": 61249
+    }
+   },
+   "1002": {
+    "rmse_cv_moyen": 11.792863279046722,
+    "rmse_par_pli": [
+     13.225546164351206,
+     13.460015856889576,
+     9.732400664789576,
+     10.353384420088496,
+     12.192969289114751
+    ],
+    "meilleures_epoques": [
+     2,
+     4,
+     1,
+     3,
+     6
+    ],
+    "metriques_oof": {
+     "rmse": 11.865298238690414,
+     "mae": 7.513228495282887,
+     "score_nasa": 497683.708404319,
+     "nb_surestimes": 2555,
+     "alertes_manquees": 879,
+     "fausses_alertes": 780,
+     "biais": -0.5703795501183568,
+     "nb_lignes": 61249
+    }
+   }
+  },
+  "cnn1d_g44": {
+   "1000": {
+    "rmse_cv_moyen": 12.800125525154296,
+    "rmse_par_pli": [
+     11.381564444206631,
+     15.872466283921717,
+     10.963711742601033,
+     12.279732210277807,
+     13.50315294476429
+    ],
+    "meilleures_epoques": [
+     11,
+     1,
+     15,
+     1,
+     27
+    ],
+    "metriques_oof": {
+     "rmse": 12.968582300933324,
+     "mae": 8.064852390339848,
+     "score_nasa": 750371.5414938343,
+     "nb_surestimes": 3215,
+     "alertes_manquees": 907,
+     "fausses_alertes": 902,
+     "biais": -0.6615948533078928,
+     "nb_lignes": 61249
+    }
+   },
+   "1001": {
+    "rmse_cv_moyen": 12.465241029961042,
+    "rmse_par_pli": [
+     13.687129613385617,
+     9.036447239349705,
+     14.949586048792879,
+     11.359034886171525,
+     13.29400736210548
+    ],
+    "meilleures_epoques": [
+     4,
+     31,
+     12,
+     8,
+     4
+    ],
+    "metriques_oof": {
+     "rmse": 12.656142740833852,
+     "mae": 7.574150591193581,
+     "score_nasa": 1249113.3980222126,
+     "nb_surestimes": 2823,
+     "alertes_manquees": 889,
+     "fausses_alertes": 717,
+     "biais": -0.5662048449066666,
+     "nb_lignes": 61249
+    }
+   },
+   "1002": {
+    "rmse_cv_moyen": 12.784724876559425,
+    "rmse_par_pli": [
+     14.696556837882788,
+     14.083800179446337,
+     9.940914226656279,
+     11.199408197387712,
+     14.002944941424012
+    ],
+    "meilleures_epoques": [
+     9,
+     3,
+     13,
+     20,
+     5
+    ],
+    "metriques_oof": {
+     "rmse": 12.895125490090603,
+     "mae": 8.033468202298328,
+     "score_nasa": 570101.4721255309,
+     "nb_surestimes": 3594,
+     "alertes_manquees": 1244,
+     "fausses_alertes": 720,
+     "biais": -0.06763159273949317,
+     "nb_lignes": 61249
+    }
+   }
+  },
+  "cnn1d_g45": {
+   "1000": {
+    "rmse_cv_moyen": 12.264603097480208,
+    "rmse_par_pli": [
+     12.998094236422396,
+     15.007032127276027,
+     10.539971668605578,
+     11.386610542853932,
+     11.391306912243108
+    ],
+    "meilleures_epoques": [
+     15,
+     7,
+     12,
+     5,
+     2
+    ],
+    "metriques_oof": {
+     "rmse": 12.427081073464837,
+     "mae": 7.738218533839909,
+     "score_nasa": 495579.6576845231,
+     "nb_surestimes": 2810,
+     "alertes_manquees": 622,
+     "fausses_alertes": 1009,
+     "biais": -1.5544469231195983,
+     "nb_lignes": 61249
+    }
+   },
+   "1001": {
+    "rmse_cv_moyen": 11.975103850456486,
+    "rmse_par_pli": [
+     13.976554271873235,
+     9.826644095612997,
+     13.157492661659969,
+     10.228833243515442,
+     12.68599497962079
+    ],
+    "meilleures_epoques": [
+     5,
+     4,
+     18,
+     4,
+     5
+    ],
+    "metriques_oof": {
+     "rmse": 12.097584439566578,
+     "mae": 7.375569440957609,
+     "score_nasa": 469263.0163924101,
+     "nb_surestimes": 2968,
+     "alertes_manquees": 816,
+     "fausses_alertes": 668,
+     "biais": -0.0373508435603747,
+     "nb_lignes": 61249
+    }
+   },
+   "1002": {
+    "rmse_cv_moyen": 11.860781186054236,
+    "rmse_par_pli": [
+     13.608113008349621,
+     12.979683945527317,
+     11.272941363960832,
+     9.702375285099492,
+     11.740792327333914
+    ],
+    "meilleures_epoques": [
+     10,
+     14,
+     24,
+     8,
+     2
+    ],
+    "metriques_oof": {
+     "rmse": 11.927459565254116,
+     "mae": 7.360270225474801,
+     "score_nasa": 475104.7416759511,
+     "nb_surestimes": 2304,
+     "alertes_manquees": 684,
+     "fausses_alertes": 828,
+     "biais": -1.1993682604186326,
+     "nb_lignes": 61249
+    }
+   }
+  },
+  "cnn1d_g46": {
+   "1000": {
+    "rmse_cv_moyen": 12.230119668645504,
+    "rmse_par_pli": [
+     12.068754377469523,
+     14.19451011150005,
+     10.692580620056237,
+     11.635808598079958,
+     12.558944636121753
+    ],
+    "meilleures_epoques": [
+     2,
+     9,
+     3,
+     2,
+     13
+    ],
+    "metriques_oof": {
+     "rmse": 12.320088944445727,
+     "mae": 7.65932679328106,
+     "score_nasa": 457308.96727929404,
+     "nb_surestimes": 3209,
+     "alertes_manquees": 943,
+     "fausses_alertes": 788,
+     "biais": -0.2898918217994349,
+     "nb_lignes": 61249
+    }
+   },
+   "1001": {
+    "rmse_cv_moyen": 12.223085384904854,
+    "rmse_par_pli": [
+     13.643419477687974,
+     9.256797250120465,
+     12.179066819836635,
+     11.941403879155276,
+     14.09473949772392
+    ],
+    "meilleures_epoques": [
+     6,
+     5,
+     6,
+     6,
+     9
+    ],
+    "metriques_oof": {
+     "rmse": 12.341565752384799,
+     "mae": 7.764696844750809,
+     "score_nasa": 480419.8380768896,
+     "nb_surestimes": 2521,
+     "alertes_manquees": 869,
+     "fausses_alertes": 900,
+     "biais": -1.7279289173539722,
+     "nb_lignes": 61249
+    }
+   },
+   "1002": {
+    "rmse_cv_moyen": 12.350364966328412,
+    "rmse_par_pli": [
+     13.870851252902876,
+     14.221890641558915,
+     10.301458200470464,
+     11.920182939465711,
+     11.4374417972441
+    ],
+    "meilleures_epoques": [
+     5,
+     7,
+     8,
+     20,
+     14
+    ],
+    "metriques_oof": {
+     "rmse": 12.42128569994911,
+     "mae": 7.70983609102586,
+     "score_nasa": 410471.0911356221,
+     "nb_surestimes": 3237,
+     "alertes_manquees": 1202,
+     "fausses_alertes": 462,
+     "biais": 0.656209910957891,
+     "nb_lignes": 61249
+    }
+   }
+  }
+ },
+ "date": "2026-11-08"
+}

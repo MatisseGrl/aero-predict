@@ -5,3 +5,18 @@ repos:
     rev: 0.8.1
     hooks:
       - id: nbstripout
+        # Exception (docs/plan_refonte_notebooks.md, section 6.3) : les notebooks de la v2 gardent leurs sorties,
+        # pour que leurs tableaux et leurs graphiques soient lisibles sur GitHub sans exécuter le notebook.
+        # Tous les autres notebooks (les 13 anciens, et le modèle notebooks/resultats/_modele.ipynb, qui n'est
+        # jamais lu tel quel : on lit les FD00X.ipynb générés depuis lui) restent nettoyés comme avant.
+        # Pourquoi une exclusion ici plutôt que la métadonnée "keep_output" dans chaque notebook : la liste est
+        # visible et relue à un seul endroit ; les FD00X.ipynb sont réécrits à chaque génération et devraient
+        # recevoir la métadonnée à chaque fois ; un notebook renommé ou supprimé se voit dans ce fichier.
+        # Coût accepté : des fichiers .ipynb plus lourds dans git (images encodées), et des diffs plus longs.
+        exclude: |
+          (?x)^notebooks/(
+              01_donnees\.ipynb
+            | 02_choix_du_modele\.ipynb
+            | evolution\.ipynb
+            | resultats/FD00[1-4]\.ipynb
+          )$

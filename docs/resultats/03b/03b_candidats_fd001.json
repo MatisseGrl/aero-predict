@@ -1,0 +1,122 @@
+{
+ "regle": "Pour chaque modele, une amelioration est retenue sur FD001 si, sur les memes 5 plis par moteur, (a) le RMSE moyen de validation baisse d'au moins 0,3 cycle (seuil de Matisse, notebook 04d) ET (b) le test de Wilcoxon apparie sur le RMSE par moteur (100 moteurs, prediction hors-pli) donne p < 0,05 en faveur du candidat. Sinon on garde la version de base. Le score NASA et les surestimations de plus de 20 cycles sont rapportes a cote ; si le candidat les degrade nettement, le dire. Les choix faits sur FD001 sont appliques tels quels a FD002-FD004 (le dire comme limite).",
+ "precisions": "Candidats : base = capteurs lisses + time_cycles / 100, fenetre 30 ; A = base + ecartinit_20 de chaque capteur (src/features.py, calcule sur les capteurs normalises puis lisses), mis a l'echelle par un min-max appris sur le train seulement ; B = entrees de base, fenetre 50 ; A+B = les deux, evalue seulement si A et B sont chacun retenus pour ce reseau. Decision par reseau (LSTM et CNN 1D separement). Test (b) : scipy.stats.wilcoxon bilateral (src.evaluation.comparer_apparie, comme le notebook 04d) sur les 100 RMSE par moteur hors-pli, p < 0,05 ET difference moyenne candidat - base negative (en faveur du candidat) ; la p-valeur unilaterale est rapportee a titre indicatif. Si A et B sont retenus : A+B est compare avec la meme regle au meilleur des deux (RMSE moyen de validation le plus bas) ; A+B est retenu s'il la satisfait, sinon on garde ce meilleur. Si un seul des deux est retenu, c'est lui. Le jeu de test n'intervient pas.",
+ "configurations": {
+  "base": {
+   "longueur": 30,
+   "ecart_initial": null
+  },
+  "A": {
+   "longueur": 30,
+   "ecart_initial": 20
+  },
+  "B": {
+   "longueur": 50,
+   "ecart_initial": null
+  },
+  "AB": {
+   "longueur": 50,
+   "ecart_initial": 20
+  }
+ },
+ "decisions": {
+  "lstm": {
+   "retenus_contre_base": [
+    "A",
+    "B"
+   ],
+   "configuration_retenue": "A",
+   "longueur_fenetre": 30,
+   "ecart_initial": 20,
+   "comparaisons": {
+    "A": {
+     "gain_rmse": 4.755935346814763,
+     "difference_moyenne_rmse_par_moteur": -4.628615551746115,
+     "p_wilcoxon": 2.122835403194774e-13,
+     "p_wilcoxon_unilateral": 1.061417701597387e-13,
+     "p_t": 1.8831482877168627e-15,
+     "nb_moteurs_ameliores": 83,
+     "nb_moteurs": 100,
+     "critere_a": true,
+     "critere_b": true,
+     "retenu": true,
+     "ecart_nasa_cv_moyen": -9507.100133019492,
+     "ecart_surestimes_oof": -704,
+     "ecart_alertes_manquees_oof": -144
+    },
+    "B": {
+     "gain_rmse": 2.3769331132116136,
+     "difference_moyenne_rmse_par_moteur": -2.2224503561818287,
+     "p_wilcoxon": 7.20690302025364e-10,
+     "p_wilcoxon_unilateral": 3.60345151012682e-10,
+     "p_t": 2.607261043334009e-11,
+     "nb_moteurs_ameliores": 77,
+     "nb_moteurs": 100,
+     "critere_a": true,
+     "critere_b": true,
+     "retenu": true,
+     "ecart_nasa_cv_moyen": -5612.504994146624,
+     "ecart_surestimes_oof": -500,
+     "ecart_alertes_manquees_oof": -50
+    },
+    "AB": {
+     "gain_rmse": -0.3733923045164005,
+     "difference_moyenne_rmse_par_moteur": 0.43694521590376645,
+     "p_wilcoxon": 0.0628666066190492,
+     "p_wilcoxon_unilateral": 0.9685666966904753,
+     "p_t": 0.04075454577240785,
+     "nb_moteurs_ameliores": 41,
+     "nb_moteurs": 100,
+     "critere_a": false,
+     "critere_b": false,
+     "retenu": false,
+     "ecart_nasa_cv_moyen": 3.438123562814326,
+     "ecart_surestimes_oof": 25,
+     "ecart_alertes_manquees_oof": 43
+    }
+   }
+  },
+  "cnn1d": {
+   "retenus_contre_base": [
+    "A"
+   ],
+   "configuration_retenue": "A",
+   "longueur_fenetre": 30,
+   "ecart_initial": 20,
+   "comparaisons": {
+    "A": {
+     "gain_rmse": 6.917085744518914,
+     "difference_moyenne_rmse_par_moteur": -6.200982192253438,
+     "p_wilcoxon": 2.2347168304074689e-13,
+     "p_wilcoxon_unilateral": 1.1173584152037344e-13,
+     "p_t": 4.489158759928008e-14,
+     "nb_moteurs_ameliores": 85,
+     "nb_moteurs": 100,
+     "critere_a": true,
+     "critere_b": true,
+     "retenu": true,
+     "ecart_nasa_cv_moyen": -15877.968031398994,
+     "ecart_surestimes_oof": -955,
+     "ecart_alertes_manquees_oof": -135
+    },
+    "B": {
+     "gain_rmse": 0.8900392061139009,
+     "difference_moyenne_rmse_par_moteur": -0.5261829786591053,
+     "p_wilcoxon": 0.4092592100268002,
+     "p_wilcoxon_unilateral": 0.2046296050134001,
+     "p_t": 0.3247960640303943,
+     "nb_moteurs_ameliores": 54,
+     "nb_moteurs": 100,
+     "critere_a": true,
+     "critere_b": false,
+     "retenu": false,
+     "ecart_nasa_cv_moyen": -2857.064250704516,
+     "ecart_surestimes_oof": 37,
+     "ecart_alertes_manquees_oof": 53
+    }
+   }
+  }
+ },
+ "plis": "GroupKFold 5 plis, shuffle=True, random_state=42 (memes plis que les arbres)",
+ "date": "2026-11-04"
+}
