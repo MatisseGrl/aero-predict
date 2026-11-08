@@ -13,6 +13,45 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
 ## Dernière modification
 
 - **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-08
+- **Quoi** : étape E du plan de réorganisation ([`docs/plan_refonte_notebooks.md`](plan_refonte_notebooks.md)) : les 14 anciens notebooks (01_eda_preparation, 01b, 02_target_engineering, 03_modelisation, 03b, 04a à 04h, 05) sont retirés de `notebooks/`, qui ne contient plus que `01_donnees`, `02_choix_du_modele`, `resultats/` (`_modele` et `FD001` à `FD004`) et `evolution`. Décision : [ADR-0008](decisions/0008-organisation-des-notebooks.md).
+  - Les anciens notebooks restent consultables au tag `v1-avant-reorganisation` (commit `efe9434`, présent sur GitHub).
+  - Contrôles faits avant le retrait : aucun fichier de `src/`, `tests/`, `scripts/` ni `app/` ne lit un ancien notebook ; dans les 7 notebooks de la v2 exécutés, chaque `plt.show()` a son image enregistrée (4 + 17 + 19 + 4 × 9 = 76 images), 0 erreur, 0 cellule non exécutée.
+  - Liens mis à jour vers le tag : `docs/01_eda_preparation.md`, `02_target_engineering.md`, `03_modelisation.md`, `protocole_evaluation.md`, `docs/resultats/04h/README.md` ; `README.md` (Phase 4) et `AGENTS.md` (section « Structure du repo ») pointent vers les nouveaux notebooks.
+  - Commit `6fd5660` (« Phase 4 marquée terminée », resté local sur `phase-04/optuna-reseaux`) repris sur cette branche.
+  - Les liens relatifs vers les anciens notebooks dans les entrées précédentes de ce fichier ne sont pas modifiés (pas de réécriture) : ils se lisent au tag.
+- **Pourquoi** : accord de Matisse le 2026-11-08 pour remplacer l'ancienne organisation par la nouvelle, plutôt que de garder les deux côte à côte.
+- **Impact** : restent ouverts, sans décision à ce jour : XGBoost FD001 à 12,78 au lieu de 12,73 au test sur la machine de génération ; réseaux Optuna sur FD003/FD004, contraires à la règle du plan du 2026-11-07 ; repli k = 20 sur FD004 ; 3 figures v1 sans équivalent exact (listées dans `docs/comparaison_v1_v2.md`) ; 04b §8 gardé « en attente » dans `02` section 13.3.
+
+### 2026-11-08 — Réseaux Optuna sur FD003 et FD004
+
+- **Qui** : Benjamin (avec Claude Code)
+- **Date** : 2026-11-08
+- **Quoi** : recherche Optuna des réseaux (processus du notebook 04h) faite sur FD003 et FD004, et réseaux publiés dans la démo. Les 4 sous-jeux ont maintenant un LSTM et un CNN 1D.
+  - Calcul : `scripts/nuit_04h_fd003_fd004_mac.sh` (mêmes étapes et nombres d'essais que `nuit_04h.sh`, adapté à macOS), 16 h 12 sur 12 processus. 9 travailleurs CNN 1D ajoutés en cours de route sur FD004 (cœurs inactifs), détail dans le journal du plan.
+  - FD003 : LSTM et CNN 1D réglés par Optuna, confirmés en validation (gains 0,45 et 1,26 cycle, 3 découpages neufs sur 3). FD004 : candidats Optuna non confirmés (p = 0,53 et 0,65), réglages du 03b gardés. Ensemble retenu sur les deux : 5 LSTM (graines 42 à 46), l'ensemble avec 5 CNN en plus restant sous le seuil de 0,3 cycle.
+  - Test officiel (RUL brute / plafonnée à 125 / score NASA) : FD003 ensemble 5 LSTM 13,30 / 12,05 / 353,9, CNN 1D 11,92 / 10,35 / 265,8 ; XGBoost reste meilleur au test sur FD003 (11,78 / 9,96). FD004 ensemble 5 LSTM 23,75 / 10,63 / 3 529,2, meilleur modèle du sous-jeu (XGBoost 24,67 / 12,35) ; le LSTM du 03b (v1) faisait 23,55.
+  - Fichiers : `src/optimisation_reseaux.py` (`CONFIGS_RESEAUX_RETENUES`, `ENSEMBLES_RETENUS`), `models/04h/FD003__*.pt` et `FD004__*.pt`, `docs/resultats/04h/04h_fd003_*` et `04h_fd004_*`, `scripts/publier_reseaux_04h.py` et `sauvegarder_poids_04h.py` (option `--sous-jeux`), notebooks de résultats régénérés.
+  - Tests : 48 réussis, 0 sauté. Démo vérifiée dans le navigateur : FD004 affiche LSTM 23,75 et CNN 1D 26,83 ; un moteur FD003 tiré au hasard est prédit en direct par les deux réseaux.
+- **Pourquoi** : demande de Benjamin, avoir des réseaux optimisés sur les 4 sous-jeux comme sur FD001 et FD002.
+- **Impact** : écart à la règle du 2026-11-07 du plan (« FD003 et FD004 sans réseau ») ; décision attendue de Matisse dans la PR. Point ouvert : sur FD004 le plus court moteur test a 19 cycles alors que l'écart initial est calculé sur k = 20 (aucune valeur plus petite dans `valeurs_ecart_initial`).
+
+### 2026-11-07 — Réorganisation des notebooks (étapes B à D)
+
+- **Qui** : Benjamin (avec Claude Code)
+- **Date** : 2026-11-07
+- **Quoi** : étapes B, C et D du plan de réorganisation des notebooks ([`docs/plan_refonte_notebooks.md`](plan_refonte_notebooks.md)) exécutées dans le dossier `aero-predict-refonte`, branche `refonte/notebooks`. Rien n'est committé ni poussé ; l'étape E (retrait des anciens notebooks, ADR, PR) attend la relecture de [`docs/comparaison_v1_v2.md`](comparaison_v1_v2.md) par Matisse.
+  - Nouveaux notebooks, exécutés avec leurs sorties (0 erreur) : `notebooks/01_donnees.ipynb`, `02_choix_du_modele.ipynb`, `evolution.ipynb`, `resultats/_modele.ipynb` et les 4 `resultats/FD00X.ipynb` générés par `scripts/generer_notebooks_resultats.py` (nbconvert). Code nouveau : `src/evaluation_sous_jeu.py` (`evaluer_sous_jeu`, `verifier_moteur`), `src/figures_resultats.py`, `scripts/valider_arbres_finaux.py`, `tests/test_evaluation_sous_jeu.py`. Les 13 anciens notebooks ne sont pas modifiés.
+  - Tests : 43 réussis, 4 sautés (réseaux de FD003 et FD004). `verifier_moteur` recalcule la prédiction d'un moteur depuis les données brutes sans lire `sorties/predictions/`, et retrouve les fichiers de la démo (écart max 1,5e-5).
+  - Non-régression, test FD001 : référence naïve 43,07, Random Forest 13,14, LightGBM 12,76, LSTM (5 graines) 11,16 / 10,09 contre la RUL plafonnée, CNN 1D 11,68 ; FD002 : LSTM 22,38 / 10,62, CNN 1D 23,89. Identiques aux entrées précédentes. Écart : **XGBoost FD001 12,78 / NASA 232,5 au lieu de 12,73 / 223,5** sur ce Mac (arm64, xgboost 3.4.1), avec 1, 2, 4 ou 8 cœurs ; l'entrée du 2026-11-05 indique que le résultat sur 1 cœur ne dépend plus de la machine, ce qui n'est pas vérifié ici. Cause non établie (machine ou version de bibliothèque : `requirements.txt` ne fixe aucune version). `ATTENDU_FD001_FINAL` et `CONFIG_XGBOOST_FINAL['metriques_test']` ne sont pas modifiés.
+  - Arbres sur FD002 à FD004 (réglages finaux, trouvés sur FD001), test RMSE brut / contre la RUL plafonnée : FD002 XGBoost 23,60 / 11,30 ; FD003 XGBoost 11,78 / 9,96 ; FD004 XGBoost 24,67 / 12,35. Erreur d'entraînement des arbres calculée pli par pli (ex. FD001 XGBoost 5,45 en entraînement contre 9,12 en validation).
+  - Le détail des écarts au plan est dans son journal (section 13).
+- **Pourquoi** : plan de réorganisation de Matisse, étapes B à D ; demande de Benjamin.
+- **Impact** : la v2 est consultable dans `aero-predict-refonte` ; décisions attendues de Matisse listées dans `docs/comparaison_v1_v2.md` section 5 (chiffre XGBoost de référence, source du 03b, figures sans équivalent exact, rappel minimal 0,95 ou 0,99). Calcul Optuna des réseaux lancé sur FD003 et FD004 le même soir (`scripts/nuit_04h_fd003_fd004_mac.sh`), résultats pas encore disponibles.
+
+### 2026-11-07 — La démo utilise les réseaux du 04h
+
+- **Qui** : Matisse (avec Claude Code)
 - **Date** : 2026-11-07
 - **Quoi** : la démo utilise les réseaux du notebook 04h à la place de ceux du 03b, sur FD001 et FD002.
   - LSTM affiché : moyenne des 5 LSTM retenus (`ENSEMBLES_RETENUS`, graines 42 à 46). CNN 1D affiché : configuration retenue, graine 42 (FD001 : réglages Optuna ; FD002 : réglages du 03b, Optuna non confirmé).
@@ -22,6 +61,20 @@ Mis à jour après chaque changement significatif. Sert de point d'entrée pour 
   - Tests : 31 réussis, 4 sautés (réseaux de FD003 et FD004, qui n'en ont pas). Le test anti-triche (a) compare maintenant la prédiction en direct aux fichiers précalculés pour les réseaux de FD001 et de FD002. Démo vérifiée dans le navigateur : la page « Comparer les modèles » affiche LSTM 11,16 et CNN 1D 11,68 sur FD001.
 - **Pourquoi** : demande de Matisse, la démo doit montrer les résultats finaux, plus ceux du 03b.
 - **Impact** : FD003 et FD004 n'ont toujours pas de réseaux dans la démo (pas de recherche Optuna sur ces sous-jeux).
+
+### 2026-11-07 — Phase 4 marquée terminée
+
+- **Qui** : Matisse (avec Claude Code)
+- **Date** : 2026-11-07
+- **Quoi** : la Phase 4 est marquée terminée à la demande de Matisse. `README.md` (tableau des phases) et `AGENTS.md` (état actuel) mis à jour. Les sections « Phase actuelle » ci-dessus et les entrées précédentes ne sont pas modifiées.
+  - Contrôles faits avant : 31 tests réussis, 4 sautés (réseaux de FD003 et FD004) ; arbre git propre.
+  - Limites connues au moment de la validation, relevées à la relecture :
+    - la courbe d'apprentissage (protocole §5) n'apparaît dans aucun notebook (04c l'a pour XGBoost seulement, pas pour les réseaux) ;
+    - baselines naïves, Ridge, métriques de classification et erreur par tranche de RUL sont dans le notebook 05 pour les 6 modèles ; leur couverture des réseaux du 04h n'a pas été vérifiée ;
+    - FD003 et FD004 n'ont pas de recherche Optuna des réseaux ni de réseaux dans la démo ;
+    - `docs/04_evaluation.md` (étape 4 de la Definition of Done) n'est pas encore rédigé.
+- **Pourquoi** : décision de Matisse ; le travail Optuna, la démo et les résultats sont documentés.
+- **Impact** : le README n'affiche plus la Phase 4 « To do ». Les limites ci-dessus restent ouvertes tant qu'elles ne sont pas traitées.
 
 ### 2026-11-07 — Poids des réseaux du 04h
 

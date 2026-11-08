@@ -87,7 +87,7 @@ Avant de coder le schéma SQL (`engines` / `sensor_readings` / `predictions`), m
 - **Phase 1 (EDA et préparation) : terminée**, voir [`docs/01_eda_preparation.md`](docs/01_eda_preparation.md).
 - **Phase 2 (Target engineering) : terminée**, voir [`docs/02_target_engineering.md`](docs/02_target_engineering.md).
 - **Phase 3 (Modélisation baseline XGBoost) : terminée**, voir [`docs/03_modelisation.md`](docs/03_modelisation.md) (dont le diagnostic biais/variance, section 6 : RMSE train 10.94 vs validation 16.86 ; et l'échelle de l'erreur, section 7 : 2.5 fois mieux que la baseline moyenne, R² validation 0.835, benchmark exploratoire 18.97 pas encore battu sur le test).
-- **Phase 4 (Évaluation) : commencée le 2026-11-04** avec le protocole d'évaluation ([`docs/protocole_evaluation.md`](docs/protocole_evaluation.md)). Sa section 0 liste ce qui manque au modèle XGBoost de la Phase 3 au regard du protocole.
+- **Phase 4 (Évaluation) : terminée, validée par Matisse le 2026-11-07**, selon le protocole d'évaluation ([`docs/protocole_evaluation.md`](docs/protocole_evaluation.md)). Limites connues listées dans la dernière entrée de [`docs/STATUS.md`](docs/STATUS.md) (courbe d'apprentissage et métriques de classification non démontrées pour les réseaux 04h ; FD003/FD004 sans recherche Optuna).
 - Un notebook exploratoire pré-existant avait établi un **benchmark empirique** sur FD001 avant la mise en place de ce process : Random Forest, RMSE test = 18.97, Score NASA test = 1053.9 (détail dans le README). Il n'a suivi ni la normalisation, ni le lissage, ni la documentation par phase. Le fichier a depuis été supprimé (voir [ADR-0006](docs/decisions/0006-suppression-baseline-exploratoire.md)) ; seul le chiffre de référence est conservé, dans le README et `docs/00_etat_de_l_art.md`.
 
 ## Workflow git en équipe
@@ -116,9 +116,13 @@ aero-predict/
 │   │   ├── template.md
 │   │   └── NNNN-titre-court.md
 │   └── 0X_phase.md            # un fichier par phase, créé une fois la phase validée
-├── notebooks/
-│   ├── exploration/           # travaux exploratoires archivés (pas le process officiel)
-│   └── 0X_....ipynb           # notebooks de phase, créés au fur et à mesure
+├── notebooks/                 # organisation fixée par l'ADR-0008 (anciens notebooks 01 à 05 : tag git v1-avant-reorganisation)
+│   ├── 01_donnees.ipynb       # préparation des 4 sous-jeux
+│   ├── 02_choix_du_modele.ipynb  # tout ce qui est décidé, sur FD001 (cible, features, réglages, diagnostics)
+│   ├── resultats/
+│   │   ├── _modele.ipynb      # seul notebook de résultats écrit à la main
+│   │   └── FD00X.ipynb        # générés par scripts/generer_notebooks_resultats.py, jamais modifiés à la main
+│   └── evolution.ipynb        # le parcours du projet, avant / après
 ├── src/                       # code réutilisable, créé au fur et à mesure des besoins (Phase 1+)
 ├── data/                      # dataset NASA C-MAPSS (déjà versionné)
 └── requirements.txt

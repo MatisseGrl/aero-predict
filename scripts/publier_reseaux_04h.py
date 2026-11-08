@@ -2,11 +2,12 @@
 Publie les reseaux du notebook 04h dans la demo : predictions precalculees de sorties/predictions/, a partir
 des poids deja sauvegardes dans models/04h/ (scripts/sauvegarder_poids_04h.py). Rien n'est entraine.
 
-Pour chaque sous-jeu (FD001, FD002) et chaque reseau :
+Pour chaque sous-jeu (FD001 a FD004) et chaque reseau :
 
-- LSTM : moyenne simple des 5 LSTM retenus (graines 42 a 46, ENSEMBLES_RETENUS) ;
-- CNN 1D : configuration retenue, graine 42 (FD001 : reglages Optuna ; FD002 : reglages du 03b, le meilleur
-  essai Optuna n'y a pas ete confirme).
+- LSTM : moyenne simple des 5 LSTM retenus (graines 42 a 46, ENSEMBLES_RETENUS) ; reglages Optuna sur FD001,
+  FD002 et FD003, reglages du 03b sur FD004 (le meilleur essai Optuna n'y a pas ete confirme) ;
+- CNN 1D : configuration retenue, graine 42 (FD001 et FD003 : reglages Optuna ; FD002 et FD004 : reglages du
+  03b, le meilleur essai Optuna n'y a pas ete confirme).
 
 Les memes graines que la demo en direct (src.inference.graines_reseau) : precalcule et direct concordent
 (test anti-triche (a), tests/test_anti_triche.py).
@@ -18,9 +19,11 @@ dans sorties/predictions_archive_03b/.
 
 Lancement, depuis la racine du depot (quelques secondes par reseau) :
 
-    python scripts/publier_reseaux_04h.py
+    python scripts/publier_reseaux_04h.py                          # les quatre sous-jeux
+    python scripts/publier_reseaux_04h.py --sous-jeux FD003 FD004  # certains sous-jeux seulement
 """
 
+import argparse
 import datetime
 import json
 import os
@@ -48,7 +51,8 @@ from src.contrat_predictions import (  # noqa: E402
 from src.deep_learning import charger_modele, predire  # noqa: E402
 
 DOSSIER_RESULTATS = os.path.join(RACINE_DEPOT, "docs", "resultats", "04h")
-PREFIXES = {"FD001": "04h_", "FD002": "04h_fd002_"}
+# prefixe des fichiers de resultats de chaque sous-jeu dans docs/resultats/04h/ (FD001 : sans numero)
+PREFIXES = {"FD001": "04h_", "FD002": "04h_fd002_", "FD003": "04h_fd003_", "FD004": "04h_fd004_"}
 COLONNE_NUIT = {"lstm": "lstm_5_graines", "cnn1d": "cnn1d_g42"}  # colonne du calcul de nuit a retrouver
 
 
@@ -80,7 +84,12 @@ def validation_et_protocole(sous_jeu, modele):
         ensemble = lire_json(sous_jeu, "ensemble")["ensembles"]["lstm_5_graines"]
         metriques["rmse_cv_decoupages_neufs"] = float(np.mean(ensemble["rmse_cv_par_decoupage"]))
         metriques["rmse_cv_par_decoupage"] = ensemble["rmse_cv_par_decoupage"]
-        protocole = protocole + ("Moyenne simple de 5 LSTM (graines 42 a 46), reglages Optuna confirmes ; "
+        # reglages du LSTM : ceux d'Optuna s'ils ont passe la confirmation (FD001 a FD003), sinon ceux du 03b (FD004)
+        if confirmation["comparaison"]["retenu"]:
+            reglages = "reglages Optuna confirmes"
+        else:
+            reglages = "reglages du 03b (le meilleur essai Optuna n'a pas ete confirme sur ce sous-jeu)"
+        protocole = protocole + ("Moyenne simple de 5 LSTM (graines 42 a 46), " + reglages + " ; "
                                  "retenue contre un seul LSTM (gain >= 0,3 cycle, 3 decoupages sur 3, Wilcoxon p < 0,05).")
     elif confirmation["comparaison"]["retenu"]:
         protocole = protocole + "CNN 1D, graine 42, reglages Optuna confirmes (non retenu comme modele final)."
@@ -112,7 +121,7 @@ def publier(sous_jeu, modele):
     if "regime" in test.columns:
         df["regime"] = test["regime"].to_numpy().astype(int)
     else:
-        df["regime"] = 0  # FD001 : un seul regime
+        df["regime"] = 0  # FD001 et FD003 : un seul regime
     df = calculer_rul_vraie(df, tableaux["y_test_vraie"])
     assert np.array_equal(df["rul_vraie"].to_numpy(dtype=float), test["RUL_vraie"].to_numpy(dtype=float))
 
@@ -148,9 +157,21 @@ def publier(sous_jeu, modele):
           f"(calcul de nuit {nuit['rmse']:.2f}) -> {chemin_csv}", flush=True)
 
 
-def main():
-    """Publie le LSTM et le CNN 1D de FD001 et de FD002."""
-    for sous_jeu in opt.ENSEMBLES_RETENUS:
+def main(argv=None):
+    """
+    Publie le LSTM et le CNN 1D des sous-jeux demandes (par defaut, les quatre de ENSEMBLES_RETENUS).
+
+    Parameters
+    ----------
+    argv : list de str, optionnel
+        Les arguments (sans le nom du programme) ; par defaut ceux de la ligne de commande.
+    """
+    analyseur = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    # sous-jeux a traiter : par defaut tous ceux qui ont un ensemble retenu
+    analyseur.add_argument("--sous-jeux", dest="sous_jeux", nargs="+", default=list(opt.ENSEMBLES_RETENUS),
+                           choices=list(opt.ENSEMBLES_RETENUS))
+    arguments = analyseur.parse_args(argv)
+    for sous_jeu in arguments.sous_jeux:
         for modele in inf.MODELES_RESEAUX:
             publier(sous_jeu, modele)
 

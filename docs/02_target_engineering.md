@@ -4,7 +4,7 @@
 
 ## Contexte
 
-Avant de pouvoir entraîner un modèle, il faut construire la cible qu'il devra apprendre à prédire. Le fichier `train_FD001.txt` ne donne que le numéro du cycle en cours pour chaque moteur — jamais directement la durée de vie utile restante (RUL). Cette phase construit cette cible, puis la plafonne à 125 cycles comme convenu dans le cahier des charges (section Phase 2). Notebook complet : [`notebooks/02_target_engineering.ipynb`](../notebooks/02_target_engineering.ipynb).
+Avant de pouvoir entraîner un modèle, il faut construire la cible qu'il devra apprendre à prédire. Le fichier `train_FD001.txt` ne donne que le numéro du cycle en cours pour chaque moteur — jamais directement la durée de vie utile restante (RUL). Cette phase construit cette cible, puis la plafonne à 125 cycles comme convenu dans le cahier des charges (section Phase 2). Notebook d'origine : [`notebooks/02_target_engineering.ipynb`](https://github.com/MatisseGrl/aero-predict/blob/v1-avant-reorganisation/notebooks/02_target_engineering.ipynb) (archivé au tag `v1-avant-reorganisation`) ; son contenu est repris dans [`notebooks/02_choix_du_modele.ipynb`](../notebooks/02_choix_du_modele.ipynb), section 2.
 
 ## Méthode et résultats
 

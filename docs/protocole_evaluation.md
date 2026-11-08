@@ -72,7 +72,7 @@ Pour chaque modèle : **train** (moyenne des plis), **validation** (valeur par p
 | Erreur absolue médiane | `median_absolute_error` | erreur « typique », insensible aux quelques moteurs ratés ; comparée à la MAE, elle montre si quelques grosses erreurs tirent la moyenne |
 | Erreur maximale | `max_error` | pire cas : en maintenance, c'est le moteur qu'on aurait laissé voler |
 | Biais moyen | `np.mean(y_pred - y_true)` | positif = le modèle surestime en moyenne (dangereux), négatif = prudent |
-| Score NASA (somme **et** moyenne par prédiction) | fonction de `notebooks/03_modelisation.ipynb` §6 | métrique asymétrique du domaine (Saxena et al., 2008) |
+| Score NASA (somme **et** moyenne par prédiction) | `score_nasa` de `src/evaluation.py` (définie à l'origine dans `notebooks/03_modelisation.ipynb` §6, archivé au tag `v1-avant-reorganisation`) | métrique asymétrique du domaine (Saxena et al., 2008) |
 | Surestimations de plus de 20 cycles | `np.sum(y_pred - y_true > 20)` (et en %) | nombre de cas dangereux, lisible par un non-spécialiste |
 | MAPE | `mean_absolute_percentage_error` | **à tester puis très probablement écarter** : la RUL tend vers 0 en fin de vie, donc la division par la vraie valeur explose (1 cycle d'erreur sur une RUL de 1 = 100 %). Documenter le chiffre et la raison du rejet |
 

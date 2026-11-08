@@ -375,34 +375,34 @@ Demande de Matisse (2026-11-06) : garder la version actuelle du dépôt (« v1 �
 - [x] Poser le tag local `v1-avant-reorganisation` sur le dernier commit de `phase-04/optuna-reseaux` (9.4)
 - [x] Fusionner `phase-04/optuna-reseaux` dans `refonte/notebooks` (règle des deux dossiers, 9.3), après la nuit Optuna et le commit des derniers changements de Matisse
 - [x] Relancer la suite pytest
-- [ ] `src/evaluation_sous_jeu.py` : `evaluer_sous_jeu(sous_jeu)` (sections 3 à 6 du protocole) et `verifier_moteur(sous_jeu, moteur)` (section 7, depuis les données brutes)
-- [ ] Fonctions de figures (matplotlib), une par graphe de la section 7.1, titrées par leur question
-- [ ] Tests pytest : `verifier_moteur` égal aux fichiers de la démo ; `evaluer_sous_jeu("FD001")` redonne les chiffres de 9.2
+- [x] `src/evaluation_sous_jeu.py` : `evaluer_sous_jeu(sous_jeu)` (sections 3 à 6 du protocole) et `verifier_moteur(sous_jeu, moteur)` (section 7, depuis les données brutes)
+- [x] Fonctions de figures (matplotlib), une par graphe de la section 7.1, titrées par leur question
+- [x] Tests pytest : `verifier_moteur` égal aux fichiers de la démo ; `evaluer_sous_jeu("FD001")` redonne les chiffres de 9.2
 
 ### Étape C : les notebooks qui ne dépendent pas d'Optuna
 
-- [ ] Choisir papermill ou nbconvert (6.1)
-- [ ] `notebooks/resultats/_modele.ipynb`, sections 1 à 7
-- [ ] `scripts/generer_notebooks_resultats.py`
-- [ ] Régénérer `sorties/predictions/` pour les 4 sous-jeux (6.5), en journée
-- [ ] Générer FD001 à FD004 avec les modèles actuels, relire les 4
-- [ ] `notebooks/01_donnees.ipynb`
-- [ ] Garder les sorties de ces notebooks dans git (6.3)
+- [x] Choisir papermill ou nbconvert (6.1)
+- [x] `notebooks/resultats/_modele.ipynb`, sections 1 à 7
+- [x] `scripts/generer_notebooks_resultats.py`
+- [x] Régénérer `sorties/predictions/` pour les 4 sous-jeux (6.5), en journée
+- [x] Générer FD001 à FD004 avec les modèles actuels, relire les 4
+- [x] `notebooks/01_donnees.ipynb`
+- [x] Garder les sorties de ces notebooks dans git (6.3)
 
 ### Étape D : après la relecture des résultats Optuna
 
-- [ ] Relire `sorties/resultats/04h_nuit.log` et les résultats de l'étape `final`
-- [ ] `notebooks/02_choix_du_modele.ipynb`
-- [ ] Regénérer FD001 à FD004 avec les réglages finaux, contrôle de non-régression (9.2)
-- [ ] `notebooks/evolution.ipynb`
-- [ ] `docs/comparaison_v1_v2.md` : chiffres, cellules et figures v1 contre v2 (9.4)
+- [x] Relire `sorties/resultats/04h_nuit.log` et les résultats de l'étape `final`
+- [x] `notebooks/02_choix_du_modele.ipynb`
+- [x] Regénérer FD001 à FD004 avec les réglages finaux, contrôle de non-régression (9.2)
+- [x] `notebooks/evolution.ipynb`
+- [x] `docs/comparaison_v1_v2.md` : chiffres, cellules et figures v1 contre v2 (9.4)
 
 ### Étape E : nettoyage
 
-- [ ] Vérifier que Matisse a relu `docs/comparaison_v1_v2.md` et validé la v2 (9.4)
-- [ ] ADR de la nouvelle organisation des notebooks
-- [ ] Retirer les 13 anciens notebooks de `notebooks/` (leur contenu gardé est déjà déplacé, section 8.2)
-- [ ] Mettre à jour les liens (README, `STATUS.md` par une nouvelle entrée, docs de phase, `AGENTS.md` section « Structure du repo »)
+- [x] Vérifier que Matisse a relu `docs/comparaison_v1_v2.md` et validé la v2 (9.4) : accord de Matisse le 2026-11-08 (voir le journal)
+- [x] ADR de la nouvelle organisation des notebooks ([ADR-0008](decisions/0008-organisation-des-notebooks.md))
+- [x] Retirer les 13 anciens notebooks (14 avec le 04h) de `notebooks/` (leur contenu gardé est déjà déplacé, section 8.2)
+- [x] Mettre à jour les liens (README, `STATUS.md` par une nouvelle entrée, docs de phase, `AGENTS.md` section « Structure du repo »)
 - [ ] Pousser et ouvrir une PR vers `main` : seulement sur demande de Matisse
 
 ### Étape F : optionnel, après la soutenance
@@ -426,7 +426,7 @@ La refonte est terminée quand :
 | Question | État |
 |---|---|
 | Le chiffre 12,85 cité dans la discussion : d'où vient-il ? `STATUS.md` donne 13,10 (écart initial, réglages de base) et 12,73 (réglages Optuna, 1 cœur) pour XGBoost au test FD001 | À vérifier |
-| papermill ou nbconvert | À décider en étape C |
+| papermill ou nbconvert | Réglé (2026-11-07) : nbconvert (déjà installé avec Jupyter, aucune dépendance de plus) ; `scripts/generer_notebooks_resultats.py` réécrit la cellule de paramètres comme le ferait papermill |
 | Valeur de N pour les matrices de confusion (15, 30 ou 50) | Proposition : 30 |
 | Où placer la comparaison à la littérature (section 4 de `resultats/` ou `02_choix_du_modele`) | Proposition : section 4, FD001 uniquement si les articles ne donnent pas les autres |
 | Importances de features (04e) : Phase 5 ou ce plan ? | Réglé : gardées dans `02_choix_du_modele`, réutilisées en Phase 5 |
@@ -453,3 +453,14 @@ Une ligne par étape faite ou par écart au plan, la plus récente en bas. On n'
 | 2026-11-07 | Matisse | Périmètre confirmé, tel qu'écrit dans ce plan : seulement les notebooks (`app/` inchangée, section 4), protocole complet dans les 4 `resultats/FD00X` (section 5.3), seul code nouveau `evaluer_sous_jeu` et « Vérifier un moteur » (principe 0). FD001 et FD002 ont des réseaux optimisés (04h) ; FD003 et FD004 gardent les réglages fixés à l'avance du 03b, accepté, et dit dans leurs notebooks |
 | 2026-11-07 | Matisse | Règle : **uniquement les nouveaux modèles**, aucun modèle ancien (03b, réglages de base) dans la v2. Réseaux : ceux du 04h seulement, donc FD001 et FD002 ; FD003 et FD004 sans réseau, dit dans leurs notebooks. Arbres : réglages finaux (`CONFIG_*_FINAL`) seulement ; leur validation croisée, absente avec ces réglages, est recalculée (code existant, mêmes plis), dans un dossier à part qui ne touche pas la démo |
 | 2026-11-07 | Matisse | Règle : **aucun graphe supprimé**. Les 8 figures de l'ancienne section 7.2 (03 : courbes `max_depth` / `n_estimators`, erreur vs baseline et benchmark ; 01b : XGBoost Phase 3 sur 4 sous-jeux ; 04d : RMSE vs score NASA ; 04f : test 100 moteurs ; 05 : pénalisation, temps d'entraînement, écart vs longueur de trajectoire) sont déplacées dans `evolution` avec leur cellule (étapes 1, 2 et 5, et nouvelle section « Pistes et diagnostics »). Question 05 E réglée de la même façon. Sections 5.4, 7 et 8.2 mises à jour |
+| 2026-11-07 | Benjamin (avec Claude Code) | Étapes B, C et D exécutées dans `aero-predict-refonte`, branche `refonte/notebooks`, sans commit ni push. Créés : `src/evaluation_sous_jeu.py`, `src/figures_resultats.py`, `tests/test_evaluation_sous_jeu.py`, `scripts/generer_notebooks_resultats.py`, `scripts/valider_arbres_finaux.py`, `notebooks/01_donnees.ipynb` (61 cellules, 4 figures), `02_choix_du_modele.ipynb` (232 cellules, 17 figures), `evolution.ipynb` (115 cellules, 19 figures), `resultats/_modele.ipynb` et `FD001` à `FD004.ipynb` (37 cellules, 9 figures chacun). Tous exécutés, 0 erreur. Pytest : 43 réussis, 4 sautés (réseaux FD003/FD004). Les 13 anciens notebooks ne sont pas touchés |
+| 2026-11-07 | Benjamin (avec Claude Code) | Choix 6.1 : nbconvert. Sorties gardées dans git par une exclusion nbstripout dans `.pre-commit-config.yaml` (liste des 7 notebooks v2), plutôt que la métadonnée `keep_output`. Coût : environ 14 Mo de notebooks avec images dans git (`resultats/` 9,9 Mo, `evolution` 2,4 Mo, `02` 1,8 Mo) |
+| 2026-11-07 | Benjamin (avec Claude Code) | Non-régression (9.2) : tous les chiffres retrouvés sauf XGBoost FD001, **12,78 / NASA 232,5 au lieu de 12,73 / 223,5**, sur un Mac arm64 (xgboost 3.4.1), avec n_jobs = 1, 2, 4 ou 8. L'affirmation « sur 1 cœur, le résultat ne dépend plus de la machine » (`generer_predictions_arbres.py`, STATUS du 2026-11-05) n'est pas vérifiée ici ; une différence de version de bibliothèque n'est pas exclue (`requirements.txt` ne fixe aucune version). Pour avancer, le script des arbres a été lancé sans ce seul contrôle (enveloppe hors dépôt) ; `ATTENDU_FD001_FINAL` et `CONFIG_XGBOOST_FINAL['metriques_test']` ne sont pas modifiés. Décision attendue de Matisse |
+| 2026-11-07 | Benjamin (avec Claude Code) | Écarts au plan : (1) `docs/resultats/03b/` ajouté (13 fichiers du 03b du 2026-11-04, ceux de STATUS), lu par `02` et `evolution` pour que les deux affichent le même CNN 03b (12,74 au test) ; le calcul du 2026-11-05 (`docs/resultats/04h/03b_*`, 13,09) reste affiché à côté dans `evolution` ; (2) `scripts/preparer_demo.py` publie les réseaux du 04h au lieu de réentraîner ceux du 03b, qui écrasaient les fichiers de la démo ; (3) validation des arbres recalculée aussi sur les 3 découpages neufs du 04h (graines 1000-1002) sur FD001 et FD002, pour comparer leurs moyennes à celles des réseaux (comparaison non appariée) ; (4) erreur d'entraînement des arbres calculée pli par pli sur les 4 sous-jeux |
+| 2026-11-07 | Benjamin (avec Claude Code) | Vérification indépendante (deux relectures) : `verifier_moteur` ne lit aucun fichier de `sorties/predictions/` (audit par espions sur open/read_csv), et redonne les prédictions de la démo (écart max 1,5e-5) sur 7 moteurs des 4 sous-jeux. 5 figures que l'inventaire déclarait perdues (03b F.6 et G.5, 04g cellule 3, 04h §7, 05 F.7 FD002-FD004) ont été déplacées dans `evolution`. 3 figures v1 n'ont pas d'équivalent exact (04b §7 en validation N = 15/30/50, 03b F.7 sur deux moteurs, premier panneau du 04d [12]) : listées dans `docs/comparaison_v1_v2.md`, décision de Matisse attendue |
+| 2026-11-07 | Benjamin (avec Claude Code) | `docs/comparaison_v1_v2.md` livré (fin d'étape D), en attente de relecture par Matisse ; étape E non commencée. Il relève : sur FD004, le LSTM du 03b de la v1 (23,55 au test) est sous tous les modèles de la v2 (meilleur : XGBoost 24,67) ; le tag local `v1-avant-reorganisation` pointe ici sur le commit `efe9434` (tag annoté), pas sur `2905e54` comme écrit plus haut (hash absent de ce dépôt) |
+| 2026-11-07 | Benjamin (avec Claude Code) | Écart au périmètre confirmé plus haut (« FD003 et FD004 sans réseau ») : à la demande de Benjamin, le processus Optuna du 04h est lancé sur FD003 et FD004 (`scripts/nuit_04h_fd003_fd004_mac.sh`, mêmes étapes et mêmes nombres d'essais que `nuit_04h.sh`, adapté à macOS ; arrêt : `scripts/arreter_04h_mac.sh`). Base Optuna : copie de `docs/resultats/04h/04h_optuna.db`. Point à trancher par Matisse : sur FD004, le plus court moteur test fait 19 cycles, et aucune valeur de k < 19 n'existe dans `valeurs_ecart_initial` ; le code retombe sur k = 20 (repli documenté), contraire au texte `TEXTE_REGLE_SOUS_JEUX` |
+| 2026-11-08 | Benjamin (avec Claude Code) | Calcul de nuit Optuna FD003/FD004 terminé sans erreur (2026-11-07 17 h 57 → 2026-11-08 10 h 09, 16 h 12, Mac de Benjamin, 12 processus). Écart : à 07 h 16, 9 travailleurs CNN 1D ajoutés à la main sur FD004 (l'étude LSTM était finie, 9 cœurs inactifs) ; aucun essai fini après le début de « confirmer » (meilleur essai CNN n° 81, fini à 08 h 11, venu du travailleur 10). FD003 : LSTM (essai 82, gain 0,448, p = 0,042) et CNN 1D (essai 79, gain 1,257, p = 3,5e-7) confirmés. FD004 : ni le LSTM (gain 0,142, p = 0,53) ni le CNN 1D (gain 0,266, p = 0,65) confirmés, réglages du 03b gardés. Ensemble retenu sur les deux : 5 LSTM (l'ensemble 5 LSTM + 5 CNN gagne 0,273 sur FD003 et 0,050 sur FD004, sous le seuil de 0,3, même règle que FD001/FD002) |
+| 2026-11-08 | Benjamin (avec Claude Code) | Réseaux FD003/FD004 publiés : `CONFIGS_RESEAUX_RETENUES` et `ENSEMBLES_RETENUS` étendus, poids `models/04h/FD003__*` et `FD004__*` (20 fichiers), résultats copiés dans `docs/resultats/04h/` (base Optuna remplacée après contrôle : les 4 études de Matisse identiques), prédictions de la démo et inférence en direct (écart ≤ 1,5e-5). Test (RUL brute / plafonnée) : FD003 ensemble 5 LSTM 13,30 / 12,05, moins bon que XGBoost 11,78 / 9,96 ; FD004 ensemble 5 LSTM 23,75 / 10,63, meilleur que XGBoost 24,67 / 12,35. Notebooks de résultats, `evolution` et `docs/comparaison_v1_v2.md` mis à jour. Pytest : 48 réussis, 0 sauté. Démo vérifiée dans le navigateur (FD001, FD003 en direct, FD004) |
+| 2026-11-08 | Benjamin (avec Claude Code) | Étape E, dernière ligne : PR vers `main` ouverte à la demande de Benjamin, qui indique l'accord de Matisse. Les autres cases de l'étape E (relecture de `comparaison_v1_v2.md` par Matisse, ADR, retrait des anciens notebooks, liens) restent à faire |
+| 2026-11-08 | Matisse (avec Claude Code) | Étape E : accord de Matisse pour remplacer l'ancienne organisation par la nouvelle (et non ajouter la v2 à côté), donné en discussion après un contrôle de l'arborescence de la v2 contre la section 4 et des figures contre les sections 5 et 7.1 (chaque `plt.show()` a son image, 0 erreur). Les 14 anciens notebooks (13 + 04h) sont retirés ; ils restent au tag `v1-avant-reorganisation` (`efe9434`, sur GitHub). ADR-0008 écrite ; liens mis à jour (docs de phase 01 à 03, `protocole_evaluation.md`, `docs/resultats/04h/README.md`, README, `AGENTS.md`). Restent ouverts, non tranchés par cet accord : XGBoost FD001 12,78 / 12,73 ; réseaux FD003/FD004 ; repli k = 20 sur FD004 ; 3 figures v1 sans équivalent exact ; 04b §8. Commits locaux, pas encore poussés |

@@ -84,13 +84,16 @@ CONFIG_CNN_REFERENCE = {
 }
 
 # ---------------------------------------------------------------------------------------------------
-# Reglages RETENUS apres Optuna (calcul de la nuit du 2026-11-07, 0 h 36 -> 12 h 34) : FIGES ici
+# Reglages RETENUS apres Optuna : FIGES ici. FD001 et FD002 : calcul de la nuit du 2026-11-07, 0 h 36 -> 12 h 34
+# (machine de Matisse, scripts/nuit_04h.sh) ; FD003 et FD004 : calcul du 2026-11-07, 17 h 57 -> 2026-11-08,
+# 10 h 09 (Mac de Benjamin, scripts/nuit_04h_fd003_fd004_mac.sh, memes etapes et memes nombres d'essais).
 # ---------------------------------------------------------------------------------------------------
-# Pourquoi les recopier ? Refaire la recherche prend environ 11 h de calcul sur tout le processeur (machine
-# de Matisse). Ces dictionnaires suffisent pour reentrainer les modeles finaux sans relancer Optuna. Ils ont
+# Pourquoi les recopier ? Refaire la recherche prend environ 11 h de calcul sur tout le processeur pour FD001
+# et FD002 (machine de Matisse), environ 16 h pour FD003 et FD004 (Mac de Benjamin). Ces dictionnaires suffisent pour reentrainer les modeles finaux sans relancer Optuna. Ils ont
 # exactement la forme qu'attendent `evaluer_config_cv` et `entrainer_modele_final`. Les valeurs sont celles
 # des fichiers de resultats, recopiees sans arrondi (copie versionnee : docs/resultats/04h/). Les poids des
-# reseaux, eux, ne sont pas sauvegardes : il faut reentrainer (quelques minutes par modele).
+# modeles finaux (5 graines par reseau et par sous-jeu) sont sauvegardes a part, dans models/04h/
+# (scripts/sauvegarder_poids_04h.py) ; sans eux, il faut reentrainer (quelques minutes par modele).
 #
 # Signification de chaque reglage :
 # - "taille_cachee" : nombre d'unites (de "memoires") de chaque couche LSTM ;
@@ -109,7 +112,8 @@ CONFIG_CNN_REFERENCE = {
 #
 # Regle qui a decide (TEXTE_REGLE_CONFIRMATION de scripts/optimiser_reseaux.py) : le meilleur essai Optuna
 # remplace la reference du 03b seulement si, sur 3 decoupages NEUFS, il gagne au moins 0,3 cycle en moyenne,
-# gagne sur les 3, et Wilcoxon p < 0,05. Sinon la reference est gardee (cas du CNN 1D de FD002).
+# gagne sur les 3, et Wilcoxon p < 0,05. Sinon la reference est gardee (cas du CNN 1D de FD002, et des deux
+# reseaux de FD004).
 
 CONFIGS_RESEAUX_RETENUES = {
     "FD001": {
@@ -148,17 +152,56 @@ CONFIGS_RESEAUX_RETENUES = {
         # Test (graine 42, reglages du 03b) : 23,89 / 11,16.
         "cnn1d": dict(CONFIG_CNN_REFERENCE, nb_epoques_final=2),
     },
+    "FD003": {
+        "lstm": {  # essai Optuna n° 82 sur 108 (94 complets, 14 elagues)
+            "type": "lstm",
+            "hyperparametres": {"taille_cachee": 96, "nb_couches": 2, "dropout": 0.18087260512166423},
+            "reglages": {"taux_apprentissage": 0.0028173996951326176, "taille_lot": 256, "max_epoques": 80,
+                         "patience": 10, "alpha": 1.0},
+            "entrees": {"longueur": 25, "ecart_initial": 30, "capteurs": True, "pente": None},
+            "nb_epoques_final": 14,
+            # validation : 8,535 -> 8,087, p = 0,042 ; test (graine 42) : 13,37 / 12,20 ; 5 graines : 13,41 +- 0,18
+        },
+        "cnn1d": {  # essai Optuna n° 79 sur 82 (64 complets, 18 elagues)
+            "type": "cnn1d",
+            "hyperparametres": {"canaux": [32, 32, 32, 32], "noyaux": [9, 9, 9, 9], "dropout": 0.11770064003111405},
+            "reglages": {"taux_apprentissage": 0.00111043288379496, "taille_lot": 256, "max_epoques": 80,
+                         "patience": 10, "alpha": 1.0},
+            "entrees": {"longueur": 20, "ecart_initial": 25, "capteurs": True, "pente": None},
+            "nb_epoques_final": 11,
+            # validation : 9,027 -> 7,769, p = 3,5e-7 ; test (graine 42) : 11,92 / 10,35 ; 5 graines : 13,34 +- 1,18
+        },
+    },
+    "FD004": {
+        # LSTM de FD004 : le meilleur essai Optuna (n° 36 sur 108, 46 complets, 62 elagues) n'a PAS passe la
+        # confirmation (gain 0,14, gagne sur 1 decoupage sur 3, p = 0,53) : la reference du 03b est gardee.
+        # Validation : 11,108 (reference) ; test (graine 42, reglages du 03b) : 23,03 / 11,68 ; 5 graines : 24,43 +- 1,96
+        "lstm": dict(CONFIG_LSTM_REFERENCE, nb_epoques_final=14),
+        # CNN 1D de FD004 : le meilleur essai Optuna (n° 81 sur 90, 48 complets, 42 elagues) n'a PAS passe la
+        # confirmation (gain 0,27, gagne sur 2 decoupages sur 3, p = 0,65) : la reference du 03b est gardee.
+        # Validation : 11,959 (reference) ; test (graine 42, reglages du 03b) : 26,83 / 15,80 ; 5 graines : 26,67 +- 1,55
+        "cnn1d": dict(CONFIG_CNN_REFERENCE, nb_epoques_final=6),
+    },
 }
 
 # Modele retenu pour chaque sous-jeu : moyenne simple des predictions de 5 LSTM (graines 42 a 46), meme
 # configuration. Validation (3 decoupages neufs), contre un seul LSTM : FD001 gain 0,47, p = 3,0e-6 ;
-# FD002 gain 0,39, p = 2,6e-13. L'ensemble 5 LSTM + 5 CNN n'est pas retenu : FD001, 0,02 cycle de mieux que
-# les 5 LSTM en validation (sous le seuil de 0,3, on garde le plus simple) ; FD002, non confirme (gain 0,18).
+# FD002 gain 0,39, p = 2,6e-13 ; FD003 gain 0,50, p = 6,4e-5 ; FD004 gain 0,36, p = 7,3e-7.
+# L'ensemble 5 LSTM + 5 CNN n'est pas retenu : FD001, 0,02 cycle de mieux que les 5 LSTM en validation (sous
+# le seuil de 0,3, on garde le plus simple) ; FD002, non confirme (gain 0,18) ; FD003, confirme contre un
+# seul LSTM (gain 0,77) mais seulement 0,273 cycle de mieux que les 5 LSTM (7,589 -> 7,315, moyenne des
+# 3 decoupages, sous le seuil de 0,3) ; FD004, confirme (gain 0,41) mais 0,050 cycle de mieux que les 5 LSTM
+# (10,744 -> 10,693). Dans les deux cas, on garde le plus simple : les 5 LSTM (choix fait sur la validation,
+# avant de lire le test).
 # Test officiel (RUL brute / plafonnee / score NASA) : FD001 11,16 / 10,09 / 227,2 (avant : LSTM du 03b
-# 12,29 / 11,37 / 228,7) ; FD002 22,38 / 10,62 / 3 432,5.
+# 12,29 / 11,37 / 228,7) ; FD002 22,38 / 10,62 / 3 432,5 ; FD003 13,30 / 12,05 / 353,9 ; FD004
+# 23,75 / 10,63 / 3 529,2. Sur FD003, les 5 LSTM font MOINS bien au test que le XGBoost actuel (11,78 / 9,96) ;
+# sur FD004, un peu mieux (XGBoost : 24,67 / 12,35).
 ENSEMBLES_RETENUS = {
     "FD001": {"reseau": "lstm", "graines": [42, 43, 44, 45, 46]},
     "FD002": {"reseau": "lstm", "graines": [42, 43, 44, 45, 46]},
+    "FD003": {"reseau": "lstm", "graines": [42, 43, 44, 45, 46]},
+    "FD004": {"reseau": "lstm", "graines": [42, 43, 44, 45, 46]},
 }
 
 # Mode "essai rapide" (variable d'environnement AERO_ESSAI_RAPIDE=1) : 2 epoques au plus par reseau, pour
@@ -173,7 +216,8 @@ SOUS_JEU_DEFAUT = "FD001"
 
 # Valeurs candidates de k (ecart a l'etat initial). Seules celles STRICTEMENT plus petites que le plus court
 # moteur test du sous-jeu sont tirees par Optuna (voir `valeurs_ecart_initial`) : FD001 (31 cycles) garde
-# 20, 25 et 30 ; FD002 (21 cycles) seulement 20.
+# 20, 25 et 30 ; FD002 (21 cycles) seulement 20 ; FD003 (38 cycles) 20, 25 et 30 ; FD004 (19 cycles) aucune,
+# on retombe sur 20 (voir `valeurs_ecart_initial`).
 VALEURS_ECART_INITIAL = [20, 25, 30]
 
 # Caches du processus : la preparation des donnees (~15 s) n'est faite qu'une fois par processus pour un
@@ -931,7 +975,7 @@ def entrees_essai(essai, sous_jeu=SOUS_JEU_DEFAUT):
     Tire la longueur de fenetre et k de l'ecart a l'etat initial.
 
     Longueur : 20 a 50 cycles par pas de 5 (le 03b a teste 30 et 50). k : parmi `valeurs_ecart_initial`
-    (20, 25 ou 30 sur FD001 ; 20 seulement sur FD002).
+    (20, 25 ou 30 sur FD001 et FD003 ; 20 seulement sur FD002 et FD004).
 
     Parameters
     ----------
